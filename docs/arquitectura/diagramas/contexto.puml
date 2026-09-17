@@ -1,0 +1,44 @@
+@startuml
+' Contexto de negocio del APM
+' Editar y regenerar: `npm run diagrams` (ver docs/guias/diagramas.md)
+!include <archimate/Archimate>
+!theme archimate-standard from <archimate/themes>
+
+title Contexto: Gestión del Portafolio de Aplicaciones (APM)
+
+skinparam defaultFontName "Helvetica, Arial, sans-serif"
+
+' --- Actores y roles ---
+Business_Actor(arquitecto, "Arquitecto/a de TI\nDueño/a del portafolio")
+Business_Actor(equipos, "Equipos de aplicación")
+Business_Actor(direccion, "Dirección TI / Stakeholders")
+Business_Role(comite, "Comité de Arquitectura")
+
+' --- Procesos de negocio ---
+Business_Process(gobernar, "Gobernar el portafolio")
+Business_Process(evaluar, "Evaluar riesgo,\ncriticidad y obsolescencia")
+Business_Process(planificar, "Planificar modernización")
+Business_Process(cambios, "Gestionar cambios\ny aprobaciones")
+
+' --- Servicios de negocio ---
+Business_Service(svc360, "Visión 360°\ndel portafolio")
+Business_Service(svcAnalisis, "Análisis de\ncriticidad y riesgo")
+Business_Service(svcRecom, "Recomendaciones de\nciclo de vida")
+
+' --- Aplicación ---
+Application_Component(apm, "Plataforma APM\n(Application Portfolio Management)")
+
+' --- Relaciones ---
+Rel_Assignment_Left(arquitecto, comite, "")
+Rel_Assignment_Left(equipos, cambios, "")
+Rel_Assignment_Left(direccion, planificar, "")
+Rel_Triggering_Right(gobernar, evaluar, "")
+Rel_Triggering_Right(evaluar, planificar, "")
+Rel_Triggering_Right(planificar, cambios, "")
+Rel_Serving_Up(svc360, gobernar, "")
+Rel_Serving_Up(svcAnalisis, evaluar, "")
+Rel_Serving_Up(svcRecom, planificar, "")
+Rel_Serving_Right(apm, svc360, "")
+Rel_Serving_Right(apm, svcAnalisis, "")
+Rel_Serving_Right(apm, svcRecom, "")
+@enduml

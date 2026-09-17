@@ -1,0 +1,55 @@
+name: Validar portal documental
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: website
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+
+  render-diagrams:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Instalar dependencias (website)
+        working-directory: website
+        run: npm ci
+      - name: Descargar PlantUML
+        run: |
+          mkdir -p /tmp/plantuml
+          curl -fsSL -o /tmp/plantuml/plantuml.jar \
+            https://github.com/plantuml/plantuml/releases/latest/download/plantuml.jar
+      - name: Regenerar diagramas
+        working-directory: website
+        run: PLANTUML_JAR=/tmp/plantuml/plantuml.jar npm run diagrams
+      - name: Verificar que los SVG están al día
+        run: |
+          if git status --porcelain -- docs/arquitectura/diagramas | grep -q .; then
+            echo "Hay diagramas sin actualizar. Ejecuta 'npm run diagrams' y haz commit de los SVG."
+            git status --porcelain -- docs/arquitectura/diagramas
+            exit 1
+          fi

@@ -1,0 +1,49 @@
+@startuml
+' Vista por capas (Business / Application / Technology)
+' Editar y regenerar: `npm run diagrams` (ver docs/guias/diagramas.md)
+!include <archimate/Archimate>
+!theme archimate-standard from <archimate/themes>
+
+title APM · Vista por capas
+
+skinparam defaultFontName "Helvetica, Arial, sans-serif"
+
+' ===== Capa de negocio =====
+Business_Function(cf_catalogos, "Gestionar catálogos\n(Aplicaciones, Integraciones, Tecnologías)")
+Business_Function(cf_evaluacion, "Evaluación de riesgo,\ncriticidad y obsolescencia")
+Business_Function(cf_planificacion, "Planificación y\nmodernización")
+Business_Function(cf_gobierno, "Gobierno de datos\ny arquitectura")
+
+' ===== Capa de aplicación =====
+Application_Component(a_portal, "Portal APM\n(UI y dashboards)")
+Application_Component(a_catalogos, "Servicios de Catálogo")
+Application_Component(a_agentes, "Runtime de Agentes IA")
+Application_Component(a_motores, "Motores de análisis\n(vulnerabilidades, obsolescencia, scoring)")
+Application_Component(a_ingesta, "Ingesta y descubrimiento")
+Application_Component(a_gobernanza, "IAM y Auditoría")
+
+' ===== Capa de tecnología =====
+Technology_Node(t_k8s, "Kubernetes")
+Technology_SystemSoftware(t_pg, "PostgreSQL + pgvector")
+Technology_SystemSoftware(t_redis, "Redis")
+Technology_SystemSoftware(t_kafka, "Kafka (eventos)")
+Technology_SystemSoftware(t_s3, "Object Storage")
+Technology_Service(t_idp, "IdP corporativo (OIDC)")
+Technology_Service(t_llm, "Proveedores de modelos LLM")
+
+' ===== Relaciones (pocas, por capa) =====
+Rel_Composition_Up(cf_evaluacion, cf_catalogos, "")
+Rel_Composition_Up(cf_planificacion, cf_evaluacion, "")
+Rel_Composition_Up(cf_gobierno, cf_catalogos, "")
+Rel_Serving_Up(a_portal, cf_catalogos, "")
+Rel_Serving_Up(a_catalogos, cf_catalogos, "")
+Rel_Serving_Up(a_motores, cf_evaluacion, "")
+Rel_Serving_Up(a_agentes, cf_gobierno, "")
+Rel_Realization_Down(a_portal, t_k8s, "")
+Rel_Realization_Down(a_catalogos, t_pg, "")
+Rel_Realization_Down(a_motores, t_pg, "")
+Rel_Realization_Down(a_ingesta, t_kafka, "")
+Rel_Serving_Up(t_llm, a_agentes, "")
+Rel_Serving_Up(t_idp, a_gobernanza, "")
+Rel_Assignment_Down(a_gobernanza, t_idp, "")
+@enduml

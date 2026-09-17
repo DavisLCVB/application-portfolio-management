@@ -1,0 +1,30 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import documents from '../generated/pdfs.json';
+---
+
+<StarlightPage frontmatter={{ title: 'Documentos PDF', description: 'Documentos compartidos para las presentaciones de avance.' }}>
+  <p>Archivos PDF publicados desde la carpeta <code>docs/</code>. Abre un documento para presentarlo o descarga una copia.</p>
+  {documents.length === 0 && <p>Todavía no hay PDF publicados.</p>}
+  {documents.map((document) => (
+    <section>
+      <h2>{document.title}</h2>
+      <p>
+        <a href={document.url} target="_blank" rel="noopener noreferrer">Abrir PDF en otra pestaña</a>
+        {' · '}
+        <a href={document.url} download>Descargar PDF</a>
+      </p>
+      <details>
+        <summary>Ver documento aquí</summary>
+        <iframe src={document.url} title={`Vista previa: ${document.title}`} loading="lazy"></iframe>
+        <p>Si tu navegador no muestra el PDF, utiliza el enlace para abrirlo o descargarlo.</p>
+      </details>
+    </section>
+  ))}
+</StarlightPage>
+
+<style>
+  section { margin-block: 2rem; }
+  summary { cursor: pointer; padding-block: .75rem; }
+  iframe { width: 100%; height: 75vh; border: 1px solid var(--sl-color-gray-5); border-radius: .5rem; }
+</style>

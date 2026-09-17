@@ -1,0 +1,41 @@
+@startuml
+' Ciclo de datos con IA agéntica (humano en el bucle)
+' Editar y regenerar: `npm run diagrams` (ver docs/guias/diagramas.md)
+!include <archimate/Archimate>
+!theme archimate-standard from <archimate/themes>
+
+title IA agéntica · Ciclo de datos con humano en el bucle
+
+skinparam defaultFontName "Helvetica, Arial, sans-serif"
+
+' --- Funciones de aplicación ---
+Application_Function(fnCapturar, "Capturar fuentes\n(CMDB, nube, SBOM, repos)")
+Application_Function(fnNormalizar, "Normalizar y enriquecer\n(Agentes IA)")
+Application_Function(fnValidar, "Validar\n(humano en el bucle)")
+Application_Function(fnPublicar, "Publicar en catálogo")
+Application_Function(fnAnalizar, "Analizar:\nvulnerabilidades,\nobsolescencia, criticidad")
+Application_Function(fnRecomendar, "Recomendar\ny notificar")
+
+' --- Objetos de datos ---
+Application_DataObject(objCrudo, "Datos crudos")
+Application_DataObject(objEnriquecido, "Datos enriquecidos")
+Application_DataObject(objPropuesta, "Propuesta\nde cambio")
+Application_DataObject(objPublicado, "Datos publicados\ndel catálogo")
+Application_DataObject(objAlertas, "Alertas y\nrecomendaciones")
+
+' --- Rol ---
+Business_Role(arquitecto, "Arquitecto/a TI")
+
+' --- Flujo ---
+Rel_Access_Right(fnCapturar, objCrudo, "crea")
+Rel_Flow_Up(objCrudo, fnNormalizar, "")
+Rel_Access_Right(fnNormalizar, objEnriquecido, "crea")
+Rel_Flow_Up(objEnriquecido, fnValidar, "")
+Rel_Assignment_Right(arquitecto, fnValidar, "aprueba")
+Rel_Flow_Up(fnValidar, objPropuesta, "emite")
+Rel_Flow_Up(objPropuesta, fnPublicar, "")
+Rel_Access_Right(fnPublicar, objPublicado, "escribe")
+Rel_Flow_Up(objPublicado, fnAnalizar, "consulta")
+Rel_Triggering_Up(fnAnalizar, fnRecomendar, "")
+Rel_Access_Right(fnRecomendar, objAlertas, "emite")
+@enduml

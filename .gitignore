@@ -1,0 +1,10 @@
+node_modules/
+website/dist/
+website/.astro/
+website/public/documentos/
+website/src/generated/
+docs/arquitectura/diagramas/*.png
+.vercel/
+.env
+.env.*
+!.env.example

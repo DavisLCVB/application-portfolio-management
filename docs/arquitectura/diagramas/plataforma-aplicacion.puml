@@ -1,0 +1,56 @@
+@startuml
+' Componentes de la plataforma APM y objetos de datos
+' Editar y regenerar: `npm run diagrams` (ver docs/guias/diagramas.md)
+!include <archimate/Archimate>
+!theme archimate-standard from <archimate/themes>
+
+title Plataforma APM · Composición de la capa de aplicación
+
+skinparam defaultFontName "Helvetica, Arial, sans-serif"
+
+' --- Componentes ---
+Application_Component(portal, "Portal APM\n(UI, dashboards, visor)")
+Application_Component(gateway, "API Gateway")
+Application_Component(catalogos, "Servicios de Catálogo\n(Apps, Integraciones,\nTecnologías)")
+Application_Component(grafo, "Motor de Grafo\ny Dependencias")
+Application_Component(ingesta, "Ingesta y\nDescubrimiento")
+Application_Component(agentes, "Runtime de\nAgentes IA")
+Application_Component(vuln, "Motor de\nVulnerabilidades")
+Application_Component(obso, "Motor de Obsolescencia\ny Licencias")
+Application_Component(analitica, "Analítica y\nScoring")
+Application_Component(notif, "Notificaciones y\nAprobaciones")
+Application_Component(iam, "IAM\n(OIDC / RBAC)")
+Application_Component(auditoria, "Auditoría y\nTrazabilidad")
+
+' --- Objetos de datos ---
+Application_DataObject(do_cat, "Datos de catálogo")
+Application_DataObject(do_rel, "Relaciones y\ndependencias")
+Application_DataObject(do_cve, "Hallazgos de\nseguridad (CVEs)")
+Application_DataObject(do_eol, "Calendario EOL\ny licencias")
+Application_DataObject(do_prop, "Propuestas y\nborradores")
+Application_DataObject(do_aud, "Bitácora\nde auditoría")
+
+' --- Relaciones ---
+Rel_Serving_Up(gateway, portal, "expone APIs")
+Rel_Serving_Up(catalogos, gateway, "expone")
+Rel_Serving_Up(ingesta, gateway, "expone")
+Rel_Access_Right(catalogos, do_cat, "lee/escribe")
+Rel_Realization_Up(grafo, do_rel, "mantiene")
+Rel_Access_Right(grafo, do_cat, "lee")
+Rel_Flow_Left(ingesta, catalogos, "alimenta")
+Rel_Serving_Up(catalogos, agentes, "consulta")
+Rel_Access_Right(agentes, do_prop, "crea")
+Rel_Serving_Up(catalogos, vuln, "correlaciona")
+Rel_Access_Right(vuln, do_cve, "ingesta")
+Rel_Serving_Up(catalogos, obso, "revisa")
+Rel_Access_Right(obso, do_eol, "consulta")
+Rel_Access_Right(analitica, do_cat, "lee")
+Rel_Access_Right(analitica, do_rel, "lee")
+Rel_Triggering_Up(notif, analitica, "dispara")
+Rel_Triggering_Up(notif, agentes, "dispara")
+Rel_Serving_Up(iam, portal, "protege")
+Rel_Serving_Up(iam, gateway, "protege")
+Rel_Flow_Left(agentes, auditoria, "registra")
+Rel_Flow_Left(ingesta, auditoria, "registra")
+Rel_Access_Right(auditoria, do_aud, "escribe")
+@enduml
