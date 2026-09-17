@@ -4,3 +4,37 @@
   --sl-color-accent: #387bd6;
   --sl-color-accent-high: #b9d7ff;
 }
+
+/* Zoom de imágenes (lightbox) */
+.sl-markdown-content img {
+  cursor: zoom-in;
+}
+
+.apm-zoom {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 15, 25, 0.9);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+  cursor: zoom-out;
+}
+
+.apm-zoom img {
+  max-width: 95vw;
+  max-height: 95vh;
+  object-fit: contain;
+  background: #ffffff;
+  padding: 0.5rem;
+  border-radius: 0.4rem;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5);
+}
+
+.apm-zoom--open {
+  opacity: 1;
+  pointer-events: auto;
+}
