@@ -20,12 +20,19 @@ function findJava() {
     const bin = path.join(process.env.JAVA_HOME, 'bin', 'java');
     if (existsSync(bin)) return bin;
   }
-  const cached = ['/tmp/opencode/plantuml'];
+  const cached = [
+    '/tmp/opencode/plantuml',
+    path.join(process.env.HOME ?? '', '.local', 'share', 'plantuml'),
+  ];
   for (const dir of cached) {
     if (!existsSync(dir)) continue;
     const jdk = readdirSync(dir).find((n) => n.startsWith('jdk-'));
     if (jdk && existsSync(path.join(dir, jdk, 'bin', 'java'))) {
       return path.join(dir, jdk, 'bin', 'java');
+    }
+    const jre = readdirSync(dir).find((n) => n.startsWith('jre'));
+    if (jre && existsSync(path.join(dir, jre, 'bin', 'java'))) {
+      return path.join(dir, jre, 'bin', 'java');
     }
   }
   return 'java'; // confía en el PATH
@@ -35,6 +42,7 @@ function findJar() {
   if (process.env.PLANTUML_JAR) return process.env.PLANTUML_JAR;
   const candidates = [
     '/tmp/opencode/plantuml/plantuml.jar',
+    path.join(process.env.HOME ?? '', '.local', 'share', 'plantuml', 'plantuml.jar'),
     path.join(process.env.HOME ?? '', '.cache', 'apm', 'plantuml.jar'),
   ];
   for (const c of candidates) if (existsSync(c)) return c;
