@@ -41,4 +41,5 @@ Páginas relacionadas:
 
 - [Catálogos del portafolio](./catalogos/)
 - [IA agéntica y funcionalidades](./ia-agentes/)
+- [Interfaz de usuario (UI/UX)](./interfaz/)
 - [Roadmap de implementación](./roadmap/)
