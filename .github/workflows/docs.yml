@@ -24,6 +24,9 @@ jobs:
 
   render-diagrams:
     runs-on: ubuntu-latest
+    env:
+      # Versión fija (no usar "latest") para que la regeneración sea reproducible.
+      PLANTUML_VERSION: '1.2026.8'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -38,18 +41,16 @@ jobs:
       - name: Instalar dependencias (website)
         working-directory: website
         run: npm ci
-      - name: Descargar PlantUML
+      - name: Verificar que los diagramas están al día
+        # Compara el hash de cada .puml con manifest.json (no depende de las fuentes
+        # instaladas en el runner, por eso no compara los bytes de los SVG).
+        working-directory: website
+        run: npm run diagrams:check
+      - name: Descargar PlantUML (versión fija)
         run: |
           mkdir -p /tmp/plantuml
           curl -fsSL -o /tmp/plantuml/plantuml.jar \
-            https://github.com/plantuml/plantuml/releases/latest/download/plantuml.jar
-      - name: Regenerar diagramas
+            "https://github.com/plantuml/plantuml/releases/download/v${PLANTUML_VERSION}/plantuml.jar"
+      - name: Validar que las fuentes .puml compilan
         working-directory: website
         run: PLANTUML_JAR=/tmp/plantuml/plantuml.jar npm run diagrams
-      - name: Verificar que los SVG están al día
-        run: |
-          if git status --porcelain -- docs/arquitectura/diagramas | grep -q .; then
-            echo "Hay diagramas sin actualizar. Ejecuta 'npm run diagrams' y haz commit de los SVG."
-            git status --porcelain -- docs/arquitectura/diagramas
-            exit 1
-          fi

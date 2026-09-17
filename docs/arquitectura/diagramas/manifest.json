@@ -1,0 +1,11 @@
+{
+  "comment": "Generado por scripts/render-diagrams.mjs. No editar a mano.",
+  "plantumlVersion": "1.2026.8",
+  "sources": {
+    "capas.puml": "4ac0272b1a0b5c6f4b55a360a70725c78fcb821a93d0ed1b2e07a9d4bdddc689",
+    "contexto.puml": "9695d92479d325c90b571ebb4165cbb6a1d7d6f591b244d66947d7b727e03aee",
+    "ia-flujo.puml": "3281a950f3ed74dfca198fd572e1ba43d11404ee770f6a09b3eba4eb5c558027",
+    "plataforma-aplicacion.puml": "39ba15feb7d99d0754992f44731a40bc2eef3f1d7eae62a821b3e357acfeee5b",
+    "roadmap.puml": "7a453ff203df14dd26e3320bb39202f488d0ea12285cb8052bc7ef53de710f60"
+  }
+}

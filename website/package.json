@@ -8,6 +8,7 @@
     "build": "node scripts/prepare-pdfs.mjs && astro build",
     "preview": "astro preview",
     "diagrams": "node scripts/render-diagrams.mjs",
+    "diagrams:check": "node scripts/render-diagrams.mjs --check",
     "test": "node --test scripts/*.test.mjs"
   },
   "dependencies": {

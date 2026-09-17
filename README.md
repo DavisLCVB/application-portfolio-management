@@ -26,16 +26,16 @@ Para validar producción: `npm run build`. Para verla localmente: `npm run previ
 
 La arquitectura del APM se modela en **ArchiMate 3.2** como código (PlantUML) en `docs/arquitectura/diagramas/`. Cinco vistas: contexto de negocio, capas, composición de la plataforma, ciclo de IA agéntica y roadmap.
 
-Para regenerar los diagramas necesitas **Java 17+** y `plantuml.jar`:
+Para regenerar los diagramas necesitas **Java 17+** y `plantuml.jar` (usa la versión fija del CI, definida en `.github/workflows/docs.yml`):
 
 ```sh
 curl -L -o /tmp/opencode/plantuml/plantuml.jar \
-  https://github.com/plantuml/plantuml/releases/latest/download/plantuml.jar
+  https://github.com/plantuml/plantuml/releases/download/v1.2026.8/plantuml.jar
 cd website
 PLANTUML_JAR=/tmp/opencode/plantuml/plantuml.jar npm run diagrams
 ```
 
-Haz commit de los `.puml` y los `.svg` (los `.png` son solo para revisión local y están en `.gitignore`). El CI regenera los diagramas y **falla si los SVG no coinciden** con los fuentes.
+Haz commit de los `.puml`, los `.svg` y `manifest.json` (los `.png` son solo para revisión local y están en `.gitignore`). Para comprobar sin Java que todo está al día: `npm run diagrams:check`. El CI valida el hash de las fuentes —no los bytes del SVG, que dependen de las fuentes del sistema— y compila los `.puml` con PlantUML.
 
 ## PDF
 
