@@ -3,6 +3,8 @@ title: Catálogos del portafolio
 description: Los catálogos que estructuran los datos del portafolio de aplicaciones.
 ---
 
+Estos catálogos son la vista operativa del [modelo de datos (metamodelo)](./modelo-datos/) del APM: cada uno cubre uno o más tipos de Fact Sheet de LeanIX expresados en ArchiMate.
+
 ## Catálogos núcleo
 
 El sistema se organiza alrededor de tres catálogos principales:

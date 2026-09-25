@@ -1,0 +1,64 @@
+@startuml
+' Metamodelo conceptual del APM: tipos de Fact Sheet de SAP LeanIX Meta Model v4
+' expresados como elementos ArchiMate 3.2 (propuesta de este proyecto; LeanIX
+' no publica un mapeo oficial Fact Sheet -> ArchiMate).
+' Editar y regenerar: `npm run diagrams` (ver docs/guias/diagramas.md)
+!include <archimate/Archimate>
+!theme archimate-standard from <archimate/themes>
+
+title Metamodelo del APM · Fact Sheets de LeanIX v4 en ArchiMate 3.2
+
+skinparam defaultFontName "Helvetica, Arial, sans-serif"
+skinparam nodesep 40
+skinparam ranksep 55
+
+' ===== Motivación =====
+Motivation_Goal(goal, "Objective\n(Objetivo)")
+
+' ===== Estrategia =====
+Strategy_Capability(cap, "Business Capability\n(Capacidad de negocio)")
+Strategy_ValueStream(vstream, "Business Context\n(Value Stream / Customer Journey)")
+
+' ===== Compuesto =====
+Grouping(techcat, "Tech Category\n(Categoría tecnológica)")
+Grouping(platform, "Platform\n(Plataforma)")
+
+' ===== Negocio =====
+Business_Actor(provider, "Provider\n(Proveedor)")
+Business_Actor(org, "Organization\n(Organización)")
+Business_Process(bproc, "Business Context\n(Process)")
+Business_Product(bprod, "Business Context\n(Business Product)")
+
+' ===== Implementación y migración =====
+Implementation_WorkPackage(initiative, "Initiative\n(Iniciativa)")
+
+' ===== Aplicación =====
+Application_Component(app, "Application\n(Aplicación)")
+Application_Interface(iface, "Interface\n(Interfaz)")
+Application_DataObject(dobj, "Data Object\n(Objeto de datos)")
+
+' ===== Tecnología =====
+Technology_SystemSoftware(itsw, "IT Component\n(Software)")
+Technology_Device(ithw, "IT Component\n(Hardware)")
+Technology_Service(itsvc, "IT Component\n(Service SaaS/PaaS/IaaS)")
+
+' ===== Relaciones (subconjunto ilustrativo; ver tabla completa en modelo-datos.md) =====
+Rel_Realization_Up(app, cap, "Realization\n(functional fit)")
+Rel_Serving_Up(app, bproc, "Serving")
+Rel_Composition_Right(app, iface, "Composition")
+Rel_Access_Right(iface, dobj, "Access")
+Rel_Access_Right(app, dobj, "Access")
+Rel_Serving_Down(itsw, app, "Serving\n(technical fit, costo)")
+Rel_Serving_Down(itsvc, app, "Serving\n(technical fit, costo)")
+Rel_Aggregation_Up(techcat, itsw, "Aggregation")
+Rel_Aggregation_Up(techcat, ithw, "Aggregation")
+Rel_Association_Right(provider, itsvc, "Association")
+Rel_Serving_Up(org, app, "Serving\n(uso)")
+Rel_Association_Right(org, app, "Association\n(propiedad)")
+Rel_Association_Right(initiative, app, "Association")
+Rel_Influence_Up(initiative, goal, "Influence")
+Rel_Influence_Right(cap, goal, "Influence")
+Rel_Aggregation_Up(platform, app, "Aggregation")
+Rel_Aggregation_Up(platform, itsvc, "Aggregation")
+Rel_Aggregation_Up(platform, cap, "Aggregation")
+@enduml

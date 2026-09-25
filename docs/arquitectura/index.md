@@ -40,6 +40,7 @@ Todo dato que toca la IA sigue un ciclo con **humano en el bucle**: captura → 
 Páginas relacionadas:
 
 - [Catálogos del portafolio](./catalogos/)
+- [Modelo de datos (metamodelo)](./modelo-datos/)
 - [IA agéntica y funcionalidades](./ia-agentes/)
 - [Interfaz de usuario (UI/UX)](./interfaz/)
 - [Roadmap de implementación](./roadmap/)

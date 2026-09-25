@@ -17,6 +17,7 @@ export default defineConfig({
           items: [
             { label: 'Visión general', slug: 'arquitectura' },
             { label: 'Catálogos', slug: 'arquitectura/catalogos' },
+            { label: 'Modelo de datos', slug: 'arquitectura/modelo-datos' },
             { label: 'IA agéntica', slug: 'arquitectura/ia-agentes' },
             { label: 'Interfaz (UI/UX)', slug: 'arquitectura/interfaz' },
             { label: 'Roadmap', slug: 'arquitectura/roadmap' },
