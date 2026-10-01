@@ -61,4 +61,6 @@ Rel_Influence_Right(cap, goal, "Influence")
 Rel_Aggregation_Up(platform, app, "Aggregation")
 Rel_Aggregation_Up(platform, itsvc, "Aggregation")
 Rel_Aggregation_Up(platform, cap, "Aggregation")
+Rel_Serving_Right(cap, vstream, "Serving")
+Rel_Aggregation_Left(bprod, app, "Aggregation\n(por validar)")
 @enduml
