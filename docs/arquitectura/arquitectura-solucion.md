@@ -49,6 +49,84 @@ Agente sugiere ──► Borrador ──► Gobierno de Arquitectura aprueba ─
                                       └──► Rechaza o devuelve
 ```
 
+## Funcionalidades
+
+Cómo responde el sistema en las funcionalidades principales. Cada flujo pasa por la API del APM y respeta los permisos de quien consulta. La lista completa está en [IA agéntica y funcionalidades](./ia-agentes/).
+
+### Chat del portafolio
+
+```text
+"¿Qué aplicaciones críticas usan PostgreSQL 11?"
+
+ Persona ──► Chat ──► Agente ──► API: búsqueda + filtros (con permisos)
+                                   │
+                                   ▼
+ Persona ◄── Lista de aplicaciones, gráfico y cita a cada Fact Sheet
+             (si no hay datos, el chat lo dice; no inventa)
+```
+
+### Edición asistida y enriquecimiento
+
+```text
+"Registra la aplicación Portal de Clientes"
+
+ Persona ──► Formulario ──► Agente detecta stack, dueños y contacto
+                                   │
+                                   ▼
+                   Borrador con origen y confianza por campo
+                                   │
+                                   ▼
+             Gobierno de Arquitectura ──► Aprueba ──► Publicado
+                                      └─► Rechaza o devuelve
+```
+
+### Análisis de impacto
+
+```text
+"Si retiro el servicio de autenticación, ¿qué se ve afectado?"
+
+ Persona ──► Agente ──► API: recorrido del grafo de dependencias
+                                   │
+                                   ▼
+ Persona ◄── Aplicaciones e integraciones afectadas, por criticidad,
+             con la ruta de dependencia de cada una
+```
+
+### Vulnerabilidades
+
+```text
+ Feed NVD/OSV ──► Ingesta ──► Correlación con la versión del
+ (programado)                 IT Component (CPE/purl)
+                                   │
+                                   ▼
+                  Prioridad = CVSS + EPSS + criticidad de la aplicación
+                                   │
+                                   ▼
+ Seguridad ◄── Alerta y ticket sugerido ──► se crea solo si se aprueba
+```
+
+### Obsolescencia y alertas
+
+```text
+ Feed endoflife.date ──► Ingesta ──► Fechas EOL/EOS por componente
+                                   │
+                                   ▼
+ Equipos ◄── Digest programado: EOL próximas, licencias por vencer,
+             cambios pendientes de aprobación
+```
+
+### Arquitecturas base y revisión
+
+```text
+"Genera la vista de contexto de la aplicación Pagos"
+
+ Persona ──► Agente ──► API: Fact Sheet, relaciones e integraciones
+                                   │
+                                   ▼
+ Persona ◄── Vista ArchiMate/C4 preliminar + hallazgos contra los
+             estándares del equipo (consultivo; el arquitecto valida)
+```
+
 ## Vista de despliegue
 
 ![Arquitectura de solución y despliegue](./diagramas/despliegue.svg)
