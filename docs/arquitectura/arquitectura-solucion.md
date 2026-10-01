@@ -176,6 +176,26 @@ Toda ingesta registra **procedencia** (fuente, método, fecha, autor). El conten
 
 La clasificación es una propuesta; los valores exactos se confirman con Seguridad de la información (por validar).
 
+## Riesgos de la IA y contramedidas
+
+Qué podría hacer mal la IA y cómo lo impide la arquitectura. Cada riesgo tiene una **prevención** (lo que el diseño bloquea por construcción) y una **detección y respuesta** (cómo se nota si ocurre y qué se hace). Los umbrales son propuestas que se calibran en el piloto.
+
+| # | Riesgo | Cómo podría ocurrir | Prevención | Detección y respuesta |
+|---|---|---|---|---|
+| 1 | **Saltarse la aprobación de Gobierno de Arquitectura** | Un agente intenta publicar un cambio gobernado, o encadena llamadas para cambiar el estado de un Fact Sheet a `Aprobado` | La identidad del agente no tiene permiso de publicar ni de aprobar; la API solo le permite crear `Borrador`. El estado `Aprobado` exige un aprobador humano registrado, distinto de quien propone | Alerta ante cualquier publicación sin aprobador (KPI: 100 % de cambios con aprobador). Si ocurre, se activa el nivel 2 del [mecanismo de detención](#mecanismo-de-detención) (solo lectura) y se revisa la bitácora |
+| 2 | **Exceder los permisos de la persona** | El agente usa su propia identidad para leer o mostrar datos que la persona no puede ver | Permisos heredados (*on-behalf-of*): el agente actúa con los permisos de quien consulta o con los suyos, nunca con la unión de ambos. Mínimo privilegio por agente | Revisión periódica de la matriz de permisos por Seguridad de la Información; las llamadas fuera de alcance se rechazan y se registran |
+| 3 | **Exponer datos sensibles** | Una respuesta o un *log* incluye datos Confidenciales para alguien sin rol autorizado | Recorte de seguridad en AI Search, filtro por clasificación; lo Restringido no se carga ni se indexa (ver [Clases de datos](#clases-de-datos)) | Enmascarado en registros; muestreo de respuestas. Ante una fuga se activa el nivel 2 o 3 |
+| 4 | **Inventar respuestas (alucinación)** | El modelo responde sin respaldo en el catálogo | Citas obligatorias a Fact Sheets; si no hay datos, el chat lo dice | KPI de precisión con cita (meta ≥ 90 %). Por debajo de 80 % se pasa a solo lectura y se revisa el agente |
+| 5 | **Obedecer instrucciones ocultas en los datos (*prompt injection*)** | Un CVE, un repositorio o un campo de texto ingerido contiene instrucciones para el agente | El contenido externo se trata como no confiable: se sanea, nunca se ejecutan instrucciones halladas en los datos y solo se invocan herramientas de una lista permitida. Filtros de contenido del servicio de modelos | Registro de llamadas a herramientas; una llamada fuera de la lista se bloquea y genera alerta |
+| 6 | **Ejecutar acciones externas no autorizadas** | El agente crea tickets en ITSM o actúa sobre otros sistemas por su cuenta | Las acciones externas son sugerencias: el ticket solo se crea tras aprobación. Cuenta de servicio con permisos acotados; sin escritura en sistemas productivos | Cada acción externa queda registrada; revocar las herramientas del agente (nivel 1) |
+| 7 | **Aprobaciones en automático (sesgo de automatización)** | Los revisores aprueban en un clic sin leer, o se saturan con la carga inicial | Diferencias antes/después visibles, confianza por campo, carga por lotes priorizados | Métrica de aprobación sin edición y tiempo de revisión; segunda revisión por muestreo |
+| 8 | **Cambiar de comportamiento con una nueva versión del modelo** | El proveedor actualiza el modelo y empeora la calidad o cambia el formato | Versión fijada por entorno; compuerta de evals antes de cualquier actualización | Evals ejecutadas en cada cambio de modelo, *prompt* o herramienta; reversión a la versión anterior |
+| 9 | **Costos o bucles sin control** | Un agente entra en un ciclo de llamadas o el descubrimiento continuo consume de más | Límite de pasos por ejecución, límites de tasa por usuario y agente, presupuesto por agente | Alerta al 80 % del presupuesto; detener el agente (nivel 1) |
+| 10 | **Borrar o alterar la trazabilidad** | Un agente intenta modificar la bitácora para ocultar un cambio | La bitácora es de solo anexado; ningún agente tiene permiso de escritura sobre ella | Acceso de solo lectura para auditoría; verificación de integridad de la bitácora |
+| 11 | **Decidir sobre personas o retiros por su cuenta** | Las recomendaciones de racionalización se aplican sin revisión o se usan para evaluar equipos | Los análisis y escenarios *what-if* son consultivos; un agente solo puede proponer un cambio de ciclo de vida o una baja como `Borrador`, que pasa por aprobación | Etiqueta de uso consultivo en cada salida; revisión por muestreo de Gobierno de Arquitectura |
+
+La regla de fondo es que **la IA propone y la persona dispone**: los controles 1, 6 y 11 la hacen cumplir en la API, no solo en la interfaz, de modo que un agente no pueda saltársela llamando directamente a la API.
+
 ## Operación y seguridad
 
 | Tema | Propuesta |
