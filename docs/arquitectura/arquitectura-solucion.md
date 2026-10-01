@@ -55,77 +55,35 @@ Cómo responde el sistema en las funcionalidades principales. Cada flujo pasa po
 
 ### Chat del portafolio
 
-```text
-"¿Qué aplicaciones críticas usan PostgreSQL 11?"
+_Ejemplo: «¿Qué aplicaciones críticas usan PostgreSQL 11?»_
 
- Persona ──► Chat ──► Agente ──► API: búsqueda + filtros (con permisos)
-                                   │
-                                   ▼
- Persona ◄── Lista de aplicaciones, gráfico y cita a cada Fact Sheet
-             (si no hay datos, el chat lo dice; no inventa)
-```
+![Flujo del chat del portafolio](./diagramas/func-chat.svg)
 
 ### Edición asistida y enriquecimiento
 
-```text
-"Registra la aplicación Portal de Clientes"
+_Ejemplo: «Registra la aplicación Portal de Clientes»_
 
- Persona ──► Formulario ──► Agente detecta stack, dueños y contacto
-                                   │
-                                   ▼
-                   Borrador con origen y confianza por campo
-                                   │
-                                   ▼
-             Gobierno de Arquitectura ──► Aprueba ──► Publicado
-                                      └─► Rechaza o devuelve
-```
+![Flujo de edición asistida y enriquecimiento](./diagramas/func-edicion.svg)
 
 ### Análisis de impacto
 
-```text
-"Si retiro el servicio de autenticación, ¿qué se ve afectado?"
+_Ejemplo: «Si retiro el servicio de autenticación, ¿qué se ve afectado?»_
 
- Persona ──► Agente ──► API: recorrido del grafo de dependencias
-                                   │
-                                   ▼
- Persona ◄── Aplicaciones e integraciones afectadas, por criticidad,
-             con la ruta de dependencia de cada una
-```
+![Flujo de análisis de impacto](./diagramas/func-impacto.svg)
 
 ### Vulnerabilidades
 
-```text
- Feed NVD/OSV ──► Ingesta ──► Correlación con la versión del
- (programado)                 IT Component (CPE/purl)
-                                   │
-                                   ▼
-                  Prioridad = CVSS + EPSS + criticidad de la aplicación
-                                   │
-                                   ▼
- Seguridad ◄── Alerta y ticket sugerido ──► se crea solo si se aprueba
-```
+![Flujo de vulnerabilidades](./diagramas/func-vulnerabilidades.svg)
 
 ### Obsolescencia y alertas
 
-```text
- Feed endoflife.date ──► Ingesta ──► Fechas EOL/EOS por componente
-                                   │
-                                   ▼
- Equipos ◄── Digest programado: EOL próximas, licencias por vencer,
-             cambios pendientes de aprobación
-```
+![Flujo de obsolescencia y alertas](./diagramas/func-obsolescencia.svg)
 
 ### Arquitecturas base y revisión
 
-```text
-"Genera la vista de contexto de la aplicación Pagos"
+_Ejemplo: «Genera la vista de contexto de la aplicación Pagos»_
 
- Persona ──► Agente ──► API: Fact Sheet, relaciones e integraciones
-                                   │
-                                   ▼
- Persona ◄── Vista ArchiMate/C4 preliminar + hallazgos contra los
-             estándares del equipo (consultivo; el arquitecto valida)
-```
+![Flujo de arquitecturas base y revisión](./diagramas/func-arquitecturas.svg)
 
 ## Vista de despliegue
 

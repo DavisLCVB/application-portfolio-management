@@ -1,0 +1,21 @@
+@startuml
+' Funcionalidad: arquitecturas base y revisión
+' Editar y regenerar: `npm run diagrams` (ver docs/guias/diagramas.md)
+title Arquitecturas base y revisión
+
+skinparam defaultFontName "Helvetica, Arial, sans-serif"
+skinparam shadowing false
+skinparam sequenceMessageAlign center
+autonumber
+
+actor "Persona" as P
+participant "Agente de IA" as A
+participant "API del APM\n(App Service)" as API
+
+P -> A : Genera la vista de contexto de la aplicación Pagos
+A -> API : Fact Sheet, relaciones e integraciones (con permisos)
+API --> A : Datos autorizados
+A -> A : Compara contra los estándares del equipo
+A --> P : Vista ArchiMate/C4 preliminar + hallazgos (consultivo)
+note right of P : El arquitecto valida
+@enduml

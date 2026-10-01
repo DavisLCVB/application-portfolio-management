@@ -1,0 +1,22 @@
+@startuml
+' Funcionalidad: obsolescencia y alertas
+' Editar y regenerar: `npm run diagrams` (ver docs/guias/diagramas.md)
+title Obsolescencia y alertas
+
+skinparam defaultFontName "Helvetica, Arial, sans-serif"
+skinparam shadowing false
+skinparam sequenceMessageAlign center
+autonumber
+
+participant "Feed endoflife.date" as E
+participant "Ingesta\n(Azure Functions)" as I
+participant "API del APM\n(App Service)" as API
+actor "Equipos" as T
+
+I -> E : Consulta programada
+E --> I : Ciclos de vida de productos
+I -> API : Fechas EOL/EOS por componente
+loop Programado
+  API -> T : Digest: EOL próximas, licencias por vencer,\ncambios pendientes de aprobación
+end
+@enduml

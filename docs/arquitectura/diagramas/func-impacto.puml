@@ -1,0 +1,22 @@
+@startuml
+' Funcionalidad: análisis de impacto
+' Editar y regenerar: `npm run diagrams` (ver docs/guias/diagramas.md)
+title Análisis de impacto
+
+skinparam defaultFontName "Helvetica, Arial, sans-serif"
+skinparam shadowing false
+skinparam sequenceMessageAlign center
+autonumber
+
+actor "Persona" as P
+participant "Agente de IA" as A
+participant "API del APM\n(App Service)" as API
+database "Azure SQL" as DB
+
+P -> A : Si retiro el servicio de autenticación, ¿qué se ve afectado?
+A -> API : Recorrido del grafo de dependencias (con permisos)
+API -> DB : Relaciones y dependencias
+DB --> API : Nodos y aristas permitidos
+API --> A : Aplicaciones e integraciones afectadas
+A --> P : Afectados por criticidad, con la ruta de dependencia de cada uno
+@enduml

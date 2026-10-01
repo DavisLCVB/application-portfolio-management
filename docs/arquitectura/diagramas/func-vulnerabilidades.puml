@@ -1,0 +1,29 @@
+@startuml
+' Funcionalidad: vulnerabilidades
+' Editar y regenerar: `npm run diagrams` (ver docs/guias/diagramas.md)
+title Vulnerabilidades
+
+skinparam defaultFontName "Helvetica, Arial, sans-serif"
+skinparam shadowing false
+skinparam sequenceMessageAlign center
+autonumber
+
+participant "Feed NVD/OSV" as N
+participant "Ingesta\n(Azure Functions)" as I
+participant "API del APM\n(App Service)" as API
+actor "Seguridad de la\nInformación" as S
+participant "Herramienta\nITSM" as T
+
+I -> N : Consulta programada
+N --> I : Vulnerabilidades publicadas
+I -> API : Correlación con la versión del IT Component (CPE/purl)
+API -> API : Prioridad = CVSS + EPSS + criticidad de la aplicación
+API -> S : Alerta y ticket sugerido
+alt Aprueba
+  S -> API : Aprueba
+  API -> T : Crea el ticket
+else No aprueba
+  S -> API : Descarta
+  note right: No se crea ticket
+end
+@enduml

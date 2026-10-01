@@ -1,0 +1,30 @@
+@startuml
+' Funcionalidad: edición asistida
+' Editar y regenerar: `npm run diagrams` (ver docs/guias/diagramas.md)
+title Edición asistida y enriquecimiento
+
+skinparam defaultFontName "Helvetica, Arial, sans-serif"
+skinparam shadowing false
+skinparam sequenceMessageAlign center
+autonumber
+
+actor "Persona" as P
+participant "Formulario" as F
+participant "Agente de IA" as A
+participant "API del APM\n(App Service)" as API
+actor "Gobierno de\nArquitectura" as G
+
+P -> F : Registra la aplicación Portal de Clientes
+F -> A : Solicitud de alta
+A -> A : Detecta stack, dueños y contacto
+A -> API : Crea borrador con origen y confianza por campo
+API --> F : Borrador (no publicado)
+API -> G : Solicita revisión
+alt Aprueba
+  G -> API : Aprueba
+  API --> P : Publicado en el catálogo
+else Rechaza o devuelve
+  G -> API : Rechaza o devuelve con comentarios
+  API --> P : Cambio no publicado
+end
+@enduml

@@ -1,0 +1,32 @@
+@startuml
+' Funcionalidad: chat del portafolio
+' Editar y regenerar: `npm run diagrams` (ver docs/guias/diagramas.md)
+title Chat del portafolio
+
+skinparam defaultFontName "Helvetica, Arial, sans-serif"
+skinparam shadowing false
+skinparam sequenceMessageAlign center
+autonumber
+
+actor "Persona" as P
+participant "Chat" as C
+participant "Agente de IA" as A
+participant "API del APM\n(App Service)" as API
+database "Azure SQL" as DB
+database "AI Search" as S
+
+P -> C : ¿Qué aplicaciones críticas usan PostgreSQL 11?
+C -> A : Consulta con la identidad de la persona
+A -> API : Búsqueda + filtros (el agente solo actúa vía API)
+API -> S : Recuperación con recorte por permisos
+API -> DB : Filtros estructurados con permisos
+S --> API : Resultados permitidos
+DB --> API : Resultados permitidos
+API --> A : Datos autorizados
+alt Hay datos
+  A --> C : Lista, gráfico y cita a cada Fact Sheet
+else No hay datos
+  A --> C : Indica que no hay datos (no inventa)
+end
+C --> P : Respuesta
+@enduml
