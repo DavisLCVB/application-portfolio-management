@@ -7,6 +7,48 @@ description: Propuesta de despliegue del APM en Azure, capa de IA agéntica, rec
 Esta página describe una **arquitectura propuesta**, no una implementación existente. Los servicios y modelos nombrados son candidatos sujetos a validación (marcados "por validar") y a las decisiones de la fase correspondiente del [roadmap](./roadmap/).
 :::
 
+## Vista rápida
+
+Resumen a muy alto nivel de cómo se usa el APM, cómo actúa la IA y de dónde llegan los datos. El detalle está en las secciones siguientes.
+
+```text
+ USO
+ ┌────────────────────────────┐
+ │ Arquitectos y equipos      │   portal web · chat · Teams (opcional)
+ └─────────────┬──────────────┘
+               │ inicio de sesión (Entra ID)
+               ▼
+ ┌────────────────────────────┐   herramientas   ┌──────────────────────┐
+ │ API del APM (App Service)  │◄─────────────────┤ Agentes de IA        │
+ │ única puerta de entrada    │                  │ (Azure OpenAI)       │
+ │ para personas y agentes    ├─────────────────►│ responden con citas  │
+ └──────┬──────────────▲──────┘     contexto     └──────────────────────┘
+        │              │         (con permisos)
+        ▼              │
+ ┌──────────────┐   ┌──┴───────────┐
+ │ Azure SQL    ├──►│ AI Search    │   índice sin datos Restringidos
+ │ registro     │   │ búsqueda con │
+ │ maestro      │   │ permisos     │
+ └──────▲───────┘   └──────────────┘
+        │ cada dato llega con su procedencia
+ ┌──────┴─────────────────────────────┐
+ │ INGESTA (Azure Functions)          │
+ │ Excel · CMDB · CVE · EOL · SBOM    │
+ └────────────────────────────────────┘
+```
+
+- **Uso:** las personas entran con su cuenta corporativa y trabajan siempre a través de la API del APM.
+- **IA:** los agentes no tocan la base de datos. Piden contexto a la API, que solo les entrega lo que la persona puede ver, y responden citando los registros usados.
+- **Ingesta:** los datos externos entran por funciones programadas y cada valor guarda su procedencia (fuente, método, fecha).
+
+Cuando un agente sugiere un cambio, este nunca se publica directamente:
+
+```text
+Agente sugiere ──► Borrador ──► Gobierno de Arquitectura aprueba ──► Publicado
+                                      │
+                                      └──► Rechaza o devuelve
+```
+
 ## Vista de despliegue
 
 ![Arquitectura de solución y despliegue](./diagramas/despliegue.svg)
