@@ -1,0 +1,75 @@
+@startuml
+' Flujo de registro descentralizado y aprobación de Gobierno de Arquitectura,
+' con las fuentes que alimentan el catálogo (Excel: importación única; CMDB: ingesta periódica).
+' Editar y regenerar: `npm run diagrams` (ver docs/guias/diagramas.md)
+!include <archimate/Archimate>
+!theme archimate-standard from <archimate/themes>
+
+title Gobierno de datos · Flujo de registro descentralizado
+
+skinparam defaultFontName "Helvetica, Arial, sans-serif"
+skinparam nodesep 35
+skinparam ranksep 55
+
+' ===== Roles =====
+Business_Role(equipoApp, "Equipo de aplicación")
+Business_Role(gobierno, "Gobierno de\nArquitectura")
+
+' ===== Procesos de negocio =====
+Business_Process(pRegistrar, "Registrar borrador")
+Business_Process(pEnviar, "Enviar a revisión")
+Business_Process(pRevisar, "Revisar y decidir\n(aprobar / rechazar / devolver)")
+Business_Process(pPublicar, "Publicar")
+Business_Process(pSolicitar, "Solicitar cambio\n(atributo gobernado)")
+
+' ===== Componentes de aplicación (reutilizados de plataforma-aplicacion.puml) =====
+Application_Component(portal, "Portal APM")
+Application_Component(catalogos, "Servicios de Catálogo")
+Application_Component(notif, "Notificaciones\ny Aprobaciones")
+Application_Component(auditoria, "Auditoría y\nTrazabilidad")
+
+' ===== Objetos de datos =====
+Application_DataObject(doBorrador, "Fact Sheet\nborrador")
+Application_DataObject(doPublicado, "Fact Sheet\npublicado")
+Application_DataObject(doSolicitud, "Solicitud\nde cambio")
+Application_DataObject(doAuditoria, "Registro\nde auditoría")
+
+' ===== Fuentes externas =====
+Application_Component(excel, "Excel\n(importación única)")
+Technology_Node(cmdb, "CMDB\n(ingesta periódica)")
+
+' ===== Asignación de roles a procesos =====
+Rel_Assignment_Right(equipoApp, pRegistrar, "")
+Rel_Assignment_Right(equipoApp, pEnviar, "")
+Rel_Assignment_Right(equipoApp, pSolicitar, "")
+Rel_Assignment_Right(gobierno, pRevisar, "")
+
+' ===== Secuencia del proceso =====
+Rel_Triggering_Right(pRegistrar, pEnviar, "")
+Rel_Triggering_Right(pEnviar, pRevisar, "")
+Rel_Triggering_Right(pRevisar, pPublicar, "aprobado")
+Rel_Triggering_Right(pSolicitar, pRevisar, "")
+
+' ===== Acceso a datos =====
+Rel_Access_Right(pRegistrar, doBorrador, "crea")
+Rel_Access_Right(pRevisar, doBorrador, "lee")
+Rel_Access_Right(pPublicar, doPublicado, "crea/actualiza")
+Rel_Access_Right(pSolicitar, doSolicitud, "crea")
+Rel_Access_Right(pRevisar, doSolicitud, "lee")
+
+' ===== Soporte de la plataforma =====
+Rel_Serving_Up(portal, pRegistrar, "")
+Rel_Serving_Up(portal, pSolicitar, "")
+Rel_Access_Right(catalogos, doBorrador, "almacena")
+Rel_Access_Right(catalogos, doPublicado, "almacena")
+Rel_Serving_Up(catalogos, pPublicar, "")
+Rel_Serving_Up(notif, pEnviar, "notifica")
+Rel_Serving_Up(notif, pRevisar, "notifica resultado")
+Rel_Flow_Left(pRevisar, auditoria, "registra")
+Rel_Flow_Left(pPublicar, auditoria, "registra")
+Rel_Access_Right(auditoria, doAuditoria, "escribe")
+
+' ===== Fuentes que alimentan el catálogo =====
+Rel_Flow_Right(excel, catalogos, "importación única")
+Rel_Serving_Up(cmdb, catalogos, "ingesta periódica")
+@enduml

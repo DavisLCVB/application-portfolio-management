@@ -41,6 +41,7 @@ Páginas relacionadas:
 
 - [Catálogos del portafolio](./catalogos/)
 - [Modelo de datos (metamodelo)](./modelo-datos/)
+- [Gobierno y procedencia de datos](./gobierno-datos/)
 - [IA agéntica y funcionalidades](./ia-agentes/)
 - [Interfaz de usuario (UI/UX)](./interfaz/)
 - [Roadmap de implementación](./roadmap/)
