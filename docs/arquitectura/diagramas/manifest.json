@@ -4,6 +4,7 @@
   "sources": {
     "capas.puml": "4ac0272b1a0b5c6f4b55a360a70725c78fcb821a93d0ed1b2e07a9d4bdddc689",
     "contexto.puml": "9695d92479d325c90b571ebb4165cbb6a1d7d6f591b244d66947d7b727e03aee",
+    "despliegue.puml": "1154aea2df80f3305eaf7365d87a1aeb7e5fdf93c0937361f2b770f8d82c6c3a",
     "gobierno-datos.puml": "49f1163629284f935c6b95d7b2058eb18f5ce8fb1e6f973d7946275c32889704",
     "ia-flujo.puml": "3281a950f3ed74dfca198fd572e1ba43d11404ee770f6a09b3eba4eb5c558027",
     "metamodelo.puml": "4c7fc94c0b3ee0370adcfcf5d3a08df17d5a32f247f2881f4df291603a2024a3",

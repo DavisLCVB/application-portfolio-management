@@ -1,0 +1,63 @@
+@startuml
+' Arquitectura de solución y despliegue (propuesta, Azure)
+' Editar y regenerar: `npm run diagrams` (ver docs/guias/diagramas.md)
+!include <archimate/Archimate>
+!theme archimate-standard from <archimate/themes>
+
+title APM · Arquitectura de solución y despliegue (propuesta)
+
+skinparam defaultFontName "Helvetica, Arial, sans-serif"
+
+' ===== Negocio =====
+Business_Role(rolEquipo, "Equipo de aplicación")
+Business_Role(rolArq, "Arquitecto/a TI")
+Business_Role(rolGob, "Gobierno de Arquitectura")
+
+' ===== Aplicación =====
+Application_Interface(ifApi, "API del APM\n(OpenAPI)")
+Application_Component(appWeb, "Web y API del APM")
+Application_Component(appAgentes, "Agentes IA\n(identidad propia, mínimo privilegio)")
+Application_Component(appBusqueda, "Recuperación de contexto\n(búsqueda + embeddings)")
+Application_Component(appIngesta, "Ingesta\n(CMDB, CVE, EOL, SBOM)")
+Application_Service(svBorrador, "Borradores y aprobación")
+
+' ===== Tecnología =====
+Technology_SystemSoftware(tApp, "Azure App Service")
+Technology_SystemSoftware(tSql, "Azure SQL Database\n(registro maestro)")
+Technology_SystemSoftware(tSearch, "Azure AI Search")
+Technology_SystemSoftware(tAoai, "Azure OpenAI\n(modelos por rol)")
+Technology_SystemSoftware(tFoundry, "Orquestador de agentes\n(Foundry Agent Service, por validar)")
+Technology_SystemSoftware(tFunc, "Azure Functions")
+Technology_SystemSoftware(tKv, "Key Vault")
+Technology_Service(tEntra, "Entra ID\n(OIDC, RBAC/ABAC)")
+Technology_Service(tMon, "Application Insights /\nAzure Monitor")
+
+' ===== Fuentes externas =====
+Application_Component(extCmdb, "CMDB")
+Application_Component(extFeeds, "NVD / OSV y\nendoflife.date")
+
+' ===== Relaciones =====
+Rel_Serving_Up(svBorrador, rolEquipo, "")
+Rel_Serving_Up(svBorrador, rolGob, "aprobación")
+Rel_Serving_Up(appWeb, rolEquipo, "")
+Rel_Serving_Up(appWeb, rolArq, "")
+Rel_Composition_Right(appWeb, ifApi, "")
+Rel_Realization_Up(appWeb, svBorrador, "")
+Rel_Serving_Up(ifApi, appAgentes, "única vía de escritura")
+Rel_Serving_Up(appBusqueda, appAgentes, "contexto")
+Rel_Serving_Up(ifApi, appIngesta, "")
+Rel_Flow_Up(extCmdb, appIngesta, "solo lectura")
+Rel_Flow_Up(extFeeds, appIngesta, "")
+
+Rel_Serving_Up(tApp, appWeb, "")
+Rel_Serving_Up(tFoundry, appAgentes, "")
+Rel_Serving_Up(tSearch, appBusqueda, "")
+Rel_Serving_Up(tFunc, appIngesta, "")
+Rel_Serving_Up(tSql, tApp, "")
+Rel_Flow_Right(tSql, tSearch, "indexado")
+Rel_Serving_Up(tAoai, tFoundry, "")
+Rel_Serving_Up(tAoai, tSearch, "embeddings")
+Rel_Serving_Up(tEntra, tApp, "")
+Rel_Serving_Up(tKv, tApp, "")
+Rel_Serving_Up(tMon, tApp, "")
+@enduml

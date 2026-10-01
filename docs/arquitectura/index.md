@@ -43,5 +43,6 @@ Páginas relacionadas:
 - [Modelo de datos (metamodelo)](./modelo-datos/)
 - [Gobierno y procedencia de datos](./gobierno-datos/)
 - [IA agéntica y funcionalidades](./ia-agentes/)
+- [Arquitectura de solución y despliegue](./arquitectura-solucion/)
 - [Interfaz de usuario (UI/UX)](./interfaz/)
 - [Roadmap de implementación](./roadmap/)

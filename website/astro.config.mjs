@@ -20,6 +20,7 @@ export default defineConfig({
             { label: 'Modelo de datos', slug: 'arquitectura/modelo-datos' },
             { label: 'Gobierno de datos', slug: 'arquitectura/gobierno-datos' },
             { label: 'IA agéntica', slug: 'arquitectura/ia-agentes' },
+            { label: 'Arquitectura de solución', slug: 'arquitectura/arquitectura-solucion' },
             { label: 'Interfaz (UI/UX)', slug: 'arquitectura/interfaz' },
             { label: 'Roadmap', slug: 'arquitectura/roadmap' },
           ],
