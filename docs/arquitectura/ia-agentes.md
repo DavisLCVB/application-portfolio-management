@@ -153,23 +153,32 @@ La publicación automática de atributos técnicos es coherente con *"la IA prop
 
 ## Alineación con los Principios de Gobernanza de IA de la OCDE
 
-La arquitectura de descubrimiento y gestión agéntica del APM se diseña bajo estricto apego a las directrices de la **Organización para la Cooperación y el Desarrollo Económicos (OCDE)** sobre inteligencia artificial confiable:
+La arquitectura de descubrimiento y gestión agéntica del APM se diseña bajo estricto apego a las directrices de la **Organización para la Cooperación y el Desarrollo Económicos (OCDE)** sobre inteligencia artificial confiable, en su versión actualizada de 2024 ([fuente](https://oecd.ai/en/ai-principles)):
 
-### 1. Supervisión humana y valores centrados en las personas (Principio 1.2)
-- **"La IA propone con evidencia, la persona dispone"**: Ningún agente tiene privilegios de escritura directa o publicación desatendida en el catálogo de producción.
+### 1. Derechos humanos y valores democráticos, incluidas la equidad y la privacidad (Principio 1.2)
+- **"La IA propone con evidencia, la persona dispone"** (supervisión humana como salvaguarda): ningún agente aprueba ni publica atributos críticos para el negocio. La única publicación automática es la de atributos técnicos deterministas, trazable y reversible (ver [Operación continua](#operación-continua)).
 - **Doble escalón de validación humana**:
   1. *Validación técnica/operativa*: El desarrollador o dueño de producto valida los micro-nudges de atributos operativos.
   2. *Aprobación de arquitectura*: El comité de **Gobierno de Arquitectura** o el Arquitecto TI revisa formalmente el Fact Sheet consolidado y autoriza su paso a estado `Aprobado` (publicado).
+- **Privacidad**: los correos de autores de commits y los nombres de firmantes de contratos son datos personales protegidos por la Ley N.° 29733 (Ley de Protección de Datos Personales del Perú). Se aplican tres medidas:
+  - *Minimización*: solo se conserva lo necesario para sugerir un responsable; no se almacenan historiales completos de autoría.
+  - *Seudonimización*: los autores se registran con un identificador interno y la correspondencia con la persona se resuelve solo al enviar el micro-nudge.
+  - *Acceso restringido*: estos datos no se indexan para el chat ni se muestran fuera del rol de Arquitectura.
 
-### 2. Transparencia y Explicabilidad con citas de evidencia primaria (Principio 1.3)
+### 2. Transparencia y explicabilidad (Principio 1.3)
 - Cada atributo propuesto por el sistema multi-agente está respaldado por **citas de evidencia primaria verificables**:
   - Para datos técnicos: enlace directo al archivo de configuración, línea de código o manifiesto (`deployment.yaml#L45`, `pom.xml#L12-L28`), junto con el hash del commit escaneado.
   - Para datos contractuales: referencia exacta al documento, número de página y párrafo de la cláusula (`Contrato-MEF-2024-012.pdf`, Pág. 8, Cláusula 4.2).
 - Si un arquitecto audita un Fact Sheet, la plataforma permite inspeccionar el fragmento original de texto o código que originó la sugerencia, lo que reduce el riesgo de aceptar inferencias sin sustento.
 
-### 3. Robustez, Seguridad y Calidad de Datos (Principio 1.4)
+### 3. Robustez, seguridad y protección (Principio 1.4)
 - **Reducción del Shadow IT**: La combinación del escaneo continuo de repositorios/despliegues y la minería de contratos saca a la luz candidatos huérfanos o componentes que operan fuera de la visibilidad formal de TI. Es reducción, no erradicación: el escaneo solo ve los repositorios y plataformas a los que tiene acceso, y no puede encontrar lo que está fuera de ellos; los contratos y TDRs ayudan a cubrir ese hueco porque revelan sistemas adquiridos que nunca llegaron a un repositorio institucional.
 - **Control por umbrales de confianza**: Las correlaciones con puntaje de confianza inferior al umbral único configurable (ver [Agente 3](#agente-3-reconciliador-semántico-entity-resolution)) se marcan como `Requiere Verificación` y no pueden publicarse sin aclaración explícita mediante micro-nudge o intervención de un arquitecto.
+
+### 4. Rendición de cuentas (Principio 1.5)
+- **Bitácora por acción de agente**: cada propuesta, vínculo, nudge o publicación automática queda en una bitácora de solo anexado con su evidencia primaria.
+- **Responsable humano identificado**: cada aprobación registra a la persona que la otorgó; no existen aprobaciones anónimas ni del propio agente.
+- **Versión del agente registrada**: cada valor guarda la versión del agente, de las reglas o del modelo y del *prompt* que lo produjo, para reproducir o revertir un resultado.
 
 ---
 
