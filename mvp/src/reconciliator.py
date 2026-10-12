@@ -244,21 +244,23 @@ class SemanticReconciliator:
 
         1. Cada repositorio se puntúa contra todas las aplicaciones del catálogo y se
            ancla a la de mayor score si supera el mínimo de vinculación.
-        2. Cada contrato se puntúa contra cada aplicación de forma directa
-           (nombre/alias/proveedor) o a través de un repositorio anclado a ella; el
-           score transitivo es el menor de los dos vínculos. Se ancla igual que un repositorio.
-        3. Conflicto: si el mejor y el segundo mejor score superan el mínimo y difieren
-           menos que el margen de conflicto, la evidencia no se adjunta a ninguna
-           hipótesis ni se reporta como huérfana; va a la cola de revisión humana. Un
-           contrato nunca se ancla a través de un repositorio en conflicto.
+        2. Conflicto (solo repositorios): si el mejor y el segundo mejor score superan el
+           mínimo y difieren menos que el margen de conflicto, el repositorio no se adjunta
+           a ninguna hipótesis ni se reporta como huérfano; va a la cola de revisión humana.
+        3. Cada contrato se puntúa contra cada aplicación de forma directa
+           (nombre/alias/proveedor) o a través de un repositorio anclado a ella (nunca uno
+           en conflicto); el score transitivo es el menor de los dos vínculos. El contrato
+           se vincula a TODA aplicación con score ≥ mínimo (un TDR de mantenimiento puede
+           cubrir varias) y, si son dos o más, se señala como contrato multi-aplicación.
         4. Hipótesis = aplicación del catálogo + repositorios + contratos anclados (un
            contrato puede cubrir varios repositorios). Su score es el del vínculo más débil.
         5. La evidencia que no coincide con ninguna aplicación es un candidato huérfano;
-           los huérfanos que se vinculan entre sí se reportan como relacionados.
+           los huérfanos que se vinculan entre sí se reportan como relacionados. Las
+           aplicaciones candidatas de un conflicto no se reportan sin evidencia nueva.
         """
         result = ResultadoReconciliacion()
         tech_anchor: Dict[int, Tuple[AplicacionCatalogo, float]] = {}
-        contract_anchor: Dict[int, Tuple[AplicacionCatalogo, float]] = {}
+        contract_anchors: Dict[int, List[Tuple[AplicacionCatalogo, float]]] = {}
         conflicted: Set[int] = set()
         best_tech: Dict[int, float] = {}
         best_contract: Dict[int, float] = {}
@@ -286,26 +288,32 @@ class SemanticReconciliator:
                 scored.append((app, score))
             best_contract[id(contract)] = max((s for _, s in scored), default=0.0)
             ranked = self._rank_candidates(scored)
-            if self._is_ambiguous(ranked):
-                conflicted.add(id(contract))
-                result.conflicts.append(
-                    self._conflict("contrato", contract.doc_id, ranked, self._contract_citations(contract))
-                )
-            elif ranked:
-                contract_anchor[id(contract)] = ranked[0]
+            if ranked:
+                contract_anchors[id(contract)] = ranked
+
+        multi_app: Dict[str, List[str]] = {
+            c.doc_id: [app.code for app, _ in contract_anchors[id(c)]]
+            for c in contract_list if len(contract_anchors.get(id(c), [])) >= 2
+        }
+        under_review = {cand["catalog_id"] for conflict in result.conflicts for cand in conflict.candidates}
 
         for app in catalog:
             tech_links = [(t, tech_anchor[id(t)][1]) for t in tech_list
                           if id(t) in tech_anchor and tech_anchor[id(t)][0] is app]
-            contract_links = [(c, contract_anchor[id(c)][1]) for c in contract_list
-                              if id(c) in contract_anchor and contract_anchor[id(c)][0] is app]
+            contract_links = [(c, score) for c in contract_list
+                              for linked, score in contract_anchors.get(id(c), []) if linked is app]
             if not tech_links and not contract_links:
-                result.catalog_without_evidence.append(app.code)
+                if app.code not in under_review:
+                    result.catalog_without_evidence.append(app.code)
                 continue
-            result.hypotheses.append(self._anchored_hypothesis(app, tech_links, contract_links))
+            anchored = self._anchored_hypothesis(app, tech_links, contract_links)
+            anchored.fact_sheet.multi_application_contracts = {
+                c.doc_id: multi_app[c.doc_id] for c in anchored.contractual_evidences if c.doc_id in multi_app
+            }
+            result.hypotheses.append(anchored)
 
         orphan_techs = [t for t in tech_list if id(t) not in tech_anchor and id(t) not in conflicted]
-        orphan_contracts = [c for c in contract_list if id(c) not in contract_anchor and id(c) not in conflicted]
+        orphan_contracts = [c for c in contract_list if id(c) not in contract_anchors]
         related: Dict[str, List[str]] = {}
         for _, tech, contract in self.match_all(orphan_techs, orphan_contracts).links:
             related.setdefault(tech.repo_name, []).append(contract.doc_id)

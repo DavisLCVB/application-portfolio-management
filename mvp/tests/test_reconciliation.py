@@ -6,7 +6,8 @@ Cubre:
 - "Sin coincidencia" como resultado válido (candidato huérfano).
 - Anclaje en el catálogo existente como identidad de la aplicación.
 - Terminología de score heurístico, umbral de revisión único y dueño técnico sugerido.
-- Resultado "Conflicto": evidencia ambigua entre aplicaciones del catálogo va a revisión humana.
+- Resultado "Conflicto": un repositorio ambiguo entre aplicaciones del catálogo va a revisión humana.
+- Contratos multi-aplicación: un contrato se vincula a toda aplicación con score ≥ mínimo.
 """
 
 import dataclasses
@@ -347,11 +348,51 @@ class TestConflictResult(unittest.TestCase):
         )
         self.assertEqual(exported["conflicts"][0]["name"], "recaudacion-digital-service")
 
+    def test_conflict_candidates_are_not_catalog_without_evidence(self):
+        result = SemanticReconciliator().reconcile_with_catalog(self.ambiguous_catalog, [self.tech], [])
+        self.assertEqual(len(result.conflicts), 1)
+        self.assertEqual(result.catalog_without_evidence, [])
+
     def test_fixtures_have_no_conflicts(self):
         output = run_discovery.run_pipeline(scan_dir=FIXTURES_DIR)
         self.assertEqual(output["conflicts"], [])
         exported = json.loads(Path(output["output_file"]).read_text(encoding="utf-8"))
         self.assertEqual(exported["conflicts"], [])
+
+
+class TestMultiApplicationContract(unittest.TestCase):
+    """Un contrato de mantenimiento puede cubrir legítimamente varias aplicaciones del catálogo."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.contract = ContractMiner().extract(str(FIXTURES_DIR / "contracts" / "tdr-recaudacion-digital.md"))
+        # El TDR coincide con ambas aplicaciones (~0.878 y ~0.868, por encima del score mínimo)
+        cls.catalog = [
+            AplicacionCatalogo(code="APP-PAS", name="Pasarela de Recaudación Digital",
+                               provider="Indra", citation="mem#R2"),
+            AplicacionCatalogo(code="APP-ING", name="Ingresos Públicos",
+                               provider="Indra", citation="mem#R3"),
+        ]
+
+    def test_contract_links_to_every_matching_application_without_conflict(self):
+        result = SemanticReconciliator().reconcile_with_catalog(self.catalog, [], [self.contract])
+        self.assertEqual(result.conflicts, [])
+        self.assertEqual(result.orphans, [])
+        self.assertEqual(result.catalog_without_evidence, [])
+        by_app = {h.fact_sheet.catalog_id: h.fact_sheet for h in result.hypotheses}
+        self.assertEqual(set(by_app), {"APP-PAS", "APP-ING"})
+        for fs in by_app.values():
+            self.assertEqual(fs.linked_contracts, [self.contract.doc_id])
+            self.assertEqual(
+                fs.multi_application_contracts, {self.contract.doc_id: ["APP-PAS", "APP-ING"]}
+            )
+            self.assertIn("multi_application_contracts", fs.to_dict())
+
+    def test_single_application_contract_is_not_flagged(self):
+        result = SemanticReconciliator().reconcile_with_catalog(self.catalog[:1], [], [self.contract])
+        fs = result.hypotheses[0].fact_sheet
+        self.assertEqual(fs.linked_contracts, [self.contract.doc_id])
+        self.assertEqual(fs.multi_application_contracts, {})
 
 
 if __name__ == "__main__":

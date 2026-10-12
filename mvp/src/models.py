@@ -100,7 +100,10 @@ class HipotesisFactSheet:
     Contiene un score heurístico de confianza (sin calibrar contra un conjunto
     verificado) y citas primarias completas. El dueño técnico inferido de los
     commits es solo una sugerencia (`technical_owner_suggested`) que siempre
-    requiere confirmación humana.
+    requiere confirmación humana. `multi_application_contracts` señala los
+    contratos vinculados que cubren además otras aplicaciones del catálogo
+    (contrato → códigos de todas las aplicaciones que cubre) para que el
+    arquitecto lo vea.
     """
     entity_name: str
     candidate_type: str
@@ -117,6 +120,7 @@ class HipotesisFactSheet:
     catalog_id: Optional[str] = None
     linked_repos: List[str] = field(default_factory=list)
     linked_contracts: List[str] = field(default_factory=list)
+    multi_application_contracts: Dict[str, List[str]] = field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         """Serializa la hipótesis de Fact Sheet a un diccionario estándar."""
@@ -146,11 +150,12 @@ class CandidatoHuerfano:
 @dataclass
 class ConflictoReconciliacion:
     """
-    Evidencia que coincide con más de una aplicación del catálogo sin poder
+    Repositorio que coincide con más de una aplicación del catálogo sin poder
     discriminar: el mejor y el segundo mejor score superan el score mínimo de
     vinculación y difieren menos que el margen de conflicto. No se adjunta a
     ninguna hipótesis ni se reporta como huérfana: va a la cola de revisión
-    humana y un arquitecto decide (nunca se resuelve automáticamente).
+    humana y un arquitecto decide (nunca se resuelve automáticamente). Los
+    contratos no generan conflictos: se vinculan a cada aplicación que cubren.
     """
     evidence_type: str
     name: str

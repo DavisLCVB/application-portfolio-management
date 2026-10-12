@@ -220,6 +220,8 @@ def run_pipeline(
             f"contratos {hipotesis.linked_contracts}, Score {hipotesis.confidence_score:.2f}, "
             f"Estado: {hipotesis.status}, {len(nudges)} Micro-Nudges generados."
         )
+        for doc_id, apps in hipotesis.multi_application_contracts.items():
+            print(f"    ⚠ Contrato multi-aplicación {doc_id}: cubre {', '.join(apps)} (revisar alcance)")
 
         hypotheses_export.append({
             "fact_sheet": hipotesis.to_dict(),
