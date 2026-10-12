@@ -48,7 +48,7 @@ El pipeline opera mediante cuatro agentes especializados que colaboran para pasa
                               │
                ¿Score < umbral o vacíos?
                         ┌─────┴─────┐
-                   Sí   │           │   No (Confianza alta)
+                   Sí   │           │   No (score ≥ umbral)
                         ▼           │
           ┌───────────────────┐     │
           │ Agente 4:         │     │
@@ -71,6 +71,17 @@ El pipeline opera mediante cuatro agentes especializados que colaboran para pasa
                    [Catálogo APM]
 ```
 
+### Qué es determinista y qué usa LLM
+
+El LLM se reserva para el texto no estructurado y la redacción; la extracción técnica, la vinculación y las decisiones son deterministas y reproducibles.
+
+| Agente | Tipo de procesamiento | Uso de LLM |
+|---|---|---|
+| 1 · Code-to-Catalog | Parsers deterministas de manifiestos, dependencias y despliegues | No |
+| 2 · Dark Data Miner | OCR + extracción guiada por esquema | Sí: extracción de campos desde texto libre, validada contra el esquema |
+| 3 · Reconciliador | Reglas deterministas y *fuzzy matching* | Opcional: embeddings solo para casos ambiguos |
+| 4 · Micro-Nudge | Lógica de decisión determinista (cuándo, a quién, qué preguntar) | Sí, solo para redactar la pregunta |
+
 ### Agente 1: Code-to-Catalog (Pilar técnico)
 
 Este agente inspecciona de manera continua los artefactos generados en el ciclo de vida del desarrollo de software:
@@ -79,7 +90,7 @@ Este agente inspecciona de manera continua los artefactos generados en el ciclo 
   - Identificación del stack tecnológico real y versiones de frameworks/runtimes en uso.
   - Mapeo de dependencias de librerías y componentes de infraestructura subyacente.
   - Detección de puertos, endpoints expuestos, variables de entorno y servicios de base de datos consumidos.
-  - Detección de actividad reciente (commits, PRs) para sugerir potenciales responsables técnicos.
+  - Detección de actividad reciente (commits, PRs) para **sugerir** un posible responsable técnico. Es solo una sugerencia que se confirma por micro-nudge: en el sector público el principal contribuyente suele ser el proveedor contratado, no el dueño institucional.
 - **Resultado**: Genera un objeto estructurado de **Evidencia Técnica** con hashes de commit y rutas exactas de archivos como soporte.
 
 ### Agente 2: Dark Data Miner (Pilar contractual y documental)
@@ -102,7 +113,8 @@ El desafío principal en organizaciones reales es que el código y los contratos
 - **Relación N:M, no 1:1**: una aplicación puede tener varios repositorios, varios contratos o TDRs (desarrollo, mantenimiento, adendas) y varios CIs; a la vez, un repositorio compartido o un contrato marco puede cubrir varias aplicaciones. El resultado es un grafo de vínculos, no un emparejamiento uno a uno.
 - **Mecanismo de resolución**: reglas deterministas (claves externas, alias y códigos normalizados) y similitud léxica difusa (*fuzzy matching*) sobre nombres y descripciones; los embeddings semánticos son un complemento opcional para casos ambiguos.
 - **Scoring de confianza multivariable**:
-  - Calcula un puntaje de confianza probabilístico ($0.0$ a $1.0$) para cada atributo y para la correlación global de la entidad.
+  - Calcula un *score* heurístico de confianza ($0.0$ a $1.0$) para cada atributo y para cada vínculo. **No es una probabilidad**: solo podrá interpretarse como tal tras calibrarlo contra un conjunto verificado de aplicaciones conocidas, midiendo precisión y exhaustividad (*precision/recall*).
+  - Un **único umbral configurable** (p. ej. $0.85$, fijado tras la calibración) separa la publicación directa de la validación por micro-nudge.
   - Factores evaluados: concordancia de nombres/alias, congruencia tecnológica (si el TDR pedía Java/Spring y el repo contiene Java 17), alineación de fechas y coincidencia de equipos/autores.
 - **Resultados posibles**:
 
@@ -140,11 +152,11 @@ La arquitectura de descubrimiento y gestión agéntica del APM se diseña bajo e
 - Cada atributo propuesto por el sistema multi-agente está respaldado por **citas de evidencia primaria verificables**:
   - Para datos técnicos: enlace directo al archivo de configuración, línea de código o manifiesto (`deployment.yaml#L45`, `pom.xml#L12-L28`), junto con el hash del commit escaneado.
   - Para datos contractuales: referencia exacta al documento, número de página y párrafo de la cláusula (`Contrato-MEF-2024-012.pdf`, Pág. 8, Cláusula 4.2).
-- Si un arquitecto audita un Fact Sheet, la plataforma permite inspeccionar el fragmento original de texto o código que originó la sugerencia, erradicando las alucinaciones sin sustento.
+- Si un arquitecto audita un Fact Sheet, la plataforma permite inspeccionar el fragmento original de texto o código que originó la sugerencia, lo que reduce el riesgo de aceptar inferencias sin sustento.
 
 ### 3. Robustez, Seguridad y Calidad de Datos (Principio 1.4)
-- **Erradicación del Shadow IT**: La combinación del escaneo continuo de repositorios/despliegues y la minería de contratos saca a la luz aplicaciones huérfanas o componentes que operan fuera de la visibilidad formal de TI.
-- **Control por umbrales de confianza**: Las correlaciones con puntaje de confianza inferior al umbral configurable (por ejemplo, $< 0.80$) se marcan como `Requiere Verificación` y no pueden publicarse sin aclaración explícita mediante micro-nudge o intervención de un arquitecto.
+- **Reducción del Shadow IT**: La combinación del escaneo continuo de repositorios/despliegues y la minería de contratos saca a la luz candidatos huérfanos o componentes que operan fuera de la visibilidad formal de TI. Es reducción, no erradicación: el escaneo solo ve los repositorios y plataformas a los que tiene acceso, y no puede encontrar lo que está fuera de ellos; los contratos y TDRs ayudan a cubrir ese hueco porque revelan sistemas adquiridos que nunca llegaron a un repositorio institucional.
+- **Control por umbrales de confianza**: Las correlaciones con puntaje de confianza inferior al umbral único configurable (ver [Agente 3](#agente-3-reconciliador-semántico-entity-resolution)) se marcan como `Requiere Verificación` y no pueden publicarse sin aclaración explícita mediante micro-nudge o intervención de un arquitecto.
 
 ---
 

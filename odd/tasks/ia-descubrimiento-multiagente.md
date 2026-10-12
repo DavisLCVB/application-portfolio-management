@@ -49,7 +49,7 @@ ask-on-risk. Commits con Trunk-Based Development directamente en `main` (decisi�
 - [x] T3 — Actualizar `docs/arquitectura/gobierno-datos.md` incorporando la trazabilidad de evidencia y procedencia de los agentes descubridores.
 - [x] T4 — Ejecutar validaciones (`npm test`, `diagrams:check`, `build`) y verificar consistencia de enlaces y visualización.
 - [x] T5 — Reformular la resolución de entidades como N:M anclada en el catálogo existente (Excel/CMDB), con resultado "sin coincidencia" → candidato huérfano; actualizar `ia-agentes.md` y el diagrama `ia-descubrimiento.puml` (render + manifest).
-- [ ] T6 — Corregir afirmaciones en `ia-agentes.md`: *score* heurístico (no probabilidad) con calibración contra conjunto verificado, umbral único configurable, "reducción" del Shadow IT, dueño técnico inferido como sugerencia; indicar qué agentes son deterministas y cuáles usan LLM.
+- [x] T6 — Corregir afirmaciones en `ia-agentes.md`: *score* heurístico (no probabilidad) con calibración contra conjunto verificado, umbral único configurable, "reducción" del Shadow IT, dueño técnico inferido como sugerencia; indicar qué agentes son deterministas y cuáles usan LLM.
 - [ ] T7 — Diseñar la operación continua en `ia-agentes.md` y `gobierno-datos.md`: precedencia frente a valores validados por humanos, tiempo límite y escalamiento de nudges, límite de frecuencia, aprobación por niveles de riesgo.
 - [ ] T8 — Privacidad y rendición de cuentas: OCDE 1.2 (privacidad, Ley 29733) y 1.5 en `ia-agentes.md`; riesgos propios del descubrimiento en la tabla de riesgos de `arquitectura-solucion.md`.
 - [ ] T9 — Alinear `roadmap.md`, `arquitectura/index.md` e `interfaz.md` (canal de micro-nudges) con el paradigma de descubrimiento.
@@ -63,7 +63,8 @@ ask-on-risk. Commits con Trunk-Based Development directamente en `main` (decisi�
 
 - Commit `7f68565` (T1–T4) en `main`, publicado en `origin/main`.
 - Revisión crítica 2026-10-11: hallazgos convertidos en T5–T10 (documentación) y en tareas T8–T10 de `odd/tasks/mvp-descubrimiento.md` (código).
-- T5: resolución N:M anclada en el catálogo y candidatos huérfanos en `ia-agentes.md` y `ia-descubrimiento.puml` (15 diagramas al día). Ruta: delegado.
+- T5: resolución N:M anclada en el catálogo y candidatos huérfanos en `ia-agentes.md` y `ia-descubrimiento.puml` (15 diagramas al día). Ruta: delegado. Commit `2f227da`.
+- T6: *score* heurístico con calibración, umbral único, "reducción" del Shadow IT, dueño técnico como sugerencia y tabla determinista/LLM en `ia-agentes.md`. Ruta: delegado.
 
 ## Siguiente paso
 T5–T10 (ruta: delegado, un escritor; disparador: 6+ archivos de documentación no triviales).
