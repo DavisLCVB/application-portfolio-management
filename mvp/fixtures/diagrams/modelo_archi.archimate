@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xmlns:archimate="http://www.archimatetool.com/archimate"
+                 name="Modelo Arquitectura MEF - Fondos Públicos"
+                 id="id-archi-model-mef-01"
+                 version="5.0.0">
+  <folder name="Application" id="id-folder-app" type="application">
+    <element xsi:type="archimate:ApplicationComponent"
+             id="elem-sigf"
+             name="Sistema Integrado de Gestión Financiera (SIGF)"/>
+    <element xsi:type="archimate:ApplicationComponent"
+             id="elem-tesoreria"
+             name="Módulo de Tesorería Pública"/>
+    <element xsi:type="archimate:ApplicationComponent"
+             id="elem-banco-api"
+             name="Servicio de Interoperabilidad Bancaria"/>
+    <element xsi:type="archimate:ApplicationInterface"
+             id="elem-iface-swift"
+             name="API Gateway Financiero"/>
+  </folder>
+  <folder name="Relations" id="id-folder-rel" type="relations">
+    <element xsi:type="archimate:CompositionRelationship"
+             id="rel-comp-01"
+             source="elem-sigf"
+             target="elem-tesoreria"
+             name="compone"/>
+    <element xsi:type="archimate:ServingRelationship"
+             id="rel-serv-01"
+             source="elem-tesoreria"
+             target="elem-iface-swift"
+             name="expone"/>
+    <element xsi:type="archimate:FlowRelationship"
+             id="rel-flow-01"
+             source="elem-iface-swift"
+             target="elem-banco-api"
+             name="transferencia de fondos"/>
+  </folder>
+</archimate:model>

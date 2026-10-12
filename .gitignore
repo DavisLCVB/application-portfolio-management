@@ -8,3 +8,8 @@ docs/arquitectura/diagramas/*.png
 .env
 .env.*
 !.env.example
+.venv/
+__pycache__/
+*.pyc
+mvp/.venv/
+mvp/output/
