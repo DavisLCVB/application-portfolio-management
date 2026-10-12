@@ -10,8 +10,11 @@ Cubre:
 - Contratos multi-aplicación: un contrato se vincula a toda aplicación con score ≥ mínimo.
 """
 
+import contextlib
 import dataclasses
+import io
 import json
+import shutil
 import tempfile
 import re
 import sys
@@ -393,6 +396,35 @@ class TestMultiApplicationContract(unittest.TestCase):
         fs = result.hypotheses[0].fact_sheet
         self.assertEqual(fs.linked_contracts, [self.contract.doc_id])
         self.assertEqual(fs.multi_application_contracts, {})
+
+    def test_cli_warns_about_multi_application_contract(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            catalog_csv = tmp_path / "catalogo.csv"
+            catalog_csv.write_text(
+                "Codigo,Nombre Aplicacion,Proveedor\n"
+                "APP-PAS,Pasarela de Recaudación Digital,Indra\n"
+                "APP-ING,Ingresos Públicos,Indra\n",
+                encoding="utf-8",
+            )
+            repos_dir = tmp_path / "repos"
+            repos_dir.mkdir()
+            contracts_dir = tmp_path / "contracts"
+            contracts_dir.mkdir()
+            shutil.copy(FIXTURES_DIR / "contracts" / "tdr-recaudacion-digital.md", contracts_dir)
+
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                run_discovery.run_pipeline(
+                    repos_dir=repos_dir, contracts_dir=contracts_dir, catalog_path=catalog_csv
+                )
+
+        warnings = [line.strip() for line in stdout.getvalue().splitlines() if "multi-aplicación" in line]
+        expected = (
+            f"⚠ Contrato multi-aplicación {self.contract.doc_id}: "
+            "cubre APP-PAS, APP-ING (revisar alcance)"
+        )
+        self.assertEqual(warnings, [expected, expected])
 
 
 if __name__ == "__main__":
