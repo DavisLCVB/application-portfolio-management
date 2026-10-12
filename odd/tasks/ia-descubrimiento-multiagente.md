@@ -53,7 +53,7 @@ ask-on-risk. Commits con Trunk-Based Development directamente en `main` (decisi�
 - [x] T7 — Diseñar la operación continua en `ia-agentes.md` y `gobierno-datos.md`: precedencia frente a valores validados por humanos, tiempo límite y escalamiento de nudges, límite de frecuencia, aprobación por niveles de riesgo.
 - [x] T8 — Privacidad y rendición de cuentas: OCDE 1.2 (privacidad, Ley 29733) y 1.5 en `ia-agentes.md`; riesgos propios del descubrimiento en la tabla de riesgos de `arquitectura-solucion.md`.
 - [x] T9 — Alinear `roadmap.md`, `arquitectura/index.md` e `interfaz.md` (canal de micro-nudges) con el paradigma de descubrimiento.
-- [ ] T10 — Validar (`npm test`, `diagrams:check`, `build`) y cerrar la idea.
+- [x] T10 — Validar (`npm test`, `diagrams:check`, `build`) y cerrar la idea.
 
 ## Progreso
 - Creado y renderizado `docs/arquitectura/diagramas/ia-descubrimiento.puml` a SVG y PNG (15 diagramas al día en manifest).
@@ -67,7 +67,8 @@ ask-on-risk. Commits con Trunk-Based Development directamente en `main` (decisi�
 - T6: *score* heurístico con calibración, umbral único, "reducción" del Shadow IT, dueño técnico como sugerencia y tabla determinista/LLM en `ia-agentes.md`. Ruta: delegado. Commit `0eed93d`.
 - T7: operación continua (precedencia del dato validado, tiempo límite y escalamiento, límite de frecuencia, aprobación por nivel de riesgo) en `ia-agentes.md` y `gobierno-datos.md`. Ruta: delegado. Commit `7d6a809`.
 - T8: OCDE 2024 (1.2 con privacidad y Ley 29733, 1.3, 1.4, nuevo 1.5) en `ia-agentes.md`; riesgos 12–14 (vinculación errónea, datos personales, fatiga de nudges) en `arquitectura-solucion.md`. Ruta: delegado. Commit `b133b5f`.
-- T9: F3/F4 del roadmap alineadas al pipeline; párrafo y diagrama de descubrimiento en `arquitectura/index.md`; "Descubrimiento", "Centro de descubrimiento" y patrón "Micro-nudge" en `interfaz.md`. Checks: `diagrams:check` 15/15, `npm test` 1/1, `npm run build` 13 páginas sin errores. Ruta: delegado.
+- T9: F3/F4 del roadmap alineadas al pipeline; párrafo y diagrama de descubrimiento en `arquitectura/index.md`; "Descubrimiento", "Centro de descubrimiento" y patrón "Micro-nudge" en `interfaz.md`. Checks: `diagrams:check` 15/15, `npm test` 1/1, `npm run build` 13 páginas sin errores. Ruta: delegado. Commit `3f5f31b`.
+- T10: verificación del padre (`diagrams:check` 15/15, `npm test` 1/1); eliminada la viñeta "Micro-nudge" duplicada en `interfaz.md` (la dejó un intento delegado a OpenCode interrumpido). Ruta: inline.
 
 ## Siguiente paso
-T5–T10 (ruta: delegado, un escritor; disparador: 6+ archivos de documentación no triviales).
+Idea cerrada en la documentación. Continuar con T8–T10 de `odd/tasks/mvp-descubrimiento.md`. Pendiente fuera de alcance: enlaces relativos `./roadmap/`, `./ia-agentes/`, `./modelo-datos/` rotos en `arquitectura-solucion.md` (deben ser `../`).

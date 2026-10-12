@@ -65,7 +65,6 @@ APM
 
 - **Tarjeta de propuesta**: muestra qué cambió (antes → después), quién/qué lo generó (modelo, prompt, versión), confianza y estado (`Borrador` → `En revisión` → `Aprobada` / `Rechazada`).
 - **Aprobaciones**: un solo clic desde la bandeja, con registro obligatorio opcional de comentario; los cambios se publican solo tras aprobación.
-- **Micro-nudge**: pregunta puntual de 1 clic enviada al responsable en su canal habitual (Microsoft Teams o comentario en *pull request*) cuando el *score* no supera el umbral o falta un atributo; cita la evidencia que la originó, caduca tras un tiempo límite con escalamiento al arquitecto y respeta un límite de frecuencia por persona.
 - **Micro-nudge**: pregunta de un clic en Microsoft Teams o como comentario en un *pull request*; cita la evidencia que la origina, vence en un plazo configurable (p. ej. 5 días hábiles) y luego se escala al arquitecto responsable; cada persona tiene un límite de preguntas y el excedente se agrupa en un resumen semanal.
 - **Chat con fuentes**: cada respuesta enlaza los registros del catálogo citados (permitir verificación).
 - **Notificaciones**: avisos de CVEs nuevos, EOL próximas, propuestas pendientes y contratos por vencer (por correo y en la app).
