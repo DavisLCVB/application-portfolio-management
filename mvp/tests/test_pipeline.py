@@ -266,7 +266,10 @@ class TestEndToEndPipeline(unittest.TestCase):
 
         self.assertIn("fact_sheets", output)
         self.assertIn("nudges", output)
-        self.assertEqual(len(output["fact_sheets"]), 2)
+        # Solo la aplicación del catálogo con evidencia vinculada produce hipótesis;
+        # el portal sin coincidencia en el catálogo queda como candidato huérfano.
+        self.assertEqual([fs.catalog_id for fs in output["fact_sheets"]], ["APP-001"])
+        self.assertTrue(len(output["orphans"]) >= 1)
         self.assertTrue(len(output["nudges"]) >= 2)
 
         # Verificar que el archivo JSON fue generado y contiene datos válidos
@@ -276,12 +279,13 @@ class TestEndToEndPipeline(unittest.TestCase):
         with open(output_path, "r", encoding="utf-8") as f:
             data = json.load(f)
 
-        self.assertEqual(len(data), 2)
-        self.assertIn("fact_sheet", data[0])
-        self.assertIn("technical_evidence", data[0])
-        self.assertIn("contractual_evidence", data[0])
-        self.assertIn("micro_nudges", data[0])
-
+        self.assertEqual(len(data["hypotheses"]), 1)
+        hypothesis = data["hypotheses"][0]
+        self.assertIn("fact_sheet", hypothesis)
+        self.assertIn("technical_evidence", hypothesis)
+        self.assertIn("contractual_evidence", hypothesis)
+        self.assertIn("micro_nudges", hypothesis)
+        self.assertTrue(len(data["orphan_candidates"]) >= 1)
 
 if __name__ == "__main__":
     unittest.main()

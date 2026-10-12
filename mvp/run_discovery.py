@@ -27,6 +27,7 @@ from src.code_to_catalog import CodeToCatalogExtractor
 from src.connectors import ConnectorRegistry, DiagramConnector
 from src.contract_miner import ContractMiner
 from src.models import (
+    AplicacionCatalogo,
     CandidatoHuerfano,
     EvidenciaContractual,
     EvidenciaDiagrama,
@@ -35,7 +36,9 @@ from src.models import (
     MicroNudge,
 )
 from src.nudge_generator import NudgeGenerator
-from src.reconciliator import SemanticReconciliator
+from src.reconciliator import SemanticReconciliator, load_catalog
+
+CATALOG_EXTENSIONS = {".csv", ".xlsx"}
 
 
 def run_pipeline(
@@ -43,6 +46,7 @@ def run_pipeline(
     repos_dir: Optional[Union[str, Path]] = None,
     contracts_dir: Optional[Union[str, Path]] = None,
     diagrams_dir: Optional[Union[str, Path]] = None,
+    catalog_path: Optional[Union[str, Path]] = None,
 ) -> Dict[str, Any]:
     """
     Ejecuta el pipeline completo de descubrimiento sobre fixtures de prueba,
@@ -61,6 +65,7 @@ def run_pipeline(
     diagram_evidences: List[EvidenciaDiagrama] = []
     tech_evidences: List[EvidenciaTecnica] = []
     contract_evidences: List[EvidenciaContractual] = []
+    catalog_files: List[Path] = [Path(catalog_path)] if catalog_path else []
 
     has_custom_targets = any(x is not None for x in [scan_dir, repos_dir, contracts_dir, diagrams_dir])
 
@@ -70,7 +75,14 @@ def run_pipeline(
         extracted_all = registry.scan_directory(target_path)
         partition = registry.partition_evidences(extracted_all)
 
-        tech_evidences = partition["tecnica"]
+        # Los catálogos tabulares son el ancla de identidad, no evidencia técnica nueva
+        tech_evidences = [t for t in partition["tecnica"] if not t.commit_hash.startswith("spreadsheet-")]
+        if not catalog_files:
+            catalog_files = sorted(
+                f for f in target_path.rglob("*")
+                if f.is_file() and f.suffix.lower() in CATALOG_EXTENSIONS
+                and not any(part.startswith(".") for part in f.relative_to(target_path).parts)
+            )
         contract_evidences = partition["contractual"]
         diagram_evidences = partition["diagrama"]
 
@@ -156,6 +168,9 @@ def run_pipeline(
                 contract_evidences.append(cev)
                 print(f"  ✓ Documento '{cev.doc_id}': Proveedor '{cev.provider_name}', SLA: {cev.sla_uptime}, {len(cev.acquired_licenses)} licencias.")
 
+        if not catalog_files:
+            catalog_files = [fixtures_dir / "catalogs" / "catalogo_aplicaciones.csv"]
+
         # 3. Capa Multimodal: Ingesta de Diagramas y Modelos Técnicos
         print("\n[3/5] Capa Multimodal: Ingesta de diagramas arquitectónicos (DiagramConnector)...")
         diagrams_dir_path = fixtures_dir / "diagrams"
@@ -165,12 +180,19 @@ def run_pipeline(
             for dev in diagram_evidences:
                 print(f"  ✓ Diagrama '{dev.source_file}' ({dev.format_type}): {len(dev.components)} componentes, {len(dev.relations)} relaciones.")
 
+    # Catálogo existente: ancla de identidad de las aplicaciones
+    catalog: List[AplicacionCatalogo] = []
+    for cfile in catalog_files:
+        catalog.extend(load_catalog(cfile))
+    print(f"\n[Catálogo] Aplicaciones existentes cargadas como ancla de identidad: {len(catalog)}")
+
     # 4. Agente 3: Reconciliador Semántico
-    print("\n[4/5] Agente 3: Reconciliando semánticamente código vs. contratos...")
+    print("\n[4/5] Agente 3: Anclando evidencia en el catálogo y reconciliando código vs. contratos...")
     reconciliator = SemanticReconciliator(confidence_threshold=0.85)
-    reconciliation = reconciliator.match_all(tech_evidences, contract_evidences)
-    print(f"  ✓ Vínculos N:M (score ≥ {reconciliator.min_link_score:.2f}): {len(reconciliation.links)}")
-    print(f"  ✓ Candidatos huérfanos (sin coincidencia): {len(reconciliation.orphans)}")
+    reconciliation = reconciliator.reconcile_with_catalog(catalog, tech_evidences, contract_evidences)
+    print(f"  ✓ Hipótesis ancladas en el catálogo (score de vínculo ≥ {reconciliator.min_link_score:.2f}): {len(reconciliation.hypotheses)}")
+    print(f"  ✓ Candidatos huérfanos (sin coincidencia en el catálogo): {len(reconciliation.orphans)}")
+    print(f"  ✓ Aplicaciones del catálogo sin evidencia nueva: {len(reconciliation.catalog_without_evidence)}")
 
     fact_sheets: List[HipotesisFactSheet] = []
     all_nudges: List[MicroNudge] = []
@@ -178,30 +200,39 @@ def run_pipeline(
 
     # 5. Agente 4: Generador de Micro-Nudges
     print("\n[5/5] Agente 4: Evaluando umbrales de gobernanza y generando Micro-Nudges...")
-    export_data = []
+    hypotheses_export = []
 
-    for hipotesis, tech, contract in reconciliation.links:
+    for anchored in reconciliation.hypotheses:
+        hipotesis = anchored.fact_sheet
+        tech = anchored.technical_evidences[0] if anchored.technical_evidences else None
+        contract = anchored.contractual_evidences[0] if anchored.contractual_evidences else None
         fact_sheets.append(hipotesis)
         nudges = nudge_generator.evaluate_and_generate(hipotesis, tech, contract)
         all_nudges.extend(nudges)
 
-        print(f"  ✓ Fact Sheet '{hipotesis.entity_name}': Confianza {hipotesis.confidence_score * 100:.1f}%, Estado: {hipotesis.status}, {len(nudges)} Micro-Nudges generados.")
+        print(
+            f"  ✓ [{hipotesis.catalog_id}] '{hipotesis.entity_name}': repos {hipotesis.linked_repos}, "
+            f"contratos {hipotesis.linked_contracts}, Confianza {hipotesis.confidence_score * 100:.1f}%, "
+            f"Estado: {hipotesis.status}, {len(nudges)} Micro-Nudges generados."
+        )
 
-        export_data.append({
+        hypotheses_export.append({
             "fact_sheet": hipotesis.to_dict(),
-            "technical_evidence": tech.to_dict(),
-            "contractual_evidence": contract.to_dict(),
+            "technical_evidence": [t.to_dict() for t in anchored.technical_evidences],
+            "contractual_evidence": [c.to_dict() for c in anchored.contractual_evidences],
             "micro_nudges": [n.to_dict() for n in nudges],
         })
+
+    export_data = {
+        "hypotheses": hypotheses_export,
+        "orphan_candidates": [o.to_dict() for o in reconciliation.orphans],
+        "catalog_without_evidence": reconciliation.catalog_without_evidence,
+    }
 
     # Guardar en archivo JSON de salida
     output_file = output_dir / "fact_sheets_draft.json"
     with open(output_file, "w", encoding="utf-8") as f:
         json.dump(export_data, f, indent=2, ensure_ascii=False)
-
-    orphans_file = output_dir / "orphan_candidates.json"
-    with open(orphans_file, "w", encoding="utf-8") as f:
-        json.dump([o.to_dict() for o in reconciliation.orphans], f, indent=2, ensure_ascii=False)
 
     # Guardar evidencias de diagramas
     if diagram_evidences:
@@ -231,7 +262,7 @@ def print_summary_table(fact_sheets: List[HipotesisFactSheet], nudges: List[Micr
     print("\n" + "=" * 105)
     print(f"{'RESUMEN DE FACT SHEETS IDENTIFICADOS (LEANIX METAMODEL v4)':^105}")
     print("=" * 105)
-    header = f"{'Entidad / Aplicación':<36} | {'Stack Técnico':<20} | {'Proveedor':<20} | {'SLA':<7} | {'Score':<6} | {'Estado':<10}"
+    header = f"{'Aplicación del catálogo':<36} | {'Stack Técnico':<20} | {'Proveedor':<20} | {'SLA':<7} | {'Score':<6} | {'Estado':<10}"
     print(header)
     print("-" * 105)
 
@@ -243,7 +274,7 @@ def print_summary_table(fact_sheets: List[HipotesisFactSheet], nudges: List[Micr
         print(f"{name:<36} | {stack:<20} | {prov:<20} | {fs.sla_uptime:<7} | {score:<6} | {fs.status:<10}")
 
     print("=" * 105)
-    print(f"Total Fact Sheets candidatos: {len(fact_sheets)} | Total Micro-Nudges interactivos: {len(nudges)}")
+    print(f"Total hipótesis ancladas: {len(fact_sheets)} | Total Micro-Nudges interactivos: {len(nudges)}")
     print("=" * 105 + "\n")
 
     # Muestra de Micro-Nudges generados
@@ -270,8 +301,9 @@ def print_orphan_table(orphans: List[CandidatoHuerfano]) -> None:
     if not orphans:
         print("Ninguno: toda la evidencia quedó vinculada.")
     for o in orphans:
-        name = o.name[:44] + ".." if len(o.name) > 44 else o.name
-        print(f"{o.evidence_type:<12} | {name:<46} | Mejor score: {o.best_score:.2f} | Revisión humana")
+        name = o.name[:34] + ".." if len(o.name) > 34 else o.name
+        related = ", ".join(o.related) if o.related else "-"
+        print(f"{o.evidence_type:<12} | {name:<36} | Mejor score: {o.best_score:.2f} | Relacionado con: {related}")
     print("=" * 105 + "\n")
 
 
@@ -301,6 +333,7 @@ if __name__ == "__main__":
     parser.add_argument("--repos", dest="repos_dir", default=None, help="Directorio con repositorios de código fuente")
     parser.add_argument("--contracts", dest="contracts_dir", default=None, help="Directorio con contratos y TDRs (.md, .txt)")
     parser.add_argument("--diagrams", dest="diagrams_dir", default=None, help="Directorio con diagramas (.puml, .archimate, .drawio, .xml)")
+    parser.add_argument("--catalog", dest="catalog_path", default=None, help="Catálogo existente de aplicaciones (.csv, .xlsx) usado como ancla de identidad")
     args = parser.parse_args()
 
     run_pipeline(
@@ -308,4 +341,5 @@ if __name__ == "__main__":
         repos_dir=args.repos_dir,
         contracts_dir=args.contracts_dir,
         diagrams_dir=args.diagrams_dir,
+        catalog_path=args.catalog_path,
     )

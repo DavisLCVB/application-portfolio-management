@@ -1,4 +1,4 @@
-Codigo,Nombre Aplicacion,Responsable Tecnico,Lenguaje Principal,Version Runtime,Dependencias,SLA Uptime,Proveedor
-APP-001,Sistema Integrado de Tesorería,Carlos Mendoza <cmendoza@mef.gob.pe>,Java,OpenJDK 17,"Spring Boot, Hibernate, Oracle JDBC",99.9%,Consorcio TI Perú
-APP-002,Ventanilla Única de Trámites,Ana Paredes <aparedes@mef.gob.pe>,TypeScript,Node.js 20,"React, Next.js, Express",99.5%,Stefanini IT Solutions S.A.C.
-APP-003,Módulo de Conciliación Bancaria,Jorge Silva <jsilva@mef.gob.pe>,Python,Python 3.11,"FastAPI, SQLAlchemy, Pandas",99.8%,Indra Soluciones Tecnologías
+Codigo,Nombre Aplicacion,Responsable Tecnico,Lenguaje Principal,Version Runtime,Dependencias,SLA Uptime,Proveedor,Alias
+APP-001,Sistema Integrado de Tesorería,Carlos Mendoza <cmendoza@mef.gob.pe>,Java,OpenJDK 17,"Spring Boot, Hibernate, Oracle JDBC",99.9%,Consorcio TI Perú,Recaudación Digital|recaudacion-digital-service
+APP-002,Ventanilla Única de Trámites,Ana Paredes <aparedes@mef.gob.pe>,TypeScript,Node.js 20,"React, Next.js, Express",99.5%,Stefanini IT Solutions S.A.C.,VUT
+APP-003,Módulo de Conciliación Bancaria,Jorge Silva <jsilva@mef.gob.pe>,Python,Python 3.11,"FastAPI, SQLAlchemy, Pandas",99.8%,Indra Soluciones Tecnologías,Conciliación MEF

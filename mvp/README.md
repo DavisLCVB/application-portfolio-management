@@ -75,6 +75,9 @@ En la realidad operativa:
 
 ### Agente 3: Reconciliador Semántico (`src/reconciliator.py`)
 - **Responsabilidad**: Realiza *Entity Resolution* entre la jerga técnica (`recaudacion-digital-service`) y la terminología legal/administrativa (*"Pasarela de Recaudación Digital de Ingresos Públicos"*).
+- **Ancla en el catálogo existente**: primero carga el catálogo de aplicaciones (`fixtures/catalogs/catalogo_aplicaciones.csv`, columnas de código, nombre y alias) y adjunta a cada aplicación los repositorios y contratos que la referencian. Una hipótesis es *aplicación del catálogo + repositorios vinculados + contratos vinculados*.
+- **Relación N:M**: un contrato puede cubrir varios repositorios y un repositorio varios contratos; se vincula todo par con score ≥ `MIN_LINK_SCORE` (`src/config.py`, 0.5). Un contrato también se vincula a la aplicación a través de un repositorio ya anclado.
+- **"Sin coincidencia" es un resultado válido**: la evidencia que no alcanza el score mínimo con ninguna aplicación del catálogo se reporta como **candidato huérfano** (posible Shadow IT) para revisión humana, junto con las otras evidencias huérfanas con las que se relaciona. Nunca se fuerza una vinculación.
 - **Algoritmo de scoring**:
   $$\text{Score} = (0.50 \times \text{Similitud Nominal}) + (0.35 \times \text{Congruencia Técnica}) + (0.15 \times \text{Consistencia de Dominio})$$
   - *Similitud nominal*: Fusión de Jaccard sobre bolsa de tokens significativos y `difflib.SequenceMatcher`.
@@ -136,9 +139,11 @@ mvp/
 │   │   ├── package.json
 │   │   ├── Dockerfile
 │   │   └── src/routes/atencion.js
+│   ├── catalogs/
+│   │   └── catalogo_aplicaciones.csv  # Catálogo existente (ancla de identidad, con alias)
 │   └── contracts/
 │       ├── tdr-recaudacion-digital.md # TDR Indra Soluciones, SLA 99.9%
-│       └── tdr-portal-ciudadano.md    # TDR Stefanini IT, SLA 99.5%
+│       └── tdr-portal-ciudadano.md    # TDR Stefanini IT, SLA 99.5% (sin app en el catálogo: huérfano)
 ├── tests/
 │   ├── __init__.py
 │   └── test_pipeline.py               # Suite completa de pruebas unitarias
@@ -209,11 +214,12 @@ uv run python run_discovery.py
 # Escaneo multimodal federado sobre un directorio completo
 uv run python run_discovery.py --dir fixtures/
 
-# Escaneo federado cruzando fuentes reales y sintéticas
+# Escaneo federado cruzando fuentes reales y sintéticas, anclado en un catálogo
 uv run python run_discovery.py \
   --repos /home/davis/Dev \
   --contracts contratos_generados \
-  --diagrams fixtures/diagrams
+  --diagrams fixtures/diagrams \
+  --catalog fixtures/catalogs/catalogo_aplicaciones.csv
 
 # Pruebas unitarias completas (100% biblioteca estándar)
 uv run python -m unittest discover -s tests -v
@@ -233,18 +239,22 @@ python3 -m unittest discover -s mvp/tests -v
 El pipeline genera dos artefactos principales de gobernanza:
 
 1. **`output/fact_sheets_draft.json`**:
-   Contiene las hipótesis de Fact Sheets conciliadas con trazabilidad estricta y micro-nudges:
+   Contiene las hipótesis ancladas en el catálogo (con trazabilidad estricta y micro-nudges), los candidatos huérfanos y las aplicaciones del catálogo sin evidencia nueva:
 ```json
-[
+{
+  "hypotheses": [
   {
     "fact_sheet": {
-      "entity_name": "Términos de Referencia: Pasarela de Recaudación Digital de Ingresos Públicos",
+      "entity_name": "Sistema Integrado de Tesorería",
+      "catalog_id": "APP-001",
+      "linked_repos": ["recaudacion-digital-service"],
+      "linked_contracts": ["TDR-2024-MEF-0089"],
       "candidate_type": "Application",
       "technical_stack": "Java (Java 17)",
       "provider": "Indra Soluciones Tecnologías de la Información S.L.U.",
       "sla_uptime": "99.9%",
-      "confidence_score": 0.887,
-      "status": "Draft",
+      "confidence_score": 0.753,
+      "status": "Requires_Verification",
       "primary_citations": [
         {
           "source": "repository_code",
@@ -263,7 +273,18 @@ El pipeline genera dos artefactos principales de gobernanza:
     },
     "micro_nudges": [ ... ]
   }
-]
+  ],
+  "orphan_candidates": [
+    {
+      "evidence_type": "repositorio",
+      "name": "portal-atencion-ciudadano",
+      "best_score": 0.306,
+      "reason": "Sin coincidencia con ninguna aplicación del catálogo (posible Shadow IT).",
+      "related": ["TDR-2023-MEF-0145"]
+    }
+  ],
+  "catalog_without_evidence": ["APP-002", "APP-003"]
+}
 ```
 
 2. **`output/diagram_evidences.json`**:

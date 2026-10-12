@@ -70,6 +70,29 @@ class EvidenciaDiagrama:
 
 
 @dataclass
+class AplicacionCatalogo:
+    """
+    Aplicación ya registrada en el catálogo existente (Excel migrado / CMDB).
+    Es el ancla de identidad del reconciliador: la evidencia nueva se adjunta
+    a estas entradas en lugar de construir entidades desde cero.
+    """
+    code: str
+    name: str
+    aliases: List[str] = field(default_factory=list)
+    technical_owner: str = ""
+    primary_language: str = ""
+    runtime_version: str = ""
+    dependencies: List[str] = field(default_factory=list)
+    sla_uptime: str = ""
+    provider: str = ""
+    citation: str = ""
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Serializa la aplicación del catálogo a un diccionario estándar."""
+        return asdict(self)
+
+
+@dataclass
 class HipotesisFactSheet:
     """
     Representa una hipótesis unificada de Fact Sheet candidata a ser publicada
@@ -87,6 +110,9 @@ class HipotesisFactSheet:
     business_owner: Optional[str] = None
     technical_owner: Optional[str] = None
     description: str = ""
+    catalog_id: Optional[str] = None
+    linked_repos: List[str] = field(default_factory=list)
+    linked_contracts: List[str] = field(default_factory=list)
 
     def to_dict(self) -> Dict[str, Any]:
         """Serializa la hipótesis de Fact Sheet a un diccionario estándar."""
@@ -106,6 +132,7 @@ class CandidatoHuerfano:
     best_score: float
     reason: str
     primary_citations: List[Dict[str, Any]] = field(default_factory=list)
+    related: List[str] = field(default_factory=list)
 
     def to_dict(self) -> Dict[str, Any]:
         """Serializa el candidato huérfano a un diccionario estándar."""
@@ -113,13 +140,27 @@ class CandidatoHuerfano:
 
 
 @dataclass
+class HipotesisAnclada:
+    """
+    Hipótesis anclada en el catálogo: aplicación del catálogo + repositorios
+    vinculados + contratos vinculados (relación N:M).
+    """
+    fact_sheet: "HipotesisFactSheet"
+    technical_evidences: List[EvidenciaTecnica] = field(default_factory=list)
+    contractual_evidences: List[EvidenciaContractual] = field(default_factory=list)
+
+
+@dataclass
 class ResultadoReconciliacion:
     """
     Resultado del Agente 3: vínculos N:M (hipótesis, evidencia técnica,
-    evidencia contractual) y candidatos huérfanos.
+    evidencia contractual), hipótesis ancladas en el catálogo, candidatos
+    huérfanos y aplicaciones del catálogo sin evidencia nueva.
     """
     links: List[Tuple["HipotesisFactSheet", EvidenciaTecnica, EvidenciaContractual]] = field(default_factory=list)
     orphans: List[CandidatoHuerfano] = field(default_factory=list)
+    hypotheses: List[HipotesisAnclada] = field(default_factory=list)
+    catalog_without_evidence: List[str] = field(default_factory=list)
 
 
 @dataclass

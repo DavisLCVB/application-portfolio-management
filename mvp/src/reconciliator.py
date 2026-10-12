@@ -11,13 +11,17 @@ sintetiza una HipotesisFactSheet compatible con LeanIX v4 y principios OCDE.
 import difflib
 import re
 import unicodedata
-from typing import Dict, List, Set
+from pathlib import Path
+from typing import Dict, List, Optional, Set, Tuple, Union
 
 from . import config
+from .connectors.spreadsheet_connector import SpreadsheetConnector, _normalize_text
 from .models import (
+    AplicacionCatalogo,
     CandidatoHuerfano,
     EvidenciaContractual,
     EvidenciaTecnica,
+    HipotesisAnclada,
     HipotesisFactSheet,
     ResultadoReconciliacion,
 )
@@ -200,23 +204,189 @@ class SemanticReconciliator:
 
         return result
 
-    def _tech_orphan(self, tech: EvidenciaTecnica, best_score: float) -> CandidatoHuerfano:
+    def score_catalog_tech(self, app: AplicacionCatalogo, tech: EvidenciaTecnica) -> float:
+        """
+        Score heurístico de vínculo entre una aplicación del catálogo y un repositorio.
+        Fórmula: 75% similitud nominal (nombre o alias) + 25% congruencia de stack.
+        El stack solo no basta para superar el score mínimo: dos sistemas Java no
+        son la misma aplicación.
+        """
+        name_sim = max(self.calculate_name_similarity(tech.repo_name, n) for n in self._catalog_names(app))
+        stack_sim = self._stack_similarity(app, tech)
+        return round((0.75 * name_sim) + (0.25 * stack_sim), 3)
+
+    def score_catalog_contract(self, app: AplicacionCatalogo, contract: EvidenciaContractual) -> float:
+        """
+        Score heurístico de vínculo directo entre una aplicación del catálogo y un contrato.
+        Fórmula: 75% similitud nominal (nombre o alias vs. objeto del contrato) + 25% proveedor.
+        """
+        name_sim = max(self.calculate_name_similarity(n, contract.doc_name) for n in self._catalog_names(app))
+        provider_sim = self._containment(app.provider, contract.provider_name)
+        return round((0.75 * name_sim) + (0.25 * provider_sim), 3)
+
+    def reconcile_with_catalog(
+        self,
+        catalog: List[AplicacionCatalogo],
+        tech_list: List[EvidenciaTecnica],
+        contract_list: List[EvidenciaContractual],
+    ) -> ResultadoReconciliacion:
+        """
+        Ancla la evidencia en el catálogo existente (identidad de la aplicación).
+
+        1. Cada repositorio se vincula a toda aplicación del catálogo con score ≥ mínimo (N:M).
+        2. Cada contrato se vincula a una aplicación de forma directa (nombre/alias/proveedor)
+           o a través de un repositorio ya vinculado a ella; el score transitivo es el
+           menor de los dos vínculos.
+        3. Hipótesis = aplicación del catálogo + repositorios + contratos vinculados.
+           Su score es el del vínculo más débil.
+        4. La evidencia que no coincide con ninguna aplicación es un candidato huérfano;
+           los huérfanos que se vinculan entre sí se reportan como relacionados.
+        """
+        result = ResultadoReconciliacion()
+        anchored_techs: Set[int] = set()
+        anchored_contracts: Set[int] = set()
+        best_tech: Dict[int, float] = {id(t): 0.0 for t in tech_list}
+        best_contract: Dict[int, float] = {id(c): 0.0 for c in contract_list}
+
+        for app in catalog:
+            tech_links: List[Tuple[EvidenciaTecnica, float]] = []
+            for tech in tech_list:
+                score = self.score_catalog_tech(app, tech)
+                best_tech[id(tech)] = max(best_tech[id(tech)], score)
+                if score >= self.min_link_score:
+                    tech_links.append((tech, score))
+
+            contract_links: List[Tuple[EvidenciaContractual, float]] = []
+            for contract in contract_list:
+                score = self.score_catalog_contract(app, contract)
+                for tech, tech_score in tech_links:
+                    score = max(score, min(tech_score, self.compute_confidence(tech, contract)))
+                best_contract[id(contract)] = max(best_contract[id(contract)], score)
+                if score >= self.min_link_score:
+                    contract_links.append((contract, score))
+
+            if not tech_links and not contract_links:
+                result.catalog_without_evidence.append(app.code)
+                continue
+
+            anchored_techs.update(id(t) for t, _ in tech_links)
+            anchored_contracts.update(id(c) for c, _ in contract_links)
+            result.hypotheses.append(self._anchored_hypothesis(app, tech_links, contract_links))
+
+        orphan_techs = [t for t in tech_list if id(t) not in anchored_techs]
+        orphan_contracts = [c for c in contract_list if id(c) not in anchored_contracts]
+        related: Dict[str, List[str]] = {}
+        for _, tech, contract in self.match_all(orphan_techs, orphan_contracts).links:
+            related.setdefault(tech.repo_name, []).append(contract.doc_id)
+            related.setdefault(contract.doc_id, []).append(tech.repo_name)
+
+        reason = "Sin coincidencia con ninguna aplicación del catálogo (posible Shadow IT)."
+        for tech in orphan_techs:
+            orphan = self._tech_orphan(tech, best_tech[id(tech)], reason)
+            orphan.related = related.get(tech.repo_name, [])
+            result.orphans.append(orphan)
+        for contract in orphan_contracts:
+            orphan = self._contract_orphan(contract, best_contract[id(contract)], reason)
+            orphan.related = related.get(contract.doc_id, [])
+            result.orphans.append(orphan)
+
+        return result
+
+    def _anchored_hypothesis(
+        self,
+        app: AplicacionCatalogo,
+        tech_links: List[Tuple[EvidenciaTecnica, float]],
+        contract_links: List[Tuple[EvidenciaContractual, float]],
+    ) -> HipotesisAnclada:
+        """Construye la hipótesis de una aplicación del catálogo con su evidencia vinculada."""
+        scores = [s for _, s in tech_links] + [s for _, s in contract_links]
+        score = round(min(scores), 3)
+        techs = [t for t, _ in sorted(tech_links, key=lambda x: -x[1])]
+        contracts = [c for c, _ in sorted(contract_links, key=lambda x: -x[1])]
+
+        if techs:
+            stack = f"{techs[0].primary_language} ({techs[0].runtime_version})"
+        else:
+            stack = f"{app.primary_language} ({app.runtime_version})"
+        provider = contracts[0].provider_name if contracts else app.provider
+        sla = contracts[0].sla_uptime if contracts else app.sla_uptime
+
+        citations: List[Dict[str, str]] = [{
+            "source": "existing_catalog",
+            "catalog_id": app.code,
+            "attribute": "identity",
+            "citation": app.citation,
+        }]
+        for tech in techs:
+            citations.extend(self._tech_citations(tech))
+        for contract in contracts:
+            citations.extend(self._contract_citations(contract))
+
+        technical_owner = app.technical_owner or (techs[0].top_contributor if techs else None)
+
+        fact_sheet = HipotesisFactSheet(
+            entity_name=app.name,
+            candidate_type="Application",
+            technical_stack=stack,
+            provider=provider,
+            sla_uptime=sla,
+            confidence_score=score,
+            status="Draft" if score >= self.confidence_threshold else "Requires_Verification",
+            primary_citations=citations,
+            business_owner=None,  # Requiere Micro-nudge
+            technical_owner=technical_owner,
+            description=(
+                f"Aplicación del catálogo '{app.code}' con evidencia vinculada: "
+                f"repositorios {[t.repo_name for t in techs]}, contratos {[c.doc_id for c in contracts]}."
+            ),
+            catalog_id=app.code,
+            linked_repos=[t.repo_name for t in techs],
+            linked_contracts=[c.doc_id for c in contracts],
+        )
+        return HipotesisAnclada(fact_sheet, techs, contracts)
+
+    def _catalog_names(self, app: AplicacionCatalogo) -> List[str]:
+        """Nombre oficial y alias de una aplicación del catálogo."""
+        return [app.name] + list(app.aliases)
+
+    def _stack_similarity(self, app: AplicacionCatalogo, tech: EvidenciaTecnica) -> float:
+        """Congruencia entre el stack registrado en el catálogo y el detectado en el código."""
+        if not app.primary_language:
+            return 0.5
+        language = app.primary_language.lower()
+        detected = tech.primary_language.lower()
+        language_sim = 1.0 if language in detected or detected in language else 0.0
+        app_version = re.search(r"\d+", app.runtime_version or "")
+        tech_version = re.search(r"\d+", tech.runtime_version or "")
+        version_sim = 1.0 if app_version and tech_version and app_version.group() == tech_version.group() else 0.0
+        return (0.5 * language_sim) + (0.5 * version_sim)
+
+    def _containment(self, reference: str, text: str) -> float:
+        """Proporción de tokens significativos de `reference` presentes en `text`."""
+        ref_tokens = self._tokenize(reference or "")
+        if not ref_tokens:
+            return 0.0
+        return len(ref_tokens & self._tokenize(text or "")) / len(ref_tokens)
+
+    def _tech_orphan(self, tech: EvidenciaTecnica, best_score: float, reason: Optional[str] = None) -> CandidatoHuerfano:
         """Construye un candidato huérfano a partir de un repositorio sin vínculos."""
         return CandidatoHuerfano(
             evidence_type="repositorio",
             name=tech.repo_name,
             best_score=round(best_score, 3),
-            reason=f"Ningún vínculo alcanza el score mínimo {self.min_link_score:.2f}.",
+            reason=reason or f"Ningún vínculo alcanza el score mínimo {self.min_link_score:.2f}.",
             primary_citations=self._tech_citations(tech),
         )
 
-    def _contract_orphan(self, contract: EvidenciaContractual, best_score: float) -> CandidatoHuerfano:
+    def _contract_orphan(
+        self, contract: EvidenciaContractual, best_score: float, reason: Optional[str] = None
+    ) -> CandidatoHuerfano:
         """Construye un candidato huérfano a partir de un contrato sin vínculos."""
         return CandidatoHuerfano(
             evidence_type="contrato",
             name=contract.doc_id,
             best_score=round(best_score, 3),
-            reason=f"Ningún vínculo alcanza el score mínimo {self.min_link_score:.2f}.",
+            reason=reason or f"Ningún vínculo alcanza el score mínimo {self.min_link_score:.2f}.",
             primary_citations=self._contract_citations(contract),
         )
 
@@ -253,3 +423,62 @@ class SemanticReconciliator:
         clean = re.sub(r"[^a-zA-Z0-9\s]", " ", normalized.lower())
         tokens = [t.strip() for t in clean.split() if len(t.strip()) > 2]
         return {t for t in tokens if t not in self.STOPWORDS}
+
+
+_CATALOG_COLUMNS: List[Tuple[str, Tuple[str, ...]]] = [
+    ("code", ("codigo", "code")),
+    ("aliases", ("alias",)),
+    ("name", ("nombre", "aplicacion", "sistema")),
+    ("technical_owner", ("responsable", "propietario", "owner")),
+    ("primary_language", ("lenguaje", "tecnologia", "stack")),
+    ("runtime_version", ("runtime", "version")),
+    ("dependencies", ("dependencia", "libreria")),
+    ("sla_uptime", ("sla", "uptime", "disponibilidad")),
+    ("provider", ("proveedor", "vendor", "contratista")),
+]
+
+
+def load_catalog(path: Union[str, Path]) -> List[AplicacionCatalogo]:
+    """
+    Carga el catálogo existente de aplicaciones (.csv o .xlsx) como ancla de identidad.
+    Reutiliza los lectores del SpreadsheetConnector; el alias admite varios valores
+    separados por '|'.
+    """
+    p = Path(path)
+    connector = SpreadsheetConnector()
+    rows = connector._read_csv(p) if p.suffix.lower() == ".csv" else connector._read_xlsx(p)[0]
+    if not rows:
+        return []
+
+    mapping: Dict[str, int] = {}
+    for idx, header in enumerate(rows[0]):
+        norm = _normalize_text(header)
+        for attr, keywords in _CATALOG_COLUMNS:
+            matches = any(k in norm for k in keywords) or (attr == "code" and norm == "id")
+            if matches and attr not in mapping:
+                mapping[attr] = idx
+                break
+
+    def cell(row: List[str], attr: str) -> str:
+        idx = mapping.get(attr)
+        return row[idx].strip() if idx is not None and idx < len(row) else ""
+
+    catalog: List[AplicacionCatalogo] = []
+    for offset, row in enumerate(rows[1:]):
+        name = cell(row, "name")
+        if not name:
+            continue
+        row_num = offset + 2
+        catalog.append(AplicacionCatalogo(
+            code=cell(row, "code") or f"{p.stem}-R{row_num}",
+            name=name,
+            aliases=[a.strip() for a in cell(row, "aliases").split("|") if a.strip()],
+            technical_owner=cell(row, "technical_owner"),
+            primary_language=cell(row, "primary_language"),
+            runtime_version=cell(row, "runtime_version"),
+            dependencies=[d.strip() for d in re.split(r"[,;|]", cell(row, "dependencies")) if d.strip()],
+            sla_uptime=cell(row, "sla_uptime"),
+            provider=cell(row, "provider"),
+            citation=f"{p.name}#R{row_num}",
+        ))
+    return catalog
