@@ -5,7 +5,7 @@ description: Fuentes autoritativas, procedencia por atributo y flujo de registro
 
 ## Enfoque
 
-El APM sigue un modelo **híbrido**: es registro maestro propio para los datos de arquitectura y estrategia, e **ingiere** el resto desde sus fuentes autoritativas. El registro es **descentralizado** — los equipos de aplicación mantienen sus propios Fact Sheets — pero los cambios a atributos con impacto estratégico pasan por la aprobación de **Gobierno de Arquitectura**. Esta página complementa [Modelo de datos (metamodelo)](./modelo-datos/): allí se definen las entidades y atributos; aquí, quién es dueño de cada dato y cómo se aprueba un cambio.
+El APM sigue un modelo **híbrido**: es registro maestro propio para los datos de arquitectura y estrategia, e **ingiere** el resto desde sus fuentes autoritativas. El registro es **descentralizado** — los equipos de aplicación mantienen sus propios Fact Sheets — pero los cambios a atributos con impacto estratégico pasan por la aprobación de **Gobierno de Arquitectura**. Esta página complementa [Modelo de datos (metamodelo)](../modelo-datos/): allí se definen las entidades y atributos; aquí, quién es dueño de cada dato y cómo se aprueba un cambio.
 
 ## Fuentes y autoridad
 
@@ -63,7 +63,7 @@ Un Fact Sheet nuevo, o una propuesta de cambio sobre uno existente, recorre esto
 
 ### Reglas por clase de atributo
 
-Las tres clases de atributo definidas en [Modelo de datos › Atributos](./modelo-datos/#clasificación-de-gobierno-de-los-atributos-propuesta) determinan cómo se aplica un cambio:
+Las tres clases de atributo definidas en [Modelo de datos › Atributos](../modelo-datos/#clasificación-de-gobierno-de-los-atributos-propuesta) determinan cómo se aplica un cambio:
 
 - **Gobernado**: un cambio sobre un atributo gobernado de un Fact Sheet **ya publicado** genera una **solicitud de cambio**. El Fact Sheet publicado sigue vigente y visible tal cual está hasta que Gobierno de Arquitectura aprueba la solicitud; solo entonces se actualiza la versión publicada. El alta y la baja de Fact Sheets también son cambios gobernados y siguen el mismo flujo de aprobación.
 - **Operativo**: el responsable del Fact Sheet lo edita directamente, sin pasar por revisión previa. El cambio queda auditado (quién, cuándo, valor anterior) para trazabilidad, pero no bloquea la publicación.
@@ -91,7 +91,7 @@ El flujo de aprobación de esta página es distinto y complementario: la aprobac
 Pasos propuestos para la migración única del Excel al APM:
 
 1. **Perfilado y limpieza**: revisar los archivos Excel actuales de aplicaciones, integraciones y tecnologías; detectar columnas vacías, formatos inconsistentes y valores fuera de catálogo.
-2. **Mapeo columna → atributo del metamodelo**: cada columna del Excel se mapea a un atributo del modelo de datos, usando las tablas de [Modelo de datos › Atributos específicos por tipo](./modelo-datos/#atributos-específicos-por-tipo) como referencia (esas tablas ya indican, para cada atributo, el campo orientativo de [Catálogos del portafolio](./catalogos/) del que proviene).
+2. **Mapeo columna → atributo del metamodelo**: cada columna del Excel se mapea a un atributo del modelo de datos, usando las tablas de [Modelo de datos › Atributos específicos por tipo](../modelo-datos/#atributos-específicos-por-tipo) como referencia (esas tablas ya indican, para cada atributo, el campo orientativo de [Catálogos del portafolio](../catalogos/) del que proviene).
 3. **Reconciliación de duplicados e identidad**: antes de cargar, agrupar filas que representen el mismo Fact Sheet en distintas fuentes o pestañas, usando alias y códigos existentes (ver [Identidad y reconciliación](#identidad-y-reconciliación-con-cmdb)).
 4. **Carga inicial**: dos opciones, con distinto costo y riesgo:
 
@@ -105,9 +105,9 @@ Pasos propuestos para la migración única del Excel al APM:
 
 ## Identidad y reconciliación con CMDB
 
-- Cada Fact Sheet tiene un **identificador estable propio del APM** (UUID, ver [Modelo de datos › Atributos base](./modelo-datos/#atributos-base-comunes-a-todo-fact-sheet)), que no depende de ningún sistema externo.
+- Cada Fact Sheet tiene un **identificador estable propio del APM** (UUID, ver [Modelo de datos › Atributos base](../modelo-datos/#atributos-base-comunes-a-todo-fact-sheet)), que no depende de ningún sistema externo.
 - Además, guarda **claves externas** hacia los sistemas de origen: alias/códigos de reconciliación (para el Excel migrado) y el **CI de CMDB** (para IT Components de infraestructura).
 - **Reglas de matching** (propuesta, a validar con el equipo de CMDB): cruce por CI de CMDB cuando existe; si no, por alias/código normalizado; si no, por nombre normalizado + tipo de Fact Sheet como último recurso, siempre marcado de menor confianza.
 - **Conflictos** (por ejemplo, dos CIs de CMDB que podrían corresponder a la misma aplicación, o un alias que matchea más de un Fact Sheet) no se resuelven automáticamente: se envían a una **cola de revisión humana** para que un arquitecto decida la reconciliación correcta.
 
-Páginas relacionadas: [Modelo de datos (metamodelo)](./modelo-datos/), [Catálogos del portafolio](./catalogos/), [IA agéntica y funcionalidades](../ia-agentes/).
+Páginas relacionadas: [Modelo de datos (metamodelo)](../modelo-datos/), [Catálogos del portafolio](../catalogos/), [IA agéntica y funcionalidades](../ia-agentes/).

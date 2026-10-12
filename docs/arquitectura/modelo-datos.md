@@ -7,7 +7,7 @@ description: Metamodelo conceptual del APM, basado en SAP LeanIX Meta Model v4 y
 
 El modelo de datos del APM toma como base el **SAP LeanIX Meta Model v4** (tipos de *Fact Sheet* y sus relaciones) y lo expresa en notación **ArchiMate 3.2**, consistente con el resto de diagramas de este portal.
 
-El APM es un **registro maestro híbrido**: es dueño y fuente de verdad de la estrategia (mantener/invertir/contener/retirar), la criticidad, las capacidades de negocio, las relaciones entre elementos y las decisiones de arquitectura. El resto de los datos (inventario técnico, versiones, vulnerabilidades, etc.) se **ingiere de fuentes externas** con un proceso de reconciliación y procedencia por atributo (ver [Atributos](#atributos) más abajo y [Gobierno y procedencia de datos](./gobierno-datos/)).
+El APM es un **registro maestro híbrido**: es dueño y fuente de verdad de la estrategia (mantener/invertir/contener/retirar), la criticidad, las capacidades de negocio, las relaciones entre elementos y las decisiones de arquitectura. El resto de los datos (inventario técnico, versiones, vulnerabilidades, etc.) se **ingiere de fuentes externas** con un proceso de reconciliación y procedencia por atributo (ver [Atributos](#atributos) más abajo y [Gobierno y procedencia de datos](../gobierno-datos/)).
 
 > **Nota importante:** SAP LeanIX **no publica un mapeo oficial** de tipos de Fact Sheet a elementos ArchiMate. La correspondencia presentada en esta página es una **propuesta de este proyecto**, construida a partir de la semántica de cada tipo de Fact Sheet y las definiciones del estándar ArchiMate 3.2. Debe validarse contra un workspace real de LeanIX o su documentación oficial antes de tomarse como definitiva.
 
@@ -78,16 +78,16 @@ Estos aspectos transversales de LeanIX se confirmaron contra documentación ofic
 - **Quality Seal**: sello de aprobación otorgado por el rol Responsible/Accountable de un Fact Sheet; se rompe automáticamente si otra persona edita el Fact Sheet después del sello.
 - **Completion score**: porcentaje de completitud de un Fact Sheet, configurable por tipo y por campo.
 
-El conjunto completo de atributos por entidad, sus escalas y su clasificación de gobierno se definen en [Atributos](#atributos), más abajo. El modelo de procedencia y fuente autoritativa por atributo se define en [Gobierno y procedencia de datos](./gobierno-datos/).
+El conjunto completo de atributos por entidad, sus escalas y su clasificación de gobierno se definen en [Atributos](#atributos), más abajo. El modelo de procedencia y fuente autoritativa por atributo se define en [Gobierno y procedencia de datos](../gobierno-datos/).
 
 ## Extensiones propias del APM
 
 Estas capacidades están fuera del metamodelo estándar de LeanIX:
 
-- Vulnerabilidades (CVE) vinculadas a la versión específica de un IT Component (atributos en [Atributos › IT Component](#it-component); procedencia en [Gobierno y procedencia de datos](./gobierno-datos/)).
+- Vulnerabilidades (CVE) vinculadas a la versión específica de un IT Component (atributos en [Atributos › IT Component](#it-component); procedencia en [Gobierno y procedencia de datos](../gobierno-datos/)).
 - Calendario de fin de vida (EOL) y fin de soporte (EOS).
 - Licencias y su estado.
-- Procedencia y fuente autoritativa por atributo (qué sistema es dueño de cada dato y cómo se reconcilia) — ver [Gobierno y procedencia de datos](./gobierno-datos/).
+- Procedencia y fuente autoritativa por atributo (qué sistema es dueño de cada dato y cómo se reconcilia) — ver [Gobierno y procedencia de datos](../gobierno-datos/).
 
 ## Atributos
 
@@ -99,7 +99,7 @@ Cada atributo se clasifica en una de tres categorías, para saber quién puede c
 
 | Clase | Quién edita | Control | Ejemplos |
 |---|---|---|---|
-| **Gobernado** | Equipo de aplicación propone el cambio | Requiere aprobación de Gobierno de Arquitectura antes de publicarse (ver [flujo de registro](./gobierno-datos/#flujo-de-registro-descentralizado)) | Criticidad de negocio, TIME, ciclo de vida, relaciones con capacidades de negocio, responsable Accountable, alta/baja de Fact Sheets |
+| **Gobernado** | Equipo de aplicación propone el cambio | Requiere aprobación de Gobierno de Arquitectura antes de publicarse (ver [flujo de registro](../gobierno-datos/#flujo-de-registro-descentralizado)) | Criticidad de negocio, TIME, ciclo de vida, relaciones con capacidades de negocio, responsable Accountable, alta/baja de Fact Sheets |
 | **Operativo** | Responsable del Fact Sheet | Se edita directamente, sin aprobación previa; queda auditado (quién, cuándo, valor anterior) | Descripción, datos de contacto, URL, etiquetas, campos de detalle técnico sin impacto estratégico |
 | **Ingerido** | Nadie en el APM (solo lectura) | Se sincroniza desde la fuente autoritativa (CMDB o feeds externos); un usuario no puede editarlo a mano | Inventario de infraestructura desde CMDB, CVE y fechas EOL/EOS desde feeds externos |
 
@@ -122,13 +122,13 @@ Dos matices sobre "ingerido":
 | Responsable último (Accountable) | Persona que responde por el Fact Sheet ante Gobierno de Arquitectura | Gobernado |
 | Observadores | Personas que solo reciben notificaciones | Operativo |
 | Etiquetas | Etiquetas libres de clasificación | Operativo |
-| Estado de gobierno | `Borrador` / `En revisión` / `Aprobado` / `Rechazado` / `Devuelto` (ver [flujo de registro](./gobierno-datos/#flujo-de-registro-descentralizado)) | Ingerido (calculado por el flujo de aprobación) |
+| Estado de gobierno | `Borrador` / `En revisión` / `Aprobado` / `Rechazado` / `Devuelto` (ver [flujo de registro](../gobierno-datos/#flujo-de-registro-descentralizado)) | Ingerido (calculado por el flujo de aprobación) |
 | Completitud | Porcentaje de campos obligatorios completos (Completion score) | Ingerido (calculado) |
 | Fecha de creación / actualización | Metadatos de auditoría | Ingerido (calculado) |
 
 ### Atributos específicos por tipo
 
-Cada tabla incluye, cuando aplica, el campo orientativo de [Catálogos del portafolio](./catalogos/) donde hoy vive ese dato en Excel/CMDB.
+Cada tabla incluye, cuando aplica, el campo orientativo de [Catálogos del portafolio](../catalogos/) donde hoy vive ese dato en Excel/CMDB.
 
 #### Application
 
@@ -138,7 +138,7 @@ Cada tabla incluye, cuando aplica, el campo orientativo de [Catálogos del porta
 | Functional fit | Gobernado | — (nuevo; insumo de TIME) |
 | Technical fit | Gobernado | — (nuevo; insumo de TIME) |
 | TIME (derivado) | Ingerido (calculado de functional × technical fit) | Catálogo Aplicaciones → Estrategia (mantener/invertir/contener/retirar) |
-| Alias / códigos de reconciliación | Operativo (clave para identidad, ver [Identidad y reconciliación](./gobierno-datos/#identidad-y-reconciliación-con-cmdb)) | — (nuevo; no existe en Excel hoy) |
+| Alias / códigos de reconciliación | Operativo (clave para identidad, ver [Identidad y reconciliación](../gobierno-datos/#identidad-y-reconciliación-con-cmdb)) | — (nuevo; no existe en Excel hoy) |
 | URL | Operativo | — (nuevo) |
 | Usuarios estimados | Operativo | Catálogo Aplicaciones → Stack: usuarios |
 | Capacidad de negocio soportada (relación) | Gobernado | Catálogo Aplicaciones → Clasificación: capacidad de negocio |
@@ -165,7 +165,7 @@ Cada tabla incluye, cuando aplica, el campo orientativo de [Catálogos del porta
 | Fecha EOL / EOS | Ingerido (feed externo — propuesta: endoflife.date, a confirmar) | Catálogo Tecnologías → fechas EOL/EOS |
 | Licencia y su estado | Operativo | Catálogo Tecnologías → licencias y su estado |
 | Identificador CPE / purl (para cruzar CVEs) | Operativo | — (nuevo; necesario para correlación de vulnerabilidades) |
-| CI de CMDB (clave externa) | Ingerido (solo lectura, viene de CMDB) | — (nuevo; ver [Identidad y reconciliación](./gobierno-datos/#identidad-y-reconciliación-con-cmdb)) |
+| CI de CMDB (clave externa) | Ingerido (solo lectura, viene de CMDB) | — (nuevo; ver [Identidad y reconciliación](../gobierno-datos/#identidad-y-reconciliación-con-cmdb)) |
 
 #### Data Object
 
@@ -225,4 +225,4 @@ Estos cuatro tipos reutilizan los atributos base y agregan, como mínimo:
 
 **Límite de la investigación:** la lista completa de tipos y subtipos del Meta Model v4, así como las escalas exactas de criticidad y de *fit* (functional/technical), no pudieron verificarse contra fuentes primarias porque la documentación de LeanIX se renderiza con JavaScript y no fue accesible para extracción automática en esta iteración. Estos puntos deben confirmarse contra un workspace real de LeanIX o su documentación oficial antes de considerarse definitivos.
 
-Páginas relacionadas: [Catálogos del portafolio](./catalogos/), [Gobierno y procedencia de datos](./gobierno-datos/).
+Páginas relacionadas: [Catálogos del portafolio](../catalogos/), [Gobierno y procedencia de datos](../gobierno-datos/).

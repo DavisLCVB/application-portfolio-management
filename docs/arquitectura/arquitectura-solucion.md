@@ -4,7 +4,7 @@ description: Propuesta de despliegue del APM en Azure, capa de IA agéntica, rec
 ---
 
 :::note[Propuesta]
-Esta página describe una **arquitectura propuesta**, no una implementación existente. Los servicios y modelos nombrados son candidatos sujetos a validación (marcados "por validar") y a las decisiones de la fase correspondiente del [roadmap](./roadmap/).
+Esta página describe una **arquitectura propuesta**, no una implementación existente. Los servicios y modelos nombrados son candidatos sujetos a validación (marcados "por validar") y a las decisiones de la fase correspondiente del [roadmap](../roadmap/).
 :::
 
 ## Vista rápida
@@ -51,7 +51,7 @@ Agente sugiere ──► Borrador ──► Gobierno de Arquitectura aprueba ─
 
 ## Funcionalidades
 
-Cómo responde el sistema en las funcionalidades principales. Cada flujo pasa por la API del APM y respeta los permisos de quien consulta. La lista completa está en [IA agéntica y funcionalidades](./ia-agentes/).
+Cómo responde el sistema en las funcionalidades principales. Cada flujo pasa por la API del APM y respeta los permisos de quien consulta. La lista completa está en [IA agéntica y funcionalidades](../ia-agentes/).
 
 ### Chat del portafolio
 
@@ -94,7 +94,7 @@ _Ejemplo: «Genera la vista de contexto de la aplicación Pagos»_
 | Capa | Componente | Responsabilidad |
 |---|---|---|
 | Aplicación | **Azure App Service** | Web y API del APM (OpenAPI). Única vía de lectura/escritura para personas, agentes e ingesta |
-| Datos | **Azure SQL Database** | Registro maestro: Fact Sheets, relaciones, procedencia por atributo, estados del flujo de aprobación y bitácora de auditoría (ver [Modelo de datos](./modelo-datos/) y [Gobierno de datos](./gobierno-datos/)) |
+| Datos | **Azure SQL Database** | Registro maestro: Fact Sheets, relaciones, procedencia por atributo, estados del flujo de aprobación y bitácora de auditoría (ver [Modelo de datos](../modelo-datos/) y [Gobierno de datos](../gobierno-datos/)) |
 | Identidad | **Entra ID** | OIDC/SSO, RBAC/ABAC; identidades administradas (*managed identity* o *service principal*) por agente |
 | Secretos | **Key Vault** | Secretos y claves; sin credenciales en el catálogo |
 | Red | *Private endpoints* / integración con VNet | Los servicios de datos e IA no se exponen a Internet |
@@ -111,7 +111,7 @@ _Ejemplo: «Genera la vista de contexto de la aplicación Pagos»_
 
 - Los agentes **solo actúan a través de la API del APM** (herramientas OpenAPI); nunca escriben directo en la base de datos.
 - Cada agente tiene **identidad propia** y **mínimo privilegio**: solo las herramientas y los alcances que su función requiere.
-- Toda escritura crea un **Borrador** con procedencia y confianza, que entra a la bandeja de aprobación (estados y roles en [Gobierno de datos](./gobierno-datos/#flujo-de-registro-descentralizado)). Ningún agente publica por sí mismo.
+- Toda escritura crea un **Borrador** con procedencia y confianza, que entra a la bandeja de aprobación (estados y roles en [Gobierno de datos](../gobierno-datos/#flujo-de-registro-descentralizado)). Ningún agente publica por sí mismo.
 - Un agente opera con los permisos del usuario que lo invoca o con su propia identidad de menor alcance, nunca con la unión de ambos.
 
 ### Modelos por rol
@@ -135,7 +135,7 @@ El catálogo de modelos cambia con frecuencia ([Microsoft Learn: modelos de Azur
 
 | Fuente | Mecanismo | Fase |
 |---|---|---|
-| Excel (migración única) | Carga por lotes como `Borrador`; ver [Migración del Excel](./gobierno-datos/#migración-del-excel) | F1 |
+| Excel (migración única) | Carga por lotes como `Borrador`; ver [Migración del Excel](../gobierno-datos/#migración-del-excel) | F1 |
 | CMDB | Sincronización de solo lectura, por clave de CI | F3 |
 | NVD / OSV (CVE) y endoflife.date (EOL) | Función programada; propuesta por validar | F2 |
 | SBOM y repositorios | Descubrimiento continuo | F3 |
