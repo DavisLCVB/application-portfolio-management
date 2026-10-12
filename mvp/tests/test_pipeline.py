@@ -5,7 +5,7 @@ Cubre:
 - Modelos de datos canónicos y serialización.
 - Extractor Code-to-Catalog (Maven, npm, Dockerfile, endpoints, git).
 - Minero documental Dark Data Miner (TDRs, regex estructurado, cláusulas).
-- Reconciliador semántico (scoring probabilístico, similitud difusa, LeanIX Fact Sheets).
+- Reconciliador semántico (score heurístico, similitud difusa, LeanIX Fact Sheets).
 - Generador de micro-nudges (Adaptive Cards, acciones en 1 clic).
 - Pipeline end-to-end y generación de artefactos JSON.
 """
@@ -164,7 +164,7 @@ class TestSemanticReconciliator(unittest.TestCase):
     """Pruebas del Agente Reconciliador Semántico."""
 
     def setUp(self):
-        self.reconciliator = SemanticReconciliator(confidence_threshold=0.85)
+        self.reconciliator = SemanticReconciliator(review_threshold=0.85)
         extractor = CodeToCatalogExtractor()
         miner = ContractMiner()
 
@@ -215,7 +215,7 @@ class TestNudgeGenerator(unittest.TestCase):
     """Pruebas del Agente Micro-Nudge."""
 
     def setUp(self):
-        self.generator = NudgeGenerator(confidence_threshold=0.85)
+        self.generator = NudgeGenerator(review_threshold=0.85)
 
     def test_generates_nudge_for_missing_business_owner(self):
         hipotesis = HipotesisFactSheet(

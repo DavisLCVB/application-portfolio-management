@@ -5,9 +5,11 @@ Cubre:
 - Vinculación N:M entre evidencias técnicas y contractuales con score mínimo.
 - "Sin coincidencia" como resultado válido (candidato huérfano).
 - Anclaje en el catálogo existente como identidad de la aplicación.
+- Terminología de score heurístico, umbral de revisión único y dueño técnico sugerido.
 """
 
 import dataclasses
+import re
 import sys
 import unittest
 from pathlib import Path
@@ -20,6 +22,7 @@ from src import config
 from src.code_to_catalog import CodeToCatalogExtractor
 from src.contract_miner import ContractMiner
 from src.models import AplicacionCatalogo, CandidatoHuerfano, ResultadoReconciliacion
+from src.nudge_generator import NudgeGenerator
 from src.reconciliator import SemanticReconciliator, load_catalog
 import run_discovery
 
@@ -108,7 +111,7 @@ class TestNToMReconciliation(unittest.TestCase):
 
     def test_min_link_score_is_configurable_and_below_review_threshold(self):
         self.assertEqual(self.reconciliator.min_link_score, config.MIN_LINK_SCORE)
-        self.assertLess(config.MIN_LINK_SCORE, self.reconciliator.confidence_threshold)
+        self.assertLess(config.MIN_LINK_SCORE, self.reconciliator.review_threshold)
         strict = SemanticReconciliator(min_link_score=0.99)
         result = strict.match_all([self.tech_recaudacion], [self.contract_recaudacion])
         self.assertEqual(result.links, [])
@@ -195,6 +198,62 @@ class TestCatalogAnchoring(unittest.TestCase):
         self.assertIn("portal-atencion-ciudadano", orphan_names)
         # Las filas del catálogo no deben tratarse como evidencia técnica huérfana
         self.assertNotIn("Ventanilla Única de Trámites", orphan_names)
+
+
+class TestScoreTerminologyAndThreshold(unittest.TestCase):
+    """Score heurístico (no probabilidad), umbral único y dueño técnico sugerido."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.tech = CodeToCatalogExtractor().extract(str(FIXTURES_DIR / "repo-recaudacion"))
+        cls.contract = ContractMiner().extract(str(FIXTURES_DIR / "contracts" / "tdr-recaudacion-digital.md"))
+
+    def test_no_probability_terminology(self):
+        files = sorted((MVP_DIR / "src").rglob("*.py")) + [MVP_DIR / "run_discovery.py", MVP_DIR / "README.md"]
+        offenders = [
+            f.name for f in files
+            if re.search(r"probabil", f.read_text(encoding="utf-8"), re.IGNORECASE)
+        ]
+        self.assertEqual(offenders, [])
+
+    def test_single_review_threshold_shared_by_agents(self):
+        self.assertEqual(config.REVIEW_THRESHOLD, 0.85)
+        self.assertEqual(SemanticReconciliator().review_threshold, config.REVIEW_THRESHOLD)
+        self.assertEqual(NudgeGenerator().review_threshold, config.REVIEW_THRESHOLD)
+        for name in ("src/reconciliator.py", "src/nudge_generator.py", "run_discovery.py"):
+            source = (MVP_DIR / name).read_text(encoding="utf-8")
+            self.assertNotRegex(source, r"0\.85", f"Umbral duplicado como literal en {name}")
+
+    def test_pipeline_applies_one_threshold_to_both_agents(self):
+        output = run_discovery.run_pipeline(review_threshold=0.5)
+        fs = output["fact_sheets"][0]
+        self.assertEqual(fs.status, "Draft")
+        self.assertFalse(any("Correlación" in n.question_title for n in output["nudges"]))
+
+    def test_commit_inferred_owner_is_a_suggestion_with_confirmation_nudge(self):
+        hipotesis = SemanticReconciliator().reconcile_pair(self.tech, self.contract)
+        self.assertEqual(hipotesis.technical_owner, self.tech.top_contributor)
+        self.assertTrue(hipotesis.technical_owner_suggested)
+
+        for status in ("Draft", "Requires_Verification"):
+            hipotesis.status = status
+            nudges = NudgeGenerator().evaluate_and_generate(hipotesis, self.tech, self.contract)
+            owner_nudge = next((n for n in nudges if "Dueño Técnico" in n.question_title), None)
+            self.assertIsNotNone(owner_nudge, f"Sin nudge de confirmación con estado {status}")
+            self.assertIn("sugerido", owner_nudge.proposed_value)
+
+    def test_catalog_owner_is_not_a_suggestion(self):
+        catalog = load_catalog(CATALOG_CSV)
+        result = SemanticReconciliator().reconcile_with_catalog(catalog, [self.tech], [self.contract])
+        fs = result.hypotheses[0].fact_sheet
+        self.assertIn("cmendoza@mef.gob.pe", fs.technical_owner)
+        self.assertFalse(fs.technical_owner_suggested)
+
+        without_owner = [dataclasses.replace(catalog[0], technical_owner="")]
+        result = SemanticReconciliator().reconcile_with_catalog(without_owner, [self.tech], [self.contract])
+        fs = result.hypotheses[0].fact_sheet
+        self.assertEqual(fs.technical_owner, self.tech.top_contributor)
+        self.assertTrue(fs.technical_owner_suggested)
 
 
 if __name__ == "__main__":

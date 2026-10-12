@@ -4,8 +4,9 @@ Reconciliador Semántico (Semantic Reconciliator).
 Este módulo implementa el Agente 3 del pipeline de descubrimiento continuo:
 resuelve la brecha ontológica y nominal entre los artefactos técnicos (repositorios,
 código, manifiestos) y los documentos legales/contractuales (Dark Data: TDRs).
-Calcula un puntaje probabilístico de confianza multivariable (0.0 a 1.0) y
-sintetiza una HipotesisFactSheet compatible con LeanIX v4 y principios OCDE.
+Calcula un score heurístico de confianza multivariable (0.0 a 1.0, aún sin calibrar
+contra un conjunto verificado de aplicaciones) y sintetiza una
+HipotesisFactSheet compatible con LeanIX v4 y principios OCDE.
 """
 
 import difflib
@@ -39,8 +40,12 @@ class SemanticReconciliator:
         "digital", "web", "app", "aplicacion", "portal", "modulo", "mef", "terminos", "referencia"
     }
 
-    def __init__(self, confidence_threshold: float = 0.85, min_link_score: float = config.MIN_LINK_SCORE):
-        self.confidence_threshold = confidence_threshold
+    def __init__(
+        self,
+        review_threshold: float = config.REVIEW_THRESHOLD,
+        min_link_score: float = config.MIN_LINK_SCORE,
+    ):
+        self.review_threshold = review_threshold
         self.min_link_score = min_link_score
 
     def calculate_name_similarity(self, tech_name: str, contract_name: str) -> float:
@@ -125,7 +130,7 @@ class SemanticReconciliator:
 
     def compute_confidence(self, tech: EvidenciaTecnica, contract: EvidenciaContractual) -> float:
         """
-        Calcula el puntaje de confianza probabilístico ponderado multivariable.
+        Calcula el score heurístico de confianza ponderado multivariable.
         Formula: 50% similitud nominal + 35% congruencia técnica + 15% dominio.
         """
         name_sim = self.calculate_name_similarity(tech.repo_name, contract.doc_name)
@@ -148,7 +153,7 @@ class SemanticReconciliator:
         else:
             entity_name = tech.repo_name.replace("-", " ").title()
 
-        status = "Draft" if score >= self.confidence_threshold else "Requires_Verification"
+        status = "Draft" if score >= self.review_threshold else "Requires_Verification"
 
         # Consolidar citas primarias (Principio OCDE 1.3)
         primary_citations = self._tech_citations(tech) + self._contract_citations(contract)
@@ -164,6 +169,7 @@ class SemanticReconciliator:
             primary_citations=primary_citations,
             business_owner=None,  # Requiere Micro-nudge
             technical_owner=tech.top_contributor,
+            technical_owner_suggested=True,  # Inferido de commits: solo sugerencia
             description=f"Hipótesis generada automáticamente correlacionando el repositorio '{tech.repo_name}' con el documento '{contract.doc_id}'.",
         )
 
@@ -322,7 +328,9 @@ class SemanticReconciliator:
         for contract in contracts:
             citations.extend(self._contract_citations(contract))
 
+        # El responsable registrado en el catálogo prevalece; el inferido de commits es sugerencia
         technical_owner = app.technical_owner or (techs[0].top_contributor if techs else None)
+        owner_suggested = not app.technical_owner and technical_owner is not None
 
         fact_sheet = HipotesisFactSheet(
             entity_name=app.name,
@@ -331,10 +339,11 @@ class SemanticReconciliator:
             provider=provider,
             sla_uptime=sla,
             confidence_score=score,
-            status="Draft" if score >= self.confidence_threshold else "Requires_Verification",
+            status="Draft" if score >= self.review_threshold else "Requires_Verification",
             primary_citations=citations,
             business_owner=None,  # Requiere Micro-nudge
             technical_owner=technical_owner,
+            technical_owner_suggested=owner_suggested,
             description=(
                 f"Aplicación del catálogo '{app.code}' con evidencia vinculada: "
                 f"repositorios {[t.repo_name for t in techs]}, contratos {[c.doc_id for c in contracts]}."

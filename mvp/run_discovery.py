@@ -6,7 +6,7 @@ Ejecuta el flujo completo de descubrimiento multi-agente federado:
 1. Agente 1: Extracción técnica sobre repositorios (Code-to-Catalog).
 2. Agente 2: Minería de documentos y contratos (Dark Data Miner).
 3. Conectores Multimodales: Ingesta de diagramas (PlantUML, Archi, draw.io) y catálogos.
-4. Agente 3: Reconciliación semántica y scoring (Semantic Reconciliator).
+4. Agente 3: Reconciliación anclada en el catálogo y score heurístico (Semantic Reconciliator).
 5. Agente 4: Generación de micro-nudges proactivos (Micro-Nudge Generator).
 6. Persistencia de borradores de Fact Sheets, micro-nudges y evidencias de diagramas.
 7. Renderizado de tablas resumen en consola.
@@ -23,6 +23,7 @@ from typing import Any, Dict, List, Optional, Union
 BASE_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(BASE_DIR))
 
+from src import config
 from src.code_to_catalog import CodeToCatalogExtractor
 from src.connectors import ConnectorRegistry, DiagramConnector
 from src.contract_miner import ContractMiner
@@ -47,6 +48,7 @@ def run_pipeline(
     contracts_dir: Optional[Union[str, Path]] = None,
     diagrams_dir: Optional[Union[str, Path]] = None,
     catalog_path: Optional[Union[str, Path]] = None,
+    review_threshold: float = config.REVIEW_THRESHOLD,
 ) -> Dict[str, Any]:
     """
     Ejecuta el pipeline completo de descubrimiento sobre fixtures de prueba,
@@ -188,7 +190,7 @@ def run_pipeline(
 
     # 4. Agente 3: Reconciliador Semántico
     print("\n[4/5] Agente 3: Anclando evidencia en el catálogo y reconciliando código vs. contratos...")
-    reconciliator = SemanticReconciliator(confidence_threshold=0.85)
+    reconciliator = SemanticReconciliator(review_threshold=review_threshold)
     reconciliation = reconciliator.reconcile_with_catalog(catalog, tech_evidences, contract_evidences)
     print(f"  ✓ Hipótesis ancladas en el catálogo (score de vínculo ≥ {reconciliator.min_link_score:.2f}): {len(reconciliation.hypotheses)}")
     print(f"  ✓ Candidatos huérfanos (sin coincidencia en el catálogo): {len(reconciliation.orphans)}")
@@ -196,10 +198,10 @@ def run_pipeline(
 
     fact_sheets: List[HipotesisFactSheet] = []
     all_nudges: List[MicroNudge] = []
-    nudge_generator = NudgeGenerator(confidence_threshold=0.85)
+    nudge_generator = NudgeGenerator(review_threshold=review_threshold)
 
     # 5. Agente 4: Generador de Micro-Nudges
-    print("\n[5/5] Agente 4: Evaluando umbrales de gobernanza y generando Micro-Nudges...")
+    print(f"\n[5/5] Agente 4: Evaluando el umbral único de revisión ({review_threshold:.2f}) y generando Micro-Nudges...")
     hypotheses_export = []
 
     for anchored in reconciliation.hypotheses:
@@ -212,7 +214,7 @@ def run_pipeline(
 
         print(
             f"  ✓ [{hipotesis.catalog_id}] '{hipotesis.entity_name}': repos {hipotesis.linked_repos}, "
-            f"contratos {hipotesis.linked_contracts}, Confianza {hipotesis.confidence_score * 100:.1f}%, "
+            f"contratos {hipotesis.linked_contracts}, Score {hipotesis.confidence_score:.2f}, "
             f"Estado: {hipotesis.status}, {len(nudges)} Micro-Nudges generados."
         )
 
@@ -333,6 +335,7 @@ if __name__ == "__main__":
     parser.add_argument("--repos", dest="repos_dir", default=None, help="Directorio con repositorios de código fuente")
     parser.add_argument("--contracts", dest="contracts_dir", default=None, help="Directorio con contratos y TDRs (.md, .txt)")
     parser.add_argument("--diagrams", dest="diagrams_dir", default=None, help="Directorio con diagramas (.puml, .archimate, .drawio, .xml)")
+    parser.add_argument("--umbral", dest="review_threshold", type=float, default=config.REVIEW_THRESHOLD, help="Umbral único de revisión del score heurístico (por defecto: config.REVIEW_THRESHOLD)")
     parser.add_argument("--catalog", dest="catalog_path", default=None, help="Catálogo existente de aplicaciones (.csv, .xlsx) usado como ancla de identidad")
     args = parser.parse_args()
 
@@ -342,4 +345,5 @@ if __name__ == "__main__":
         contracts_dir=args.contracts_dir,
         diagrams_dir=args.diagrams_dir,
         catalog_path=args.catalog_path,
+        review_threshold=args.review_threshold,
     )

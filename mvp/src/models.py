@@ -97,7 +97,10 @@ class HipotesisFactSheet:
     """
     Representa una hipótesis unificada de Fact Sheet candidata a ser publicada
     en el catálogo APM (LeanIX v4), generada por el Agente Reconciliador Semántico.
-    Contiene un puntaje probabilístico de confianza y citas primarias completas.
+    Contiene un score heurístico de confianza (sin calibrar contra un conjunto
+    verificado) y citas primarias completas. El dueño técnico inferido de los
+    commits es solo una sugerencia (`technical_owner_suggested`) que siempre
+    requiere confirmación humana.
     """
     entity_name: str
     candidate_type: str
@@ -109,6 +112,7 @@ class HipotesisFactSheet:
     primary_citations: List[Dict[str, Any]] = field(default_factory=list)
     business_owner: Optional[str] = None
     technical_owner: Optional[str] = None
+    technical_owner_suggested: bool = False
     description: str = ""
     catalog_id: Optional[str] = None
     linked_repos: List[str] = field(default_factory=list)

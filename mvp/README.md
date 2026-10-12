@@ -34,11 +34,11 @@ En la realidad operativa:
                           └─────────────┬─────────────┘
                                         │
                             [Hipótesis Conciliada +
-                             Scoring de Confianza]
+                             Score heurístico]
                                         │
-                         ¿Confianza < 0.85 o vacíos?
+                     ¿Score < umbral de revisión o vacíos?
                                   ┌─────┴─────┐
-                             Sí   │           │   No (Confianza alta)
+                             Sí   │           │   No (score ≥ umbral)
                                   ▼           │
                     ┌───────────────────┐     │
                     │ Agente 4:         │     │
@@ -78,15 +78,16 @@ En la realidad operativa:
 - **Ancla en el catálogo existente**: primero carga el catálogo de aplicaciones (`fixtures/catalogs/catalogo_aplicaciones.csv`, columnas de código, nombre y alias) y adjunta a cada aplicación los repositorios y contratos que la referencian. Una hipótesis es *aplicación del catálogo + repositorios vinculados + contratos vinculados*.
 - **Relación N:M**: un contrato puede cubrir varios repositorios y un repositorio varios contratos; se vincula todo par con score ≥ `MIN_LINK_SCORE` (`src/config.py`, 0.5). Un contrato también se vincula a la aplicación a través de un repositorio ya anclado.
 - **"Sin coincidencia" es un resultado válido**: la evidencia que no alcanza el score mínimo con ninguna aplicación del catálogo se reporta como **candidato huérfano** (posible Shadow IT) para revisión humana, junto con las otras evidencias huérfanas con las que se relaciona. Nunca se fuerza una vinculación.
-- **Algoritmo de scoring**:
+- **Score heurístico de confianza** (no está calibrado contra un conjunto verificado, por lo que no debe leerse como certeza estadística):
   $$\text{Score} = (0.50 \times \text{Similitud Nominal}) + (0.35 \times \text{Congruencia Técnica}) + (0.15 \times \text{Consistencia de Dominio})$$
   - *Similitud nominal*: Fusión de Jaccard sobre bolsa de tokens significativos y `difflib.SequenceMatcher`.
   - *Congruencia técnica*: Grado de coincidencia entre tecnologías requeridas por contrato y dependencias reales del código.
   - *Consistencia de dominio*: Alineación de rutas de endpoints y nombres funcionales.
-- **Salida**: `HipotesisFactSheet` con estado (`Draft` si score $\ge 0.85$, de lo contrario `Requires_Verification`).
+- **Umbral único de revisión**: `REVIEW_THRESHOLD` en `src/config.py` (por defecto $0.85$, configurable con `--umbral`) lo comparten el reconciliador y el generador de micro-nudges; no hay valores duplicados.
+- **Salida**: `HipotesisFactSheet` con estado (`Draft` si score $\ge$ umbral, de lo contrario `Requires_Verification`).
 
 ### Agente 4: Micro-Nudge Generator (`src/nudge_generator.py`)
-- **Responsabilidad**: Si la confianza es menor a $0.85$ o faltan atributos mandatarios (como el *Dueño de Negocio*), genera solicitudes contextuales en formato **Microsoft Adaptive Card v1.4** para Teams o Slack.
+- **Responsabilidad**: Si el score es menor al umbral único de revisión, faltan atributos mandatarios (como el *Dueño de Negocio*) o el *Dueño Técnico* solo fue inferido de los commits, genera solicitudes contextuales en formato **Microsoft Adaptive Card v1.4** para Teams o Slack.
 - **Interacción**: Diseñado para resolverse en 1 clic ("Confirmar asociación", "Confirmar rol técnico"), eliminando la resistencia humana.
 
 ---
@@ -98,7 +99,7 @@ Los objetos generados mapean directamente a los tipos fundamentales de LeanIX v4
 - **ITComponent / Tech Stack**: Runtimes y bibliotecas detectadas (`Java 17`, `Spring Boot`, `Node.js 20`, `PostgreSQL`).
 - **Provider**: Empresa contratista adjudicada vinculada al Fact Sheet (`Indra Soluciones`, `Stefanini IT`).
 - **Service Level Agreements**: Disponibilidad contractual comprometida (`sla_uptime`: `99.9%`, `99.5%`).
-- **Ownership**: Dueño técnico sugerido desde Git y solicitud de dueño funcional.
+- **Ownership**: el dueño técnico registrado en el catálogo prevalece; el inferido de los commits se marca como sugerencia (`technical_owner_suggested`) y siempre genera un micro-nudge de confirmación. Se solicita además el dueño funcional.
 
 ---
 
@@ -113,7 +114,7 @@ Los objetos generados mapean directamente a los tipos fundamentales de LeanIX v4
    - Cero alucinaciones: Si un dato no tiene evidencia textual o técnica, se marca como vacío y se solicita aclaración.
 3. **Principio 1.4 — Robustez y Seguridad**:
    - Ejecución autónoma en entorno cerrado (Sandbox) utilizando únicamente la biblioteca estándar de Python 3.
-   - Umbrales de confianza matemáticos que impiden la incorporación desatendida de datos ambiguos.
+   - Un umbral único de revisión sobre el score heurístico impide la incorporación desatendida de datos ambiguos.
 
 ---
 
@@ -125,6 +126,7 @@ mvp/
 ├── run_discovery.py                   # Orquestador y runner CLI end-to-end
 ├── src/
 │   ├── __init__.py
+│   ├── config.py                      # Umbral único de revisión y score mínimo de vínculo
 │   ├── models.py                      # Dataclasses canónicas (Evidencias, Hipótesis, Nudges)
 │   ├── code_to_catalog.py             # Agente 1: Extractor de código y repositorios
 │   ├── contract_miner.py              # Agente 2: Minero de TDRs y contratos
@@ -146,7 +148,8 @@ mvp/
 │       └── tdr-portal-ciudadano.md    # TDR Stefanini IT, SLA 99.5% (sin app en el catálogo: huérfano)
 ├── tests/
 │   ├── __init__.py
-│   └── test_pipeline.py               # Suite completa de pruebas unitarias
+│   ├── test_pipeline.py               # Suite completa de pruebas unitarias
+│   └── test_reconciliation.py         # Reconciliación N:M, anclaje en catálogo y umbral único
 └── output/
     └── fact_sheets_draft.json         # Artefacto consolidado exportado
 ```
@@ -210,6 +213,9 @@ Para extender la cobertura más allá del código Git y los TDRs Markdown, el si
 cd mvp
 # Flujo estándar de descubrimiento (fixtures canónicos)
 uv run python run_discovery.py
+
+# Mismo flujo con otro umbral único de revisión
+uv run python run_discovery.py --umbral 0.75
 
 # Escaneo multimodal federado sobre un directorio completo
 uv run python run_discovery.py --dir fixtures/

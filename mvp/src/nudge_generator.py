@@ -2,14 +2,17 @@
 Generador de Micro-Nudges (Micro-Nudge Generator).
 
 Este módulo implementa el Agente 4 del pipeline de descubrimiento continuo:
-evalúa si las hipótesis reconciliadas tienen puntaje de confianza inferior al
-umbral de gobernanza (< 0.85) o presentan atributos críticos vacíos (ej. Dueño de Negocio).
+evalúa si las hipótesis reconciliadas tienen un score heurístico inferior al
+umbral único de revisión (`config.REVIEW_THRESHOLD`, compartido con el
+reconciliador), presentan atributos críticos vacíos (ej. Dueño de Negocio) o
+un dueño técnico solo sugerido a partir de los commits.
 Genera micro-solicitudes interactivas en formato Adaptive Card de Teams/Slack
 con botones de confirmación en 1 clic (Principio OCDE 1.2: Supervisión Humana).
 """
 
 from typing import Any, Dict, List, Optional
 
+from . import config
 from .models import EvidenciaContractual, EvidenciaTecnica, HipotesisFactSheet, MicroNudge
 
 
@@ -19,8 +22,8 @@ class NudgeGenerator:
     técnicos para enriquecer progresivamente el catálogo APM sin fricción operativa.
     """
 
-    def __init__(self, confidence_threshold: float = 0.85):
-        self.confidence_threshold = confidence_threshold
+    def __init__(self, review_threshold: float = config.REVIEW_THRESHOLD):
+        self.review_threshold = review_threshold
 
     def evaluate_and_generate(
         self,
@@ -30,14 +33,15 @@ class NudgeGenerator:
     ) -> List[MicroNudge]:
         """
         Inspecciona una HipotesisFactSheet y genera los MicroNudges correspondientes
-        si la confianza es baja o faltan campos obligatorios.
+        si el score es inferior al umbral de revisión, faltan campos obligatorios
+        o el dueño técnico es solo una sugerencia.
         """
         nudges: List[MicroNudge] = []
         recipient = (tech.top_contributor if tech else hipotesis.technical_owner) or "arquitectura@mef.gob.pe"
         channel = "Microsoft Teams / Slack"
 
-        # 1. Caso A: Confianza inferior al umbral de gobernanza
-        if hipotesis.confidence_score < self.confidence_threshold:
+        # 1. Caso A: Score inferior al umbral único de revisión
+        if hipotesis.confidence_score < self.review_threshold:
             nudge_conf = self._create_confidence_nudge(hipotesis, recipient, channel, tech, contract)
             nudges.append(nudge_conf)
 
@@ -46,8 +50,8 @@ class NudgeGenerator:
             nudge_bo = self._create_business_owner_nudge(hipotesis, recipient, channel)
             nudges.append(nudge_bo)
 
-        # 3. Caso C: Confirmación de Dueño Técnico (Ownership Verification)
-        if hipotesis.technical_owner and hipotesis.status == "Draft":
+        # 3. Caso C: Dueño técnico inferido de commits: sugerencia que siempre se confirma
+        if hipotesis.technical_owner and hipotesis.technical_owner_suggested:
             nudge_to = self._create_tech_owner_nudge(hipotesis, recipient, channel, tech)
             nudges.append(nudge_to)
 
@@ -61,15 +65,16 @@ class NudgeGenerator:
         tech: Optional[EvidenciaTecnica],
         contract: Optional[EvidenciaContractual],
     ) -> MicroNudge:
-        """Crea un micro-nudge cuando el puntaje de confianza requiere confirmación humana."""
+        """Crea un micro-nudge cuando el score heurístico requiere confirmación humana."""
         repo_name = tech.repo_name if tech else "repositorio escaneado"
         contract_id = contract.doc_id if contract else "contrato"
-        score_pct = f"{hipotesis.confidence_score * 100:.1f}%"
+        score_txt = f"{hipotesis.confidence_score:.2f}"
 
         title = f"Validación de Correlación: {hipotesis.entity_name}"
         summary = (
             f"El motor de descubrimiento correlacionó el código de '{repo_name}' con el "
-            f"documento '{contract_id}' con un puntaje de confianza de {score_pct}. "
+            f"documento '{contract_id}' con un score heurístico de {score_txt} "
+            f"(umbral de revisión: {self.review_threshold:.2f}). "
             f"Se requiere tu confirmación para consolidar este Fact Sheet en el catálogo APM."
         )
         proposed_value = f"Vincular '{repo_name}' con '{hipotesis.entity_name}'"
@@ -86,7 +91,7 @@ class NudgeGenerator:
                 {"title": "Entidad APM:", "value": hipotesis.entity_name},
                 {"title": "Repositorio:", "value": repo_name},
                 {"title": "Contrato/TDR:", "value": contract_id},
-                {"title": "Confianza IA:", "value": score_pct},
+                {"title": "Score heurístico:", "value": score_txt},
                 {"title": "Stack Detectado:", "value": hipotesis.technical_stack},
             ],
             actions=[
@@ -194,14 +199,16 @@ class NudgeGenerator:
         channel: str,
         tech: Optional[EvidenciaTecnica],
     ) -> MicroNudge:
-        """Crea un micro-nudge para confirmar el rol de Dueño Técnico."""
+        """Crea un micro-nudge para confirmar el Dueño Técnico sugerido a partir de los commits."""
         repo_name = tech.repo_name if tech else "el repositorio"
-        title = f"Confirmación de Responsabilidad Técnica: {hipotesis.entity_name}"
+        suggested_owner = hipotesis.technical_owner or recipient
+        title = f"Confirmación de Dueño Técnico (sugerido): {hipotesis.entity_name}"
         summary = (
-            f"Hola {recipient}. Según el historial de commits de '{repo_name}', eres el "
-            f"principal contribuyente técnico. ¿Confirmas tu designación como Dueño Técnico en APM?"
+            f"Hola {suggested_owner}. Según el historial de commits de '{repo_name}', eres el "
+            f"principal contribuyente técnico. Esto es solo una sugerencia: ¿confirmas tu "
+            f"designación como Dueño Técnico en APM o indicas a otra persona?"
         )
-        proposed_value = recipient
+        proposed_value = f"{suggested_owner} (sugerido)"
 
         quick_actions = [
             {"id": "confirm_tech_owner", "label": "✅ Sí, soy Dueño Técnico", "action": "confirm_to"},
@@ -214,7 +221,7 @@ class NudgeGenerator:
             facts=[
                 {"title": "Aplicación:", "value": hipotesis.entity_name},
                 {"title": "Repositorio:", "value": repo_name},
-                {"title": "Rol propuesto:", "value": "Technical Owner / Architect"},
+                {"title": "Rol propuesto:", "value": "Technical Owner / Architect (sugerido)"},
             ],
             actions=[
                 {
@@ -223,7 +230,7 @@ class NudgeGenerator:
                     "data": {
                         "action": "confirm_tech_owner",
                         "entity": hipotesis.entity_name,
-                        "owner": recipient,
+                        "owner": suggested_owner,
                     },
                 },
                 {
