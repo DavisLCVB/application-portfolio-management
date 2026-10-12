@@ -52,7 +52,7 @@ ask-on-risk. Commits con Trunk-Based Development directamente en `main` (decisi�
 - [x] T6 — Corregir afirmaciones en `ia-agentes.md`: *score* heurístico (no probabilidad) con calibración contra conjunto verificado, umbral único configurable, "reducción" del Shadow IT, dueño técnico inferido como sugerencia; indicar qué agentes son deterministas y cuáles usan LLM.
 - [x] T7 — Diseñar la operación continua en `ia-agentes.md` y `gobierno-datos.md`: precedencia frente a valores validados por humanos, tiempo límite y escalamiento de nudges, límite de frecuencia, aprobación por niveles de riesgo.
 - [x] T8 — Privacidad y rendición de cuentas: OCDE 1.2 (privacidad, Ley 29733) y 1.5 en `ia-agentes.md`; riesgos propios del descubrimiento en la tabla de riesgos de `arquitectura-solucion.md`.
-- [ ] T9 — Alinear `roadmap.md`, `arquitectura/index.md` e `interfaz.md` (canal de micro-nudges) con el paradigma de descubrimiento.
+- [x] T9 — Alinear `roadmap.md`, `arquitectura/index.md` e `interfaz.md` (canal de micro-nudges) con el paradigma de descubrimiento.
 - [ ] T10 — Validar (`npm test`, `diagrams:check`, `build`) y cerrar la idea.
 
 ## Progreso
@@ -66,7 +66,8 @@ ask-on-risk. Commits con Trunk-Based Development directamente en `main` (decisi�
 - T5: resolución N:M anclada en el catálogo y candidatos huérfanos en `ia-agentes.md` y `ia-descubrimiento.puml` (15 diagramas al día). Ruta: delegado. Commit `2f227da`.
 - T6: *score* heurístico con calibración, umbral único, "reducción" del Shadow IT, dueño técnico como sugerencia y tabla determinista/LLM en `ia-agentes.md`. Ruta: delegado. Commit `0eed93d`.
 - T7: operación continua (precedencia del dato validado, tiempo límite y escalamiento, límite de frecuencia, aprobación por nivel de riesgo) en `ia-agentes.md` y `gobierno-datos.md`. Ruta: delegado. Commit `7d6a809`.
-- T8: OCDE 2024 (1.2 con privacidad y Ley 29733, 1.3, 1.4, nuevo 1.5) en `ia-agentes.md`; riesgos 12–14 (vinculación errónea, datos personales, fatiga de nudges) en `arquitectura-solucion.md`. Ruta: delegado.
+- T8: OCDE 2024 (1.2 con privacidad y Ley 29733, 1.3, 1.4, nuevo 1.5) en `ia-agentes.md`; riesgos 12–14 (vinculación errónea, datos personales, fatiga de nudges) en `arquitectura-solucion.md`. Ruta: delegado. Commit `b133b5f`.
+- T9: F3/F4 del roadmap alineadas al pipeline; párrafo y diagrama de descubrimiento en `arquitectura/index.md`; "Descubrimiento", "Centro de descubrimiento" y patrón "Micro-nudge" en `interfaz.md`. Checks: `diagrams:check` 15/15, `npm test` 1/1, `npm run build` 13 páginas sin errores. Ruta: delegado.
 
 ## Siguiente paso
 T5–T10 (ruta: delegado, un escritor; disparador: 6+ archivos de documentación no triviales).

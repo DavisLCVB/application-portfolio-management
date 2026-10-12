@@ -33,6 +33,10 @@ Todo dato que toca la IA sigue un ciclo con **humano en el bucle**: captura → 
 
 ![Ciclo de IA agéntica](./diagramas/ia-flujo.svg)
 
+La captura no depende solo de la carga manual: un pipeline multi-agente descubre aplicaciones en repositorios, despliegues y contratos, concilia esa evidencia con el catálogo existente (Excel migrado y CMDB) y pregunta a los responsables solo lo que no puede resolver con reglas. Los detalles están en [IA agéntica y funcionalidades](./ia-agentes/).
+
+![Pipeline multi-agente de descubrimiento y reconciliación](./diagramas/ia-descubrimiento.svg)
+
 ## Roadmap
 
 ![Roadmap de implementación](./diagramas/roadmap.svg)

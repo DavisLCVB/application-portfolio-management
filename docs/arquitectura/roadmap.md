@@ -10,8 +10,8 @@ description: Fases de construcción del APM, de los cimientos al gobierno avanza
 | **F0 · Cimientos** | Portal de documentación y arquitectura (este sitio), modelo de datos inicial, CI/CD de publicación. | El portal se despliega automáticamente y la arquitectura ArchiMate está versionada y publicada. |
 | **F1 · Catálogo núcleo** | Catálogos de Aplicaciones e Integraciones, IAM, UI base, motor de grafo de dependencias. | Alta/baja/modificación de aplicaciones e integraciones con auditoría. |
 | **F2 · Tecnologías y seguridad** | Catálogo de Tecnologías, gestión de vulnerabilidades y obsolescencia, alertas y aprobaciones. | CVEs y EOL correlacionados con aplicaciones; primeros informes de riesgo. |
-| **F3 · Ingesta continua** | Conectores CMDB/nube/SBOM/repos y descubrimiento automático con enriquecimiento. | El catálogo se actualiza desde fuentes reales con intervención mínima. |
-| **F4 · IA agéntica** | Edición asistida, generación de arquitecturas base, consulta en lenguaje natural, humano en el bucle. | Propuestas de IA auditadas y aprobadas por arquitectos; blueprints generados y validados. |
+| **F3 · Ingesta continua** | Conectores deterministas CMDB/nube/SBOM/repos; descubrimiento técnico (Agente 1, Code-to-Catalog) y reconciliación anclada en el catálogo existente (Agente 3), con candidatos huérfanos a revisión humana. | El catálogo se actualiza desde fuentes reales con intervención mínima; *score* de confianza calibrado contra un conjunto verificado de aplicaciones. |
+| **F4 · IA agéntica** | Minería de contratos y TDRs (Agente 2), micro-nudges con escalamiento (Agente 4); asistentes downstream: edición asistida, generación de arquitecturas base, consulta en lenguaje natural, humano en el bucle. | Propuestas de IA auditadas y aprobadas por arquitectos; evidencia contractual citada por cláusula; blueprints generados y validados. |
 | **F5 · Analítica avanzada** | Scoring, impacto, solapamientos, what-if, informes ejecutivos PDF y gobierno. | Dashboard completo y reportes ejecutivos desde el portal. |
 
 ## Principios de arquitectura
