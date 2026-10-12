@@ -136,6 +136,19 @@ El mayor error de los portafolios de arquitectura tradicionales es exigir a los 
   - *Ejemplo 2*: *"El contrato MEF-2024-089 especifica una criticidad de negocio 'Misión Crítica' para este módulo. ¿Sigue vigente esa clasificación? [Sí, confirmar] [No, ajustar]"*.
 - **Enriquecimiento progresivo**: Resuelve ambigüedades, llena vacíos de información donde la confianza del reconciliador era insuficiente y actualiza la hipótesis sin fatiga operativa.
 
+### Operación continua
+
+El descubrimiento no es una carga única: los agentes vuelven a escanear las fuentes en cada evento de CI/CD o de forma periódica. Para que el catálogo no oscile ni sature a las personas, se aplican cuatro reglas:
+
+| Regla | Comportamiento |
+|---|---|
+| **Precedencia del dato validado** | Un escaneo más reciente **nunca sobrescribe** un valor validado por una persona. Si la nueva evidencia lo contradice, se crea una **propuesta de discrepancia** (valor vigente vs. evidencia nueva) que decide su responsable. |
+| **Tiempo límite y escalamiento** | Un micro-nudge sin respuesta vence en un plazo configurable (p. ej. 5 días hábiles) y se escala al arquitecto responsable, que decide o reasigna. |
+| **Límite de frecuencia** | Cada persona recibe un número máximo de preguntas; el excedente se agrupa en un resumen semanal en lugar de interrumpir uno por uno. |
+| **Aprobación por nivel de riesgo** | Los atributos obtenidos por parsing determinista (stack, versiones, dependencias) se publican automáticamente con su procedencia. Los atributos críticos para el negocio (dueño, criticidad, costo, contrato) requieren aprobación de Gobierno de Arquitectura. |
+
+La publicación automática de atributos técnicos es coherente con *"la IA propone, la persona dispone"*: solo aplica a datos extraídos por reglas deterministas y verificables (no por un LLM), cada valor queda trazado a su evidencia primaria y cualquier persona responsable puede revertirlo o corregirlo, momento a partir del cual pasa a ser un valor validado con precedencia sobre los escaneos siguientes. Las reglas de autoridad y procedencia se detallan en [Gobierno y procedencia de datos](../gobierno-datos/#descubrimiento-continuo-y-precedencia).
+
 ---
 
 ## Alineación con los Principios de Gobernanza de IA de la OCDE

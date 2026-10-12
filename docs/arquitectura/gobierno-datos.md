@@ -31,10 +31,25 @@ Cada valor almacenado en el APM registra su procedencia, para poder auditar y co
 | Evidencia primaria | Cita directa auditable: archivo, hash de commit y línea de código (`repo:path#L10-25`), o documento, página y cláusula contractual (`TDR-2024.pdf, pág. 12, cl. 5`) |
 | Fecha | Momento exacto en que se registró o actualizó el valor |
 | Autor | Persona, conector o agente que generó el valor |
-| Confianza | Puntaje probabilístico ($0.0$ a $1.0$) calculado por el Reconciliador Semántico (ver [IA agéntica y funcionalidades](../ia-agentes/)) |
-| Estado de validación | `Pendiente (micro-nudge)`, `Validado por dueño técnico`, `En revisión de gobierno`, `Aprobado por Gobierno de Arquitectura`, `Ingerido (solo lectura)` |
+| Confianza | *Score* heurístico ($0.0$ a $1.0$) calculado por el Reconciliador Semántico; no es una probabilidad hasta calibrarse contra un conjunto verificado (ver [IA agéntica y funcionalidades](../ia-agentes/)) |
+| Estado de validación | `Publicado automáticamente (determinista)`, `Pendiente (micro-nudge)`, `Validado por dueño técnico`, `En revisión de gobierno`, `Aprobado por Gobierno de Arquitectura`, `Ingerido (solo lectura)` |
 
-Esto conecta directamente con el ciclo de datos con IA agéntica descrito en [Arquitectura del sistema](../#ciclo-de-datos-con-ia-agéntica) y en [IA agéntica y funcionalidades](../ia-agentes/): un agente puede **proponer** un valor (por ejemplo, al descubrir o reconciliar una aplicación), pero ese valor queda como **borrador auditado con origen, evidencia primaria y confianza**, y no se publica hasta que una persona lo valida — *"la IA propone, la persona dispone"*. El campo de procedencia es el mecanismo con el que ese principio se registra dato a dato.
+Esto conecta directamente con el ciclo de datos con IA agéntica descrito en [Arquitectura del sistema](../#ciclo-de-datos-con-ia-agéntica) y en [IA agéntica y funcionalidades](../ia-agentes/): un agente puede **proponer** un valor (por ejemplo, al descubrir o reconciliar una aplicación), pero ese valor queda como **borrador auditado con origen, evidencia primaria y confianza**, y no se publica hasta que una persona lo valida — *"la IA propone, la persona dispone"*. La única excepción son los atributos técnicos obtenidos por parsing determinista, que se publican automáticamente con su procedencia (ver la regla siguiente). El campo de procedencia es el mecanismo con el que ese principio se registra dato a dato.
+
+### Descubrimiento continuo y precedencia
+
+Los agentes descubridores vuelven a escanear las fuentes de forma continua. Para que un escaneo nuevo no destruya trabajo humano, la autoridad se decide por la procedencia del valor vigente:
+
+| Valor vigente | Llega evidencia nueva que lo contradice | Resultado |
+|---|---|---|
+| Validado por una persona (dueño técnico o Gobierno de Arquitectura) | Sí | **No se sobrescribe**: se crea una propuesta de discrepancia con ambos valores y su evidencia, que decide el responsable |
+| Publicado automáticamente (parsing determinista) | Sí | Se actualiza con la nueva procedencia, salvo que una persona lo haya corregido antes |
+| Pendiente o sin valor | — | La nueva evidencia actualiza la propuesta en curso |
+
+**Aprobación por nivel de riesgo:**
+
+- **Publicación automática con procedencia**: atributos técnicos extraídos de forma determinista (stack, versiones, dependencias, endpoints). Son trazables a su evidencia y reversibles por el responsable.
+- **Aprobación de Gobierno de Arquitectura**: atributos críticos para el negocio (dueño, criticidad, costo, datos contractuales) y la vinculación de candidatos huérfanos, aunque provengan de una hipótesis de alta confianza.
 
 ## Flujo de registro descentralizado
 
