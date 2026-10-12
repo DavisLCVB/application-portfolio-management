@@ -198,20 +198,17 @@ class TestSemanticReconciliator(unittest.TestCase):
         self.assertTrue(len(hipotesis.primary_citations) > 0)
 
     def test_match_all_pairs_correctly(self):
-        results = self.reconciliator.match_all(
+        result = self.reconciliator.match_all(
             [self.tech_recaudacion, self.tech_portal],
             [self.contract_recaudacion, self.contract_portal]
         )
-        self.assertEqual(len(results), 2)
-        # Primer match debe ser recaudación con recaudación
-        hipotesis_1, tech_1, contract_1 = results[0]
-        self.assertEqual(tech_1.repo_name, "recaudacion-digital-service")
-        self.assertEqual(contract_1.doc_id, "TDR-2024-MEF-0089")
-
-        # Segundo match debe ser portal con portal
-        hipotesis_2, tech_2, contract_2 = results[1]
-        self.assertEqual(tech_2.repo_name, "portal-atencion-ciudadano")
-        self.assertEqual(contract_2.doc_id, "TDR-2023-MEF-0145")
+        # Solo se vinculan los pares que superan el score mínimo (sin forzar cruces)
+        pairs = {(tech.repo_name, contract.doc_id) for _, tech, contract in result.links}
+        self.assertEqual(pairs, {
+            ("recaudacion-digital-service", "TDR-2024-MEF-0089"),
+            ("portal-atencion-ciudadano", "TDR-2023-MEF-0145"),
+        })
+        self.assertEqual(result.orphans, [])
 
 
 class TestNudgeGenerator(unittest.TestCase):

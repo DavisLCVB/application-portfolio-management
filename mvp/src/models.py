@@ -7,7 +7,7 @@ multi-agente, asegurando trazabilidad formal, citas de evidencia primaria
 """
 
 from dataclasses import dataclass, field, asdict
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 
 @dataclass
@@ -91,6 +91,35 @@ class HipotesisFactSheet:
     def to_dict(self) -> Dict[str, Any]:
         """Serializa la hipótesis de Fact Sheet a un diccionario estándar."""
         return asdict(self)
+
+
+@dataclass
+class CandidatoHuerfano:
+    """
+    Evidencia sin coincidencia por encima del score mínimo de vinculación
+    (posible Shadow IT). "Sin coincidencia" es un resultado válido: el
+    reconciliador nunca fuerza un vínculo; el arquitecto decide si es una
+    aplicación nueva, un componente de otra o un descarte.
+    """
+    evidence_type: str
+    name: str
+    best_score: float
+    reason: str
+    primary_citations: List[Dict[str, Any]] = field(default_factory=list)
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Serializa el candidato huérfano a un diccionario estándar."""
+        return asdict(self)
+
+
+@dataclass
+class ResultadoReconciliacion:
+    """
+    Resultado del Agente 3: vínculos N:M (hipótesis, evidencia técnica,
+    evidencia contractual) y candidatos huérfanos.
+    """
+    links: List[Tuple["HipotesisFactSheet", EvidenciaTecnica, EvidenciaContractual]] = field(default_factory=list)
+    orphans: List[CandidatoHuerfano] = field(default_factory=list)
 
 
 @dataclass

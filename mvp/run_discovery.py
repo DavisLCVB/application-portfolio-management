@@ -27,6 +27,7 @@ from src.code_to_catalog import CodeToCatalogExtractor
 from src.connectors import ConnectorRegistry, DiagramConnector
 from src.contract_miner import ContractMiner
 from src.models import (
+    CandidatoHuerfano,
     EvidenciaContractual,
     EvidenciaDiagrama,
     EvidenciaTecnica,
@@ -167,7 +168,9 @@ def run_pipeline(
     # 4. Agente 3: Reconciliador Semántico
     print("\n[4/5] Agente 3: Reconciliando semánticamente código vs. contratos...")
     reconciliator = SemanticReconciliator(confidence_threshold=0.85)
-    matched_results = reconciliator.match_all(tech_evidences, contract_evidences)
+    reconciliation = reconciliator.match_all(tech_evidences, contract_evidences)
+    print(f"  ✓ Vínculos N:M (score ≥ {reconciliator.min_link_score:.2f}): {len(reconciliation.links)}")
+    print(f"  ✓ Candidatos huérfanos (sin coincidencia): {len(reconciliation.orphans)}")
 
     fact_sheets: List[HipotesisFactSheet] = []
     all_nudges: List[MicroNudge] = []
@@ -177,7 +180,7 @@ def run_pipeline(
     print("\n[5/5] Agente 4: Evaluando umbrales de gobernanza y generando Micro-Nudges...")
     export_data = []
 
-    for hipotesis, tech, contract in matched_results:
+    for hipotesis, tech, contract in reconciliation.links:
         fact_sheets.append(hipotesis)
         nudges = nudge_generator.evaluate_and_generate(hipotesis, tech, contract)
         all_nudges.extend(nudges)
@@ -196,6 +199,10 @@ def run_pipeline(
     with open(output_file, "w", encoding="utf-8") as f:
         json.dump(export_data, f, indent=2, ensure_ascii=False)
 
+    orphans_file = output_dir / "orphan_candidates.json"
+    with open(orphans_file, "w", encoding="utf-8") as f:
+        json.dump([o.to_dict() for o in reconciliation.orphans], f, indent=2, ensure_ascii=False)
+
     # Guardar evidencias de diagramas
     if diagram_evidences:
         diag_output_file = output_dir / "diagram_evidences.json"
@@ -206,12 +213,14 @@ def run_pipeline(
 
     # Imprimir tablas resumen CLI
     print_summary_table(fact_sheets, all_nudges)
+    print_orphan_table(reconciliation.orphans)
     if diagram_evidences:
         print_diagram_summary_table(diagram_evidences)
 
     return {
         "fact_sheets": fact_sheets,
         "nudges": all_nudges,
+        "orphans": reconciliation.orphans,
         "diagrams": diagram_evidences,
         "output_file": str(output_file),
     }
@@ -251,6 +260,19 @@ def print_summary_table(fact_sheets: List[HipotesisFactSheet], nudges: List[Micr
         for action in sample_nudge.quick_actions:
             print(f"  [{action['id']}] -> {action['label']} (Action: {action['action']})")
     print("--------------------------------------------------------------------------------\n")
+
+
+def print_orphan_table(orphans: List[CandidatoHuerfano]) -> None:
+    """Renderiza los candidatos huérfanos (sin coincidencia): posible Shadow IT para revisión humana."""
+    print("=" * 105)
+    print(f"{'CANDIDATOS HUÉRFANOS (SIN COINCIDENCIA, POSIBLE SHADOW IT)':^105}")
+    print("=" * 105)
+    if not orphans:
+        print("Ninguno: toda la evidencia quedó vinculada.")
+    for o in orphans:
+        name = o.name[:44] + ".." if len(o.name) > 44 else o.name
+        print(f"{o.evidence_type:<12} | {name:<46} | Mejor score: {o.best_score:.2f} | Revisión humana")
+    print("=" * 105 + "\n")
 
 
 def print_diagram_summary_table(diagrams: List[EvidenciaDiagrama]) -> None:

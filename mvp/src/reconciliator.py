@@ -11,9 +11,16 @@ sintetiza una HipotesisFactSheet compatible con LeanIX v4 y principios OCDE.
 import difflib
 import re
 import unicodedata
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Set
 
-from .models import EvidenciaContractual, EvidenciaTecnica, HipotesisFactSheet
+from . import config
+from .models import (
+    CandidatoHuerfano,
+    EvidenciaContractual,
+    EvidenciaTecnica,
+    HipotesisFactSheet,
+    ResultadoReconciliacion,
+)
 
 
 class SemanticReconciliator:
@@ -28,8 +35,9 @@ class SemanticReconciliator:
         "digital", "web", "app", "aplicacion", "portal", "modulo", "mef", "terminos", "referencia"
     }
 
-    def __init__(self, confidence_threshold: float = 0.85):
+    def __init__(self, confidence_threshold: float = 0.85, min_link_score: float = config.MIN_LINK_SCORE):
         self.confidence_threshold = confidence_threshold
+        self.min_link_score = min_link_score
 
     def calculate_name_similarity(self, tech_name: str, contract_name: str) -> float:
         """
@@ -131,7 +139,7 @@ class SemanticReconciliator:
 
         # Determinar nombre formal de la entidad
         # Si la similitud es alta, preferir el nombre formal del contrato/TDR
-        if score >= 0.5 and contract.doc_name:
+        if score >= self.min_link_score and contract.doc_name:
             entity_name = contract.doc_name
         else:
             entity_name = tech.repo_name.replace("-", " ").title()
@@ -139,26 +147,7 @@ class SemanticReconciliator:
         status = "Draft" if score >= self.confidence_threshold else "Requires_Verification"
 
         # Consolidar citas primarias (Principio OCDE 1.3)
-        primary_citations = []
-
-        # Citas técnicas
-        for key, ref in tech.file_citations.items():
-            primary_citations.append({
-                "source": "repository_code",
-                "entity": tech.repo_name,
-                "commit": tech.commit_hash,
-                "attribute": key,
-                "citation": ref,
-            })
-
-        # Citas contractuales
-        for key, ref in contract.doc_citations.items():
-            primary_citations.append({
-                "source": "contract_dark_data",
-                "doc_id": contract.doc_id,
-                "attribute": key,
-                "citation": ref,
-            })
+        primary_citations = self._tech_citations(tech) + self._contract_citations(contract)
 
         return HipotesisFactSheet(
             entity_name=entity_name,
@@ -178,27 +167,83 @@ class SemanticReconciliator:
         self,
         tech_list: List[EvidenciaTecnica],
         contract_list: List[EvidenciaContractual],
-    ) -> List[Tuple[HipotesisFactSheet, EvidenciaTecnica, EvidenciaContractual]]:
+    ) -> ResultadoReconciliacion:
         """
-        Realiza el emparejamiento óptimo (bipartite matching) entre evidencias técnicas y contractuales.
+        Vincula evidencias técnicas y contractuales en relación N:M.
+
+        No es un emparejamiento uno a uno: cada par con score mayor o igual al
+        score mínimo de vinculación (`min_link_score`) produce un vínculo, de modo
+        que un contrato puede cubrir varios repositorios y un repositorio varios
+        contratos. Las evidencias sin ningún vínculo se reportan como candidatos
+        huérfanos en lugar de forzarse a la mejor coincidencia disponible.
         """
-        results = []
+        result = ResultadoReconciliacion()
+        best_tech: Dict[int, float] = {id(t): 0.0 for t in tech_list}
+        best_contract: Dict[int, float] = {id(c): 0.0 for c in contract_list}
+        linked: Set[int] = set()
 
         for tech in tech_list:
-            best_contract = None
-            best_score = -1.0
-
             for contract in contract_list:
                 score = self.compute_confidence(tech, contract)
-                if score > best_score:
-                    best_score = score
-                    best_contract = contract
+                best_tech[id(tech)] = max(best_tech[id(tech)], score)
+                best_contract[id(contract)] = max(best_contract[id(contract)], score)
+                if score >= self.min_link_score:
+                    result.links.append((self.reconcile_pair(tech, contract), tech, contract))
+                    linked.update((id(tech), id(contract)))
 
-            if best_contract:
-                hipotesis = self.reconcile_pair(tech, best_contract)
-                results.append((hipotesis, tech, best_contract))
+        for tech in tech_list:
+            if id(tech) not in linked:
+                result.orphans.append(self._tech_orphan(tech, best_tech[id(tech)]))
+        for contract in contract_list:
+            if id(contract) not in linked:
+                result.orphans.append(self._contract_orphan(contract, best_contract[id(contract)]))
 
-        return results
+        return result
+
+    def _tech_orphan(self, tech: EvidenciaTecnica, best_score: float) -> CandidatoHuerfano:
+        """Construye un candidato huérfano a partir de un repositorio sin vínculos."""
+        return CandidatoHuerfano(
+            evidence_type="repositorio",
+            name=tech.repo_name,
+            best_score=round(best_score, 3),
+            reason=f"Ningún vínculo alcanza el score mínimo {self.min_link_score:.2f}.",
+            primary_citations=self._tech_citations(tech),
+        )
+
+    def _contract_orphan(self, contract: EvidenciaContractual, best_score: float) -> CandidatoHuerfano:
+        """Construye un candidato huérfano a partir de un contrato sin vínculos."""
+        return CandidatoHuerfano(
+            evidence_type="contrato",
+            name=contract.doc_id,
+            best_score=round(best_score, 3),
+            reason=f"Ningún vínculo alcanza el score mínimo {self.min_link_score:.2f}.",
+            primary_citations=self._contract_citations(contract),
+        )
+
+    def _tech_citations(self, tech: EvidenciaTecnica) -> List[Dict[str, str]]:
+        """Citas primarias de una evidencia técnica (Principio OCDE 1.3)."""
+        return [
+            {
+                "source": "repository_code",
+                "entity": tech.repo_name,
+                "commit": tech.commit_hash,
+                "attribute": key,
+                "citation": ref,
+            }
+            for key, ref in tech.file_citations.items()
+        ]
+
+    def _contract_citations(self, contract: EvidenciaContractual) -> List[Dict[str, str]]:
+        """Citas primarias de una evidencia contractual (Principio OCDE 1.3)."""
+        return [
+            {
+                "source": "contract_dark_data",
+                "doc_id": contract.doc_id,
+                "attribute": key,
+                "citation": ref,
+            }
+            for key, ref in contract.doc_citations.items()
+        ]
 
     def _tokenize(self, text: str) -> Set[str]:
         """Limpia y tokeniza un texto eliminando tildes y stopwords."""

@@ -37,7 +37,7 @@ Implementar una versión mínima viable (MVP 1) funcional y ejecutable en Python
 - [x] T5 — Implementar el generador de micro-nudges `nudge_generator.py`.
 - [x] T6 — Crear fixtures de prueba y script orquestador `run_discovery.py` con pruebas unitarias (`test_pipeline.py`).
 - [x] T7 — Implementar la Capa de Conectores Federados Multimodales (`src/connectors/`), modelo `EvidenciaDiagrama`, conectores (.csv, .xlsx, .pptx, .puml, .archimate, .drawio), registro federado (`ConnectorRegistry`) y pruebas unitarias (`test_connectors.py`).
-- [ ] T8 — Reconciliación N:M con resultado "sin coincidencia": reemplazar el emparejamiento codicioso de `SemanticReconciliator.match_all` (siempre asigna un contrato) por emparejamiento con umbral mínimo y reporte de huérfanos.
+- [x] T8 — Reconciliación N:M con resultado "sin coincidencia": reemplazar el emparejamiento codicioso de `SemanticReconciliator.match_all` (siempre asigna un contrato) por emparejamiento con umbral mínimo y reporte de huérfanos.
 - [ ] T9 — Anclar la reconciliación en el catálogo existente (`fixtures/catalogs/catalogo_aplicaciones.csv`) antes de cruzar código y contratos.
 - [ ] T10 — Renombrar "probabilidad" a *score*, umbral único configurable compartido por reconciliador y generador de nudges; dueño técnico inferido marcado como sugerencia.
 
@@ -59,6 +59,7 @@ Implementar una versión mínima viable (MVP 1) funcional y ejecutable en Python
   - Pruebas unitarias exhaustivas en `mvp/tests/test_connectors.py` (100% biblioteca estándar).
   - Orquestador `run_discovery.py` actualizado con soporte `--dir`, particionamiento de evidencias y tabla resumen de diagramas.
 - Creado y actualizado `mvp/README.md` documentando la arquitectura multimodal, conectores, principios de gobernanza OCDE y guía de ejecución.
+- **Completado T8** (ruta: delegado): `SemanticReconciliator.match_all` vincula N:M todo par con score ≥ `config.MIN_LINK_SCORE` (0.5, menor que el umbral de revisión) y devuelve `ResultadoReconciliacion` con `links` y `orphans` (`CandidatoHuerfano`); ya no fuerza la mejor coincidencia. RED: `tests/test_reconciliation.py` (6 pruebas, p. ej. `test_unrelated_repo_is_orphan_not_forced`). Se actualizó `test_match_all_pairs_correctly` (asumía la lista de tuplas del emparejamiento forzado). Checks: `uv run python -m unittest discover -s tests` → 35 OK; `run_discovery.py --dir fixtures/` → 2 vínculos, 3 huérfanos.
 
 ## Siguiente paso
 Pipeline multimodal MVP 1 listo para integración continua y pruebas en staging.
