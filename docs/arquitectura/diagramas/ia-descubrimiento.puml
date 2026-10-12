@@ -13,17 +13,19 @@ skinparam ranksep 45
 ' ===== Fuentes de entrada (Upstream) =====
 Technology_Node(srcTecnica, "Infraestructura y Código\n(Git, CI/CD, Manifiestos K8s)")
 Application_DataObject(srcContratos, "Contratos y TDRs\n(Archivos PDF / Word)")
+Application_DataObject(srcCatalogo, "Catálogo existente\n(Excel migrado + CIs de CMDB)")
 
 ' ===== Agentes descubridores y reconciliadores =====
 Application_Component(agCode, "Agente 1: Code-to-Catalog\n(Extracción técnica)")
 Application_Component(agDark, "Agente 2: Dark Data Miner\n(Minería contractual y TDRs)")
-Application_Component(agRecon, "Agente 3: Reconciliador Semántico\n(Resolución de entidades y scoring)")
+Application_Component(agRecon, "Agente 3: Reconciliador Semántico\n(Resolución de entidades N:M anclada en catálogo)")
 Application_Component(agNudge, "Agente 4: Micro-Nudge\n(Entrevistas proactivas en 1 clic)")
 
 ' ===== Objetos de datos intermedios =====
 Application_DataObject(doEvidTec, "Evidencia técnica\n(stack, dependencias, endpoints)")
 Application_DataObject(doEvidContr, "Evidencia contractual\n(proveedor, licencias, vigencia, SLAs)")
-Application_DataObject(doHipotesis, "Hipótesis conciliada\n(candidato a Fact Sheet + confianza)")
+Application_DataObject(doHipotesis, "Hipótesis conciliada N:M\n(app ↔ repos ↔ contratos ↔ CIs + score)")
+Application_DataObject(doHuerfano, "Candidato huérfano\n(sin coincidencia: posible Shadow IT)")
 Application_DataObject(doNudge, "Micro-solicitud de validación\n(pregunta contextual en 1 clic)")
 Application_DataObject(doFactSheet, "Fact Sheet enriquecido\n(propuesta con citas primarias)")
 
@@ -44,7 +46,10 @@ Rel_Access_Right(agDark, doEvidContr, "extrae cláusulas y metadatos")
 ' ===== Reconciliación semántica =====
 Rel_Flow_Right(doEvidTec, agRecon, "alimenta")
 Rel_Flow_Right(doEvidContr, agRecon, "alimenta")
-Rel_Access_Right(agRecon, doHipotesis, "genera con puntaje de confianza")
+Rel_Flow_Down(srcCatalogo, agRecon, "ancla de identidad")
+Rel_Access_Right(agRecon, doHipotesis, "vincula evidencia + score")
+Rel_Access_Down(agRecon, doHuerfano, "si no hay coincidencia")
+Rel_Flow_Right(doHuerfano, rolGobierno, "revisión humana")
 
 ' ===== Micro-nudges a desarrolladores / dueños técnicos =====
 Rel_Triggering_Down(agRecon, agNudge, "si confianza < umbral o faltan dueños")

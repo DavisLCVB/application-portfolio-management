@@ -31,36 +31,44 @@ El pipeline opera mediante cuatro agentes especializados que colaboran para pasa
                  └───────────────────┐      ┌───────────────────────┘
                                      ▼      ▼
                           ┌───────────────────────────┐
-                          │ Agente 3:                 │
-                          │ Reconciliador Semántico   │
+ [ Catálogo existente ]──►│ Agente 3:                 │
+ [ Excel migrado + CMDB ] │ Reconciliador (ancla en   │
+   (ancla de identidad)   │ catálogo, N:M)            │
                           └─────────────┬─────────────┘
                                         │
-                            [Hipótesis Conciliada +
-                             Scoring de Confianza]
-                                        │
-                         ¿Confianza < umbral o vacíos?
-                                  ┌─────┴─────┐
-                             Sí   │           │   No (Confianza alta)
-                                  ▼           │
-                    ┌───────────────────┐     │
-                    │ Agente 4:         │     │
-                    │ Micro-Nudge       │     │
-                    └─────────┬─────────┘     │
-                              │               │
-                     [Micro-solicitud]        │
-                              ▼               │
-                    (Dueño técnico / Dev)     │
-                              │ (1 clic)      │
-                              └───────┬───────┘
-                                      ▼
-                        [Fact Sheet Enriquecido]
-                         (con citas primarias)
-                                      │
-                                      ▼
-                      (Arquitecto TI / Gobierno)
-                                      │ (Aprobación)
-                                      ▼
-                             [Catálogo APM]
+                       ¿Coincide con el catálogo?
+                              ┌─────────┴─────────┐
+                         Sí   │                   │   No
+                              ▼                   ▼
+                [Hipótesis conciliada     [Candidato huérfano:
+                 N:M + score]              posible Shadow IT]
+                              │                   │
+                              │                   ▼
+                              │           (Revisión humana)
+                              │
+               ¿Score < umbral o vacíos?
+                        ┌─────┴─────┐
+                   Sí   │           │   No (Confianza alta)
+                        ▼           │
+          ┌───────────────────┐     │
+          │ Agente 4:         │     │
+          │ Micro-Nudge       │     │
+          └─────────┬─────────┘     │
+                    │               │
+           [Micro-solicitud]        │
+                    ▼               │
+          (Dueño técnico / Dev)     │
+                    │ (1 clic)      │
+                    └───────┬───────┘
+                            ▼
+              [Fact Sheet Enriquecido]
+               (con citas primarias)
+                            │
+                            ▼
+            (Arquitecto TI / Gobierno)
+                            │ (Aprobación)
+                            ▼
+                   [Catálogo APM]
 ```
 
 ### Agente 1: Code-to-Catalog (Pilar técnico)
@@ -90,13 +98,21 @@ Gran parte de la información crítica de una aplicación en organizaciones púb
 
 El desafío principal en organizaciones reales es que el código y los contratos utilizan nomenclaturas diferentes: un repositorio puede llamarse `svc-mef-pagos-v2`, mientras que el contrato lo denomina *"Servicio de Implementación de la Pasarela de Recaudación Digital para Entidades Públicas"*, y la CMDB lo etiqueta como `VM-PRD-PAGOS01`.
 
-- **Mecanismo de resolución**:
-  - Emplea técnicas de resolución de entidades (*Entity Resolution*), combinando similitud léxica difusa (fuzzy matching), embeddings vectoriales semánticos sobre descripciones funcionales y análisis de grafos de co-ocurrencia.
-  - Cruza la evidencia técnica del Agente 1 con la evidencia contractual del Agente 2 y los CIs de infraestructura.
+- **Ancla en el catálogo existente**: el reconciliador no construye entidades desde cero. Primero toma como referencia las aplicaciones ya conocidas (Excel migrado y CIs de la CMDB, ver [Gobierno y procedencia de datos](../gobierno-datos/#identidad-y-reconciliación-con-cmdb)) y luego **adjunta** a cada una la evidencia técnica del Agente 1 y la evidencia contractual del Agente 2.
+- **Relación N:M, no 1:1**: una aplicación puede tener varios repositorios, varios contratos o TDRs (desarrollo, mantenimiento, adendas) y varios CIs; a la vez, un repositorio compartido o un contrato marco puede cubrir varias aplicaciones. El resultado es un grafo de vínculos, no un emparejamiento uno a uno.
+- **Mecanismo de resolución**: reglas deterministas (claves externas, alias y códigos normalizados) y similitud léxica difusa (*fuzzy matching*) sobre nombres y descripciones; los embeddings semánticos son un complemento opcional para casos ambiguos.
 - **Scoring de confianza multivariable**:
   - Calcula un puntaje de confianza probabilístico ($0.0$ a $1.0$) para cada atributo y para la correlación global de la entidad.
   - Factores evaluados: concordancia de nombres/alias, congruencia tecnológica (si el TDR pedía Java/Spring y el repo contiene Java 17), alineación de fechas y coincidencia de equipos/autores.
-- **Resultado**: Produce una **Hipótesis Conciliada**, vinculando código, contrato e infraestructura bajo una entidad candidata a Fact Sheet.
+- **Resultados posibles**:
+
+  | Resultado | Significado | Siguiente paso |
+  |---|---|---|
+  | **Hipótesis conciliada** | La evidencia se vincula a una o más aplicaciones del catálogo (N:M) | Publicación directa o micro-nudge según el umbral |
+  | **Candidato huérfano** | Sin coincidencia en el catálogo: repositorio, despliegue o contrato que no corresponde a ninguna aplicación conocida (posible Shadow IT) | Cola de revisión humana: el arquitecto decide si es una aplicación nueva, un componente de otra o un descarte |
+  | **Conflicto** | La evidencia coincide con más de una aplicación sin poder discriminar | Cola de revisión humana, igual que los conflictos de la CMDB |
+
+  "Sin coincidencia" es un resultado válido y valioso: el reconciliador nunca fuerza una vinculación para evitar huérfanos.
 
 ### Agente 4: Micro-Nudge y Entrevista Proactiva
 
