@@ -6,7 +6,7 @@ Ejecuta el flujo completo de descubrimiento multi-agente federado:
 1. Agente 1: Extracción técnica sobre repositorios (Code-to-Catalog).
 2. Agente 2: Minería de documentos y contratos (Dark Data Miner).
 3. Conectores Multimodales: Ingesta de diagramas (PlantUML, Archi, draw.io) y catálogos.
-4. Agente 3: Reconciliación anclada en el catálogo y score heurístico (Semantic Reconciliator).
+4. Agente 3: Reconciliación anclada en el catálogo, score heurístico y cola de conflictos (Semantic Reconciliator).
 5. Agente 4: Generación de micro-nudges proactivos (Micro-Nudge Generator).
 6. Persistencia de borradores de Fact Sheets, micro-nudges y evidencias de diagramas.
 7. Renderizado de tablas resumen en consola.
@@ -30,6 +30,7 @@ from src.contract_miner import ContractMiner
 from src.models import (
     AplicacionCatalogo,
     CandidatoHuerfano,
+    ConflictoReconciliacion,
     EvidenciaContractual,
     EvidenciaDiagrama,
     EvidenciaTecnica,
@@ -49,6 +50,7 @@ def run_pipeline(
     diagrams_dir: Optional[Union[str, Path]] = None,
     catalog_path: Optional[Union[str, Path]] = None,
     review_threshold: float = config.REVIEW_THRESHOLD,
+    ambiguity_margin: float = config.AMBIGUITY_MARGIN,
 ) -> Dict[str, Any]:
     """
     Ejecuta el pipeline completo de descubrimiento sobre fixtures de prueba,
@@ -190,10 +192,11 @@ def run_pipeline(
 
     # 4. Agente 3: Reconciliador Semántico
     print("\n[4/5] Agente 3: Anclando evidencia en el catálogo y reconciliando código vs. contratos...")
-    reconciliator = SemanticReconciliator(review_threshold=review_threshold)
+    reconciliator = SemanticReconciliator(review_threshold=review_threshold, ambiguity_margin=ambiguity_margin)
     reconciliation = reconciliator.reconcile_with_catalog(catalog, tech_evidences, contract_evidences)
     print(f"  ✓ Hipótesis ancladas en el catálogo (score de vínculo ≥ {reconciliator.min_link_score:.2f}): {len(reconciliation.hypotheses)}")
     print(f"  ✓ Candidatos huérfanos (sin coincidencia en el catálogo): {len(reconciliation.orphans)}")
+    print(f"  ✓ Conflictos para revisión humana (margen < {reconciliator.ambiguity_margin:.2f}): {len(reconciliation.conflicts)}")
     print(f"  ✓ Aplicaciones del catálogo sin evidencia nueva: {len(reconciliation.catalog_without_evidence)}")
 
     fact_sheets: List[HipotesisFactSheet] = []
@@ -228,6 +231,7 @@ def run_pipeline(
     export_data = {
         "hypotheses": hypotheses_export,
         "orphan_candidates": [o.to_dict() for o in reconciliation.orphans],
+        "conflicts": [c.to_dict() for c in reconciliation.conflicts],
         "catalog_without_evidence": reconciliation.catalog_without_evidence,
     }
 
@@ -247,6 +251,7 @@ def run_pipeline(
     # Imprimir tablas resumen CLI
     print_summary_table(fact_sheets, all_nudges)
     print_orphan_table(reconciliation.orphans)
+    print_conflict_table(reconciliation.conflicts)
     if diagram_evidences:
         print_diagram_summary_table(diagram_evidences)
 
@@ -254,6 +259,7 @@ def run_pipeline(
         "fact_sheets": fact_sheets,
         "nudges": all_nudges,
         "orphans": reconciliation.orphans,
+        "conflicts": reconciliation.conflicts,
         "diagrams": diagram_evidences,
         "output_file": str(output_file),
     }
@@ -309,6 +315,24 @@ def print_orphan_table(orphans: List[CandidatoHuerfano]) -> None:
     print("=" * 105 + "\n")
 
 
+def print_conflict_table(conflicts: List[ConflictoReconciliacion]) -> None:
+    """
+    Renderiza la cola de revisión humana: evidencia que coincide con varias aplicaciones
+    del catálogo sin poder discriminar. No genera micro-nudges al equipo técnico; la
+    decisión corresponde a un arquitecto.
+    """
+    print("=" * 105)
+    print(f"{'COLA DE REVISIÓN (CONFLICTOS): DECIDE UN ARQUITECTO':^105}")
+    print("=" * 105)
+    if not conflicts:
+        print("Ninguno: toda la evidencia vinculada discrimina entre aplicaciones del catálogo.")
+    for c in conflicts:
+        name = c.name[:34] + ".." if len(c.name) > 34 else c.name
+        candidates = ", ".join(f"{a['catalog_id']} '{a['name']}' ({a['score']:.2f})" for a in c.candidates)
+        print(f"{c.evidence_type:<12} | {name:<36} | Candidatas: {candidates}")
+    print("=" * 105 + "\n")
+
+
 def print_diagram_summary_table(diagrams: List[EvidenciaDiagrama]) -> None:
     """Renderiza una tabla con el resumen de diagramas y modelos técnicos descubiertos."""
     print("=" * 105)
@@ -336,6 +360,7 @@ if __name__ == "__main__":
     parser.add_argument("--contracts", dest="contracts_dir", default=None, help="Directorio con contratos y TDRs (.md, .txt)")
     parser.add_argument("--diagrams", dest="diagrams_dir", default=None, help="Directorio con diagramas (.puml, .archimate, .drawio, .xml)")
     parser.add_argument("--umbral", dest="review_threshold", type=float, default=config.REVIEW_THRESHOLD, help="Umbral único de revisión del score heurístico (por defecto: config.REVIEW_THRESHOLD)")
+    parser.add_argument("--margen-conflicto", dest="ambiguity_margin", type=float, default=config.AMBIGUITY_MARGIN, help="Margen bajo el cual dos aplicaciones candidatas se reportan como conflicto (por defecto: config.AMBIGUITY_MARGIN)")
     parser.add_argument("--catalog", dest="catalog_path", default=None, help="Catálogo existente de aplicaciones (.csv, .xlsx) usado como ancla de identidad")
     args = parser.parse_args()
 
@@ -346,4 +371,5 @@ if __name__ == "__main__":
         diagrams_dir=args.diagrams_dir,
         catalog_path=args.catalog_path,
         review_threshold=args.review_threshold,
+        ambiguity_margin=args.ambiguity_margin,
     )

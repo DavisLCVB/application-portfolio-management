@@ -144,6 +144,26 @@ class CandidatoHuerfano:
 
 
 @dataclass
+class ConflictoReconciliacion:
+    """
+    Evidencia que coincide con más de una aplicación del catálogo sin poder
+    discriminar: el mejor y el segundo mejor score superan el score mínimo de
+    vinculación y difieren menos que el margen de conflicto. No se adjunta a
+    ninguna hipótesis ni se reporta como huérfana: va a la cola de revisión
+    humana y un arquitecto decide (nunca se resuelve automáticamente).
+    """
+    evidence_type: str
+    name: str
+    candidates: List[Dict[str, Any]]
+    reason: str
+    primary_citations: List[Dict[str, Any]] = field(default_factory=list)
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Serializa el conflicto de reconciliación a un diccionario estándar."""
+        return asdict(self)
+
+
+@dataclass
 class HipotesisAnclada:
     """
     Hipótesis anclada en el catálogo: aplicación del catálogo + repositorios
@@ -159,11 +179,13 @@ class ResultadoReconciliacion:
     """
     Resultado del Agente 3: vínculos N:M (hipótesis, evidencia técnica,
     evidencia contractual), hipótesis ancladas en el catálogo, candidatos
-    huérfanos y aplicaciones del catálogo sin evidencia nueva.
+    huérfanos, conflictos para revisión humana y aplicaciones del catálogo sin
+    evidencia nueva.
     """
     links: List[Tuple["HipotesisFactSheet", EvidenciaTecnica, EvidenciaContractual]] = field(default_factory=list)
     orphans: List[CandidatoHuerfano] = field(default_factory=list)
     hypotheses: List[HipotesisAnclada] = field(default_factory=list)
+    conflicts: List[ConflictoReconciliacion] = field(default_factory=list)
     catalog_without_evidence: List[str] = field(default_factory=list)
 
 

@@ -20,6 +20,7 @@ from .connectors.spreadsheet_connector import SpreadsheetConnector, _normalize_t
 from .models import (
     AplicacionCatalogo,
     CandidatoHuerfano,
+    ConflictoReconciliacion,
     EvidenciaContractual,
     EvidenciaTecnica,
     HipotesisAnclada,
@@ -44,9 +45,11 @@ class SemanticReconciliator:
         self,
         review_threshold: float = config.REVIEW_THRESHOLD,
         min_link_score: float = config.MIN_LINK_SCORE,
+        ambiguity_margin: float = config.AMBIGUITY_MARGIN,
     ):
         self.review_threshold = review_threshold
         self.min_link_score = min_link_score
+        self.ambiguity_margin = ambiguity_margin
 
     def calculate_name_similarity(self, tech_name: str, contract_name: str) -> float:
         """
@@ -239,48 +242,70 @@ class SemanticReconciliator:
         """
         Ancla la evidencia en el catálogo existente (identidad de la aplicación).
 
-        1. Cada repositorio se vincula a toda aplicación del catálogo con score ≥ mínimo (N:M).
-        2. Cada contrato se vincula a una aplicación de forma directa (nombre/alias/proveedor)
-           o a través de un repositorio ya vinculado a ella; el score transitivo es el
-           menor de los dos vínculos.
-        3. Hipótesis = aplicación del catálogo + repositorios + contratos vinculados.
-           Su score es el del vínculo más débil.
-        4. La evidencia que no coincide con ninguna aplicación es un candidato huérfano;
+        1. Cada repositorio se puntúa contra todas las aplicaciones del catálogo y se
+           ancla a la de mayor score si supera el mínimo de vinculación.
+        2. Cada contrato se puntúa contra cada aplicación de forma directa
+           (nombre/alias/proveedor) o a través de un repositorio anclado a ella; el
+           score transitivo es el menor de los dos vínculos. Se ancla igual que un repositorio.
+        3. Conflicto: si el mejor y el segundo mejor score superan el mínimo y difieren
+           menos que el margen de conflicto, la evidencia no se adjunta a ninguna
+           hipótesis ni se reporta como huérfana; va a la cola de revisión humana. Un
+           contrato nunca se ancla a través de un repositorio en conflicto.
+        4. Hipótesis = aplicación del catálogo + repositorios + contratos anclados (un
+           contrato puede cubrir varios repositorios). Su score es el del vínculo más débil.
+        5. La evidencia que no coincide con ninguna aplicación es un candidato huérfano;
            los huérfanos que se vinculan entre sí se reportan como relacionados.
         """
         result = ResultadoReconciliacion()
-        anchored_techs: Set[int] = set()
-        anchored_contracts: Set[int] = set()
-        best_tech: Dict[int, float] = {id(t): 0.0 for t in tech_list}
-        best_contract: Dict[int, float] = {id(c): 0.0 for c in contract_list}
+        tech_anchor: Dict[int, Tuple[AplicacionCatalogo, float]] = {}
+        contract_anchor: Dict[int, Tuple[AplicacionCatalogo, float]] = {}
+        conflicted: Set[int] = set()
+        best_tech: Dict[int, float] = {}
+        best_contract: Dict[int, float] = {}
+
+        for tech in tech_list:
+            scored = [(app, self.score_catalog_tech(app, tech)) for app in catalog]
+            best_tech[id(tech)] = max((s for _, s in scored), default=0.0)
+            ranked = self._rank_candidates(scored)
+            if self._is_ambiguous(ranked):
+                conflicted.add(id(tech))
+                result.conflicts.append(
+                    self._conflict("repositorio", tech.repo_name, ranked, self._tech_citations(tech))
+                )
+            elif ranked:
+                tech_anchor[id(tech)] = ranked[0]
+
+        for contract in contract_list:
+            scored = []
+            for app in catalog:
+                score = self.score_catalog_contract(app, contract)
+                for tech in tech_list:
+                    anchor = tech_anchor.get(id(tech))
+                    if anchor and anchor[0] is app:
+                        score = max(score, min(anchor[1], self.compute_confidence(tech, contract)))
+                scored.append((app, score))
+            best_contract[id(contract)] = max((s for _, s in scored), default=0.0)
+            ranked = self._rank_candidates(scored)
+            if self._is_ambiguous(ranked):
+                conflicted.add(id(contract))
+                result.conflicts.append(
+                    self._conflict("contrato", contract.doc_id, ranked, self._contract_citations(contract))
+                )
+            elif ranked:
+                contract_anchor[id(contract)] = ranked[0]
 
         for app in catalog:
-            tech_links: List[Tuple[EvidenciaTecnica, float]] = []
-            for tech in tech_list:
-                score = self.score_catalog_tech(app, tech)
-                best_tech[id(tech)] = max(best_tech[id(tech)], score)
-                if score >= self.min_link_score:
-                    tech_links.append((tech, score))
-
-            contract_links: List[Tuple[EvidenciaContractual, float]] = []
-            for contract in contract_list:
-                score = self.score_catalog_contract(app, contract)
-                for tech, tech_score in tech_links:
-                    score = max(score, min(tech_score, self.compute_confidence(tech, contract)))
-                best_contract[id(contract)] = max(best_contract[id(contract)], score)
-                if score >= self.min_link_score:
-                    contract_links.append((contract, score))
-
+            tech_links = [(t, tech_anchor[id(t)][1]) for t in tech_list
+                          if id(t) in tech_anchor and tech_anchor[id(t)][0] is app]
+            contract_links = [(c, contract_anchor[id(c)][1]) for c in contract_list
+                              if id(c) in contract_anchor and contract_anchor[id(c)][0] is app]
             if not tech_links and not contract_links:
                 result.catalog_without_evidence.append(app.code)
                 continue
-
-            anchored_techs.update(id(t) for t, _ in tech_links)
-            anchored_contracts.update(id(c) for c, _ in contract_links)
             result.hypotheses.append(self._anchored_hypothesis(app, tech_links, contract_links))
 
-        orphan_techs = [t for t in tech_list if id(t) not in anchored_techs]
-        orphan_contracts = [c for c in contract_list if id(c) not in anchored_contracts]
+        orphan_techs = [t for t in tech_list if id(t) not in tech_anchor and id(t) not in conflicted]
+        orphan_contracts = [c for c in contract_list if id(c) not in contract_anchor and id(c) not in conflicted]
         related: Dict[str, List[str]] = {}
         for _, tech, contract in self.match_all(orphan_techs, orphan_contracts).links:
             related.setdefault(tech.repo_name, []).append(contract.doc_id)
@@ -297,6 +322,40 @@ class SemanticReconciliator:
             result.orphans.append(orphan)
 
         return result
+
+    def _rank_candidates(
+        self, scored: List[Tuple[AplicacionCatalogo, float]]
+    ) -> List[Tuple[AplicacionCatalogo, float]]:
+        """Aplicaciones con score ≥ mínimo de vinculación, ordenadas de mayor a menor score."""
+        ranked = [(app, score) for app, score in scored if score >= self.min_link_score]
+        return sorted(ranked, key=lambda x: -x[1])
+
+    def _is_ambiguous(self, ranked: List[Tuple[AplicacionCatalogo, float]]) -> bool:
+        """La evidencia no discrimina si los dos mejores scores difieren menos que el margen."""
+        return len(ranked) >= 2 and round(ranked[0][1] - ranked[1][1], 3) < self.ambiguity_margin
+
+    def _conflict(
+        self,
+        evidence_type: str,
+        name: str,
+        ranked: List[Tuple[AplicacionCatalogo, float]],
+        citations: List[Dict[str, str]],
+    ) -> ConflictoReconciliacion:
+        """Construye un conflicto para la cola de revisión humana con todas las apps candidatas."""
+        return ConflictoReconciliacion(
+            evidence_type=evidence_type,
+            name=name,
+            candidates=[
+                {"catalog_id": app.code, "name": app.name, "score": round(score, 3)}
+                for app, score in ranked
+            ],
+            reason=(
+                f"Coincide con {len(ranked)} aplicaciones del catálogo con score ≥ "
+                f"{self.min_link_score:.2f} y los dos mejores difieren menos que el margen "
+                f"{self.ambiguity_margin:.2f}; un arquitecto debe decidir."
+            ),
+            primary_citations=citations,
+        )
 
     def _anchored_hypothesis(
         self,

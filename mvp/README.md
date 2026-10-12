@@ -76,7 +76,8 @@ En la realidad operativa:
 ### Agente 3: Reconciliador Semántico (`src/reconciliator.py`)
 - **Responsabilidad**: Realiza *Entity Resolution* entre la jerga técnica (`recaudacion-digital-service`) y la terminología legal/administrativa (*"Pasarela de Recaudación Digital de Ingresos Públicos"*).
 - **Ancla en el catálogo existente**: primero carga el catálogo de aplicaciones (`fixtures/catalogs/catalogo_aplicaciones.csv`, columnas de código, nombre y alias) y adjunta a cada aplicación los repositorios y contratos que la referencian. Una hipótesis es *aplicación del catálogo + repositorios vinculados + contratos vinculados*.
-- **Relación N:M**: un contrato puede cubrir varios repositorios y un repositorio varios contratos; se vincula todo par con score ≥ `MIN_LINK_SCORE` (`src/config.py`, 0.5). Un contrato también se vincula a la aplicación a través de un repositorio ya anclado.
+- **Relación N:M**: un contrato puede cubrir varios repositorios y un repositorio varios contratos; se vincula todo par con score ≥ `MIN_LINK_SCORE` (`src/config.py`, 0.5). Cada evidencia se ancla a la aplicación del catálogo con mayor score (si supera el mínimo); un contrato también se vincula a la aplicación a través de un repositorio ya anclado.
+- **Conflicto**: si el mejor y el segundo mejor score de una evidencia contra aplicaciones del catálogo superan `MIN_LINK_SCORE` y difieren menos que `AMBIGUITY_MARGIN` (`src/config.py`, 0.05, configurable con `--margen-conflicto`), la evidencia no discrimina entre ellas: no se adjunta a ninguna hipótesis ni se reporta como huérfana. Se registra como `ConflictoReconciliacion` en la **cola de revisión humana** con las aplicaciones candidatas y sus scores, y un arquitecto decide (nunca se resuelve automáticamente ni genera micro-nudges al equipo técnico). Un contrato no se ancla a través de un repositorio en conflicto.
 - **"Sin coincidencia" es un resultado válido**: la evidencia que no alcanza el score mínimo con ninguna aplicación del catálogo se reporta como **candidato huérfano** (posible Shadow IT) para revisión humana, junto con las otras evidencias huérfanas con las que se relaciona. Nunca se fuerza una vinculación.
 - **Score heurístico de confianza** (no está calibrado contra un conjunto verificado, por lo que no debe leerse como certeza estadística):
   $$\text{Score} = (0.50 \times \text{Similitud Nominal}) + (0.35 \times \text{Congruencia Técnica}) + (0.15 \times \text{Consistencia de Dominio})$$
@@ -217,6 +218,9 @@ uv run python run_discovery.py
 # Mismo flujo con otro umbral único de revisión
 uv run python run_discovery.py --umbral 0.75
 
+# Margen de conflicto más amplio (más evidencia va a la cola de revisión)
+uv run python run_discovery.py --margen-conflicto 0.10
+
 # Escaneo multimodal federado sobre un directorio completo
 uv run python run_discovery.py --dir fixtures/
 
@@ -245,7 +249,7 @@ python3 -m unittest discover -s mvp/tests -v
 El pipeline genera dos artefactos principales de gobernanza:
 
 1. **`output/fact_sheets_draft.json`**:
-   Contiene las hipótesis ancladas en el catálogo (con trazabilidad estricta y micro-nudges), los candidatos huérfanos y las aplicaciones del catálogo sin evidencia nueva:
+   Contiene las hipótesis ancladas en el catálogo (con trazabilidad estricta y micro-nudges), los candidatos huérfanos, los conflictos para revisión humana y las aplicaciones del catálogo sin evidencia nueva:
 ```json
 {
   "hypotheses": [
@@ -289,6 +293,7 @@ El pipeline genera dos artefactos principales de gobernanza:
       "related": ["TDR-2023-MEF-0145"]
     }
   ],
+  "conflicts": [],
   "catalog_without_evidence": ["APP-002", "APP-003"]
 }
 ```

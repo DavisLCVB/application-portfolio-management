@@ -6,9 +6,12 @@ Cubre:
 - "Sin coincidencia" como resultado válido (candidato huérfano).
 - Anclaje en el catálogo existente como identidad de la aplicación.
 - Terminología de score heurístico, umbral de revisión único y dueño técnico sugerido.
+- Resultado "Conflicto": evidencia ambigua entre aplicaciones del catálogo va a revisión humana.
 """
 
 import dataclasses
+import json
+import tempfile
 import re
 import sys
 import unittest
@@ -21,7 +24,7 @@ if str(MVP_DIR) not in sys.path:
 from src import config
 from src.code_to_catalog import CodeToCatalogExtractor
 from src.contract_miner import ContractMiner
-from src.models import AplicacionCatalogo, CandidatoHuerfano, ResultadoReconciliacion
+from src.models import AplicacionCatalogo, CandidatoHuerfano, ConflictoReconciliacion, ResultadoReconciliacion
 from src.nudge_generator import NudgeGenerator
 from src.reconciliator import SemanticReconciliator, load_catalog
 import run_discovery
@@ -254,6 +257,101 @@ class TestScoreTerminologyAndThreshold(unittest.TestCase):
         fs = result.hypotheses[0].fact_sheet
         self.assertEqual(fs.technical_owner, self.tech.top_contributor)
         self.assertTrue(fs.technical_owner_suggested)
+
+
+class TestConflictResult(unittest.TestCase):
+    """Evidencia que no discrimina entre aplicaciones del catálogo es un conflicto, no una hipótesis."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.tech = CodeToCatalogExtractor().extract(str(FIXTURES_DIR / "repo-recaudacion"))
+        cls.contract = ContractMiner().extract(str(FIXTURES_DIR / "contracts" / "tdr-recaudacion-digital.md"))
+        # Dos aplicaciones casi idénticas: el repositorio puntúa ~0.885 y ~0.881 contra ellas
+        cls.ambiguous_catalog = [
+            AplicacionCatalogo(code="APP-C", name="Recaudación Digital Central",
+                               primary_language="Java", runtime_version="OpenJDK 17", citation="mem#R2"),
+            AplicacionCatalogo(code="APP-R", name="Recaudación Digital Regional",
+                               primary_language="Java", runtime_version="OpenJDK 17", citation="mem#R3"),
+        ]
+        # Ganador claro: 1.0 frente a ~0.756 (ambos superan el score mínimo)
+        cls.clear_catalog = [
+            AplicacionCatalogo(code="APP-W", name="Recaudación Digital",
+                               primary_language="Java", runtime_version="OpenJDK 17", citation="mem#R2"),
+            AplicacionCatalogo(code="APP-R", name="Recaudación Digital Regional",
+                               primary_language="Java", runtime_version="OpenJDK 11", citation="mem#R3"),
+        ]
+
+    def test_ambiguous_evidence_is_conflict_not_hypothesis_nor_orphan(self):
+        result = SemanticReconciliator().reconcile_with_catalog(self.ambiguous_catalog, [self.tech], [])
+        self.assertEqual(result.hypotheses, [])
+        self.assertEqual(result.orphans, [])
+        self.assertEqual(len(result.conflicts), 1)
+        conflict = result.conflicts[0]
+        self.assertIsInstance(conflict, ConflictoReconciliacion)
+        self.assertEqual(conflict.evidence_type, "repositorio")
+        self.assertEqual(conflict.name, "recaudacion-digital-service")
+        self.assertEqual([c["catalog_id"] for c in conflict.candidates], ["APP-C", "APP-R"])
+        scores = [c["score"] for c in conflict.candidates]
+        self.assertEqual(scores, sorted(scores, reverse=True))
+        self.assertTrue(all(s >= config.MIN_LINK_SCORE for s in scores))
+        self.assertTrue(conflict.primary_citations)
+        self.assertTrue(conflict.reason)
+        self.assertIn("candidates", conflict.to_dict())
+
+    def test_clear_winner_beyond_margin_is_anchored(self):
+        result = SemanticReconciliator().reconcile_with_catalog(self.clear_catalog, [self.tech], [])
+        self.assertEqual(result.conflicts, [])
+        self.assertEqual([h.fact_sheet.catalog_id for h in result.hypotheses], ["APP-W"])
+        self.assertEqual(result.hypotheses[0].fact_sheet.linked_repos, ["recaudacion-digital-service"])
+
+    def test_ambiguity_margin_is_configurable(self):
+        self.assertEqual(config.AMBIGUITY_MARGIN, 0.05)
+        self.assertEqual(SemanticReconciliator().ambiguity_margin, config.AMBIGUITY_MARGIN)
+        wide = SemanticReconciliator(ambiguity_margin=0.3)
+        result = wide.reconcile_with_catalog(self.clear_catalog, [self.tech], [])
+        self.assertEqual([c.name for c in result.conflicts], ["recaudacion-digital-service"])
+        narrow = SemanticReconciliator(ambiguity_margin=0.0)
+        result = narrow.reconcile_with_catalog(self.ambiguous_catalog, [self.tech], [])
+        self.assertEqual(result.conflicts, [])
+        self.assertEqual([h.fact_sheet.catalog_id for h in result.hypotheses], ["APP-C"])
+
+    def test_contract_is_not_anchored_through_conflicted_repo(self):
+        result = SemanticReconciliator().reconcile_with_catalog(
+            self.ambiguous_catalog, [self.tech], [self.contract]
+        )
+        self.assertEqual(result.hypotheses, [])
+        self.assertEqual([c.name for c in result.conflicts], ["recaudacion-digital-service"])
+        # Sin el repositorio en conflicto, el contrato no alcanza ninguna aplicación por sí mismo
+        self.assertEqual([o.name for o in result.orphans], [self.contract.doc_id])
+        self.assertLess(result.orphans[0].best_score, config.MIN_LINK_SCORE)
+
+    def test_pipeline_reports_conflicts_without_developer_nudges(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            catalog_csv = Path(tmp) / "catalogo_ambiguo.csv"
+            catalog_csv.write_text(
+                "Codigo,Nombre Aplicacion,Lenguaje Principal,Version Runtime\n"
+                "APP-C,Recaudación Digital Central,Java,OpenJDK 17\n"
+                "APP-R,Recaudación Digital Regional,Java,OpenJDK 17\n",
+                encoding="utf-8",
+            )
+            output = run_discovery.run_pipeline(catalog_path=catalog_csv)
+
+        self.assertEqual([c.name for c in output["conflicts"]], ["recaudacion-digital-service"])
+        self.assertEqual(output["fact_sheets"], [])
+        for nudge in output["nudges"]:
+            self.assertNotIn("recaudacion-digital-service", json.dumps(nudge.to_dict(), ensure_ascii=False))
+
+        exported = json.loads(Path(output["output_file"]).read_text(encoding="utf-8"))
+        self.assertEqual(
+            set(exported), {"hypotheses", "orphan_candidates", "conflicts", "catalog_without_evidence"}
+        )
+        self.assertEqual(exported["conflicts"][0]["name"], "recaudacion-digital-service")
+
+    def test_fixtures_have_no_conflicts(self):
+        output = run_discovery.run_pipeline(scan_dir=FIXTURES_DIR)
+        self.assertEqual(output["conflicts"], [])
+        exported = json.loads(Path(output["output_file"]).read_text(encoding="utf-8"))
+        self.assertEqual(exported["conflicts"], [])
 
 
 if __name__ == "__main__":
