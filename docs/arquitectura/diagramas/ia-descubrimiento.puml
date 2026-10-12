@@ -1,0 +1,61 @@
+@startuml
+' Pipeline multi-agente de descubrimiento continuo y reconciliación upstream
+' Editar y regenerar: `npm run diagrams` (ver docs/guias/diagramas.md)
+!include <archimate/Archimate>
+!theme archimate-standard from <archimate/themes>
+
+title IA agéntica · Pipeline de descubrimiento continuo y reconciliación upstream
+
+skinparam defaultFontName "Helvetica, Arial, sans-serif"
+skinparam nodesep 35
+skinparam ranksep 45
+
+' ===== Fuentes de entrada (Upstream) =====
+Technology_Node(srcTecnica, "Infraestructura y Código\n(Git, CI/CD, Manifiestos K8s)")
+Application_DataObject(srcContratos, "Contratos y TDRs\n(Archivos PDF / Word)")
+
+' ===== Agentes descubridores y reconciliadores =====
+Application_Component(agCode, "Agente 1: Code-to-Catalog\n(Extracción técnica)")
+Application_Component(agDark, "Agente 2: Dark Data Miner\n(Minería contractual y TDRs)")
+Application_Component(agRecon, "Agente 3: Reconciliador Semántico\n(Resolución de entidades y scoring)")
+Application_Component(agNudge, "Agente 4: Micro-Nudge\n(Entrevistas proactivas en 1 clic)")
+
+' ===== Objetos de datos intermedios =====
+Application_DataObject(doEvidTec, "Evidencia técnica\n(stack, dependencias, endpoints)")
+Application_DataObject(doEvidContr, "Evidencia contractual\n(proveedor, licencias, vigencia, SLAs)")
+Application_DataObject(doHipotesis, "Hipótesis conciliada\n(candidato a Fact Sheet + confianza)")
+Application_DataObject(doNudge, "Micro-solicitud de validación\n(pregunta contextual en 1 clic)")
+Application_DataObject(doFactSheet, "Fact Sheet enriquecido\n(propuesta con citas primarias)")
+
+' ===== Roles humanos (Humano en el bucle / OCDE) =====
+Business_Role(rolDev, "Desarrollador / Dueño técnico\n(responde micro-nudge)")
+Business_Role(rolGobierno, "Arquitecto TI / Gobierno\n(aprobador final del Fact Sheet)")
+
+' ===== Catálogo de destino =====
+Application_Component(apmCatalog, "Catálogo APM\n(Fact Sheets gobernados)")
+
+' ===== Flujo de extracción upstream =====
+Rel_Flow_Right(srcTecnica, agCode, "escaneo estático / eventos CI-CD")
+Rel_Access_Right(agCode, doEvidTec, "extrae y estructura")
+
+Rel_Flow_Right(srcContratos, agDark, "ingesta documental / OCR / NLP")
+Rel_Access_Right(agDark, doEvidContr, "extrae cláusulas y metadatos")
+
+' ===== Reconciliación semántica =====
+Rel_Flow_Right(doEvidTec, agRecon, "alimenta")
+Rel_Flow_Right(doEvidContr, agRecon, "alimenta")
+Rel_Access_Right(agRecon, doHipotesis, "genera con puntaje de confianza")
+
+' ===== Micro-nudges a desarrolladores / dueños técnicos =====
+Rel_Triggering_Down(agRecon, agNudge, "si confianza < umbral o faltan dueños")
+Rel_Access_Right(agNudge, doNudge, "emite micro-pregunta")
+Rel_Flow_Down(doNudge, rolDev, "notifica (Slack / Teams / PR)")
+Rel_Flow_Up(rolDev, agNudge, "valida en 1 clic")
+
+' ===== Consolidación y aprobación de gobernanza =====
+Rel_Flow_Right(agNudge, doFactSheet, "completa vacíos y confirma")
+Rel_Flow_Right(doHipotesis, doFactSheet, "confianza alta (directa)")
+Rel_Flow_Right(doFactSheet, rolGobierno, "presenta con evidencia primaria")
+Rel_Assignment_Down(rolGobierno, apmCatalog, "aprueba y publica")
+Rel_Access_Right(apmCatalog, doFactSheet, "almacena Fact Sheet")
+@enduml

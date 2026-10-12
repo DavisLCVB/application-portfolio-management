@@ -12,11 +12,13 @@ El APM sigue un modelo **híbrido**: es registro maestro propio para los datos d
 | Fuente | Qué gobierna | Mecanismo |
 |---|---|---|
 | **APM (registro maestro)** | Aplicaciones, integraciones, capacidades de negocio, relaciones entre Fact Sheets, decisiones de arquitectura (criticidad, TIME, ciclo de vida) | Registro directo por los equipos de aplicación, sujeto a aprobación de Gobierno de Arquitectura para atributos gobernados (ver [flujo de registro](#flujo-de-registro-descentralizado)) |
+| **Repositorios Git / CI-CD / K8s** | Código fuente, dependencias empaquetadas, stacks, contenedores, manifiestos de despliegue y endpoints | Descubrimiento continuo upstream mediante el **Agente 1 (Code-to-Catalog)**; genera evidencia técnica primaria |
+| **Contratos y TDRs (PDF/Word)** | Proveedores adjudicados, licencias, costos, vigencia contractual, garantías y SLAs | Descubrimiento continuo upstream mediante el **Agente 2 (Dark Data Miner)**; extrae Dark Data no estructurado |
 | **CMDB** | Infraestructura (servidores, contenedores, CIs y su topología) | Conector / ingesta periódica; el APM nunca edita estos atributos, solo los muestra y los referencia (ver [Identidad y reconciliación](#identidad-y-reconciliación-con-cmdb)) |
 | **Feeds CVE / EOL** | Vulnerabilidades (CVE) y fechas de fin de vida (EOL) / fin de soporte (EOS) de componentes tecnológicos | Ingesta automática — **propuesta a validar**: NVD para CVE, endoflife.date para EOL/EOS |
 | **Excel** | Catálogos actuales de aplicaciones, integraciones y tecnologías | **Solo importación inicial única** (ver [Migración del Excel](#migración-del-excel)); después de la migración deja de ser fuente y se retira |
 
-**Regla de autoridad única:** cada atributo tiene exactamente una fuente autoritativa en un momento dado. Ningún atributo se edita simultáneamente desde dos sistemas: los atributos de infraestructura solo se editan en la CMDB (el APM los ingiere de solo lectura), los atributos de CVE/EOL solo se editan en el feed de origen, y todo lo demás se edita en el APM una vez completada la migración del Excel.
+**Regla de autoridad única:** cada atributo tiene exactamente una fuente autoritativa en un momento dado. Ningún atributo se edita simultáneamente desde dos sistemas: los atributos de infraestructura solo se editan en la CMDB (el APM los ingiere de solo lectura), los atributos de CVE/EOL solo se editan en el feed de origen, y todo lo demás se edita en el APM una vez completada la migración del Excel o la reconciliación del descubrimiento continuo.
 
 ## Procedencia por atributo
 
@@ -24,14 +26,15 @@ Cada valor almacenado en el APM registra su procedencia, para poder auditar y co
 
 | Campo de procedencia | Descripción |
 |---|---|
-| Fuente | Sistema o proceso de origen (APM manual, Excel migrado, CMDB, feed de CVE/EOL, agente IA) |
-| Método | `manual` (lo escribió una persona), `importación` (carga inicial del Excel), `ingesta` (sincronización periódica desde CMDB o feeds), `propuesta de agente IA` |
-| Fecha | Momento en que se registró o actualizó el valor |
+| Fuente | Sistema, conector o agente descubridor (`APM manual`, `Excel migrado`, `CMDB`, `Feeds CVE/EOL`, `Agente Code-to-Catalog`, `Agente Dark Data Miner`, `Reconciliador Semántico`) |
+| Método | `manual` (escrito por persona), `importación` (carga inicial Excel), `ingesta` (sincronización CMDB/feeds), `descubrimiento técnico`, `minería contractual`, `hipótesis reconciliada` |
+| Evidencia primaria | Cita directa auditable: archivo, hash de commit y línea de código (`repo:path#L10-25`), o documento, página y cláusula contractual (`TDR-2024.pdf, pág. 12, cl. 5`) |
+| Fecha | Momento exacto en que se registró o actualizó el valor |
 | Autor | Persona, conector o agente que generó el valor |
-| Confianza | Solo aplica a propuestas de IA; puntaje de confianza del modelo (ver [IA agéntica y funcionalidades](../ia-agentes/)) |
-| Estado de validación | `Pendiente`, `Validado por humano`, `Ingerido (no requiere validación de contenido)` |
+| Confianza | Puntaje probabilístico ($0.0$ a $1.0$) calculado por el Reconciliador Semántico (ver [IA agéntica y funcionalidades](../ia-agentes/)) |
+| Estado de validación | `Pendiente (micro-nudge)`, `Validado por dueño técnico`, `En revisión de gobierno`, `Aprobado por Gobierno de Arquitectura`, `Ingerido (solo lectura)` |
 
-Esto conecta directamente con el ciclo de datos con IA agéntica descrito en [Arquitectura del sistema](../#ciclo-de-datos-con-ia-agéntica) y en [IA agéntica y funcionalidades](../ia-agentes/): un agente puede **proponer** un valor (por ejemplo, al enriquecer una aplicación recién registrada), pero ese valor queda como **borrador auditado con origen y confianza**, y no se publica hasta que una persona lo valida — *"la IA propone, la persona dispone"*. El campo de procedencia es el mecanismo con el que ese principio se registra dato a dato.
+Esto conecta directamente con el ciclo de datos con IA agéntica descrito en [Arquitectura del sistema](../#ciclo-de-datos-con-ia-agéntica) y en [IA agéntica y funcionalidades](../ia-agentes/): un agente puede **proponer** un valor (por ejemplo, al descubrir o reconciliar una aplicación), pero ese valor queda como **borrador auditado con origen, evidencia primaria y confianza**, y no se publica hasta que una persona lo valida — *"la IA propone, la persona dispone"*. El campo de procedencia es el mecanismo con el que ese principio se registra dato a dato.
 
 ## Flujo de registro descentralizado
 
