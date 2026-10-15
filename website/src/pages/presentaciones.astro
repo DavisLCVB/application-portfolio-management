@@ -1,0 +1,70 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import presentations from '../generated/presentaciones.json';
+---
+
+<StarlightPage frontmatter={{ title: 'Presentaciones', description: 'Presentaciones de PowerPoint publicadas desde docs/.' }}>
+  <p>Presentaciones de PowerPoint publicadas desde la carpeta <code>docs/</code>. Puedes verlas aquí o descargar una copia.</p>
+  <p class="note">El visor de Office solo funciona en el dominio público de producción. En entornos locales o en despliegues de vista previa protegidos, descarga el archivo.</p>
+  {presentations.length === 0 && <p>Todavía no hay presentaciones publicadas.</p>}
+  {presentations.map((presentation) => (
+    <section data-presentation>
+      <h2>{presentation.title}</h2>
+      <p><a href={presentation.url} download>Descargar PPTX</a></p>
+      <div class="viewer-toolbar">
+        <button type="button" data-fullscreen>Pantalla completa</button>
+      </div>
+      <iframe data-office data-src={presentation.url} title={`Presentación: ${presentation.title}`} loading="lazy" allowfullscreen></iframe>
+      <p class="local-notice" data-local-notice hidden>
+        El visor de Office solo funciona en el sitio publicado. <a href={presentation.url} download>Descarga la presentación</a> para verla en este entorno.
+      </p>
+    </section>
+  ))}
+</StarlightPage>
+
+<style>
+  section { margin-block: 2rem; }
+  .note { color: var(--sl-color-gray-2); font-size: var(--sl-text-sm); }
+  .viewer-toolbar { margin-block: .5rem; }
+  .viewer-toolbar button {
+    background: var(--sl-color-bg);
+    border: 1px solid var(--sl-color-gray-4);
+    color: var(--sl-color-text);
+    padding: .35rem .9rem;
+    border-radius: .4rem;
+    cursor: pointer;
+    font: inherit;
+  }
+  .viewer-toolbar button:hover { border-color: var(--sl-color-accent); color: var(--sl-color-accent); }
+  iframe { width: 100%; height: 75vh; border: 1px solid var(--sl-color-gray-5); border-radius: .5rem; }
+  .local-notice {
+    padding: .75rem 1rem;
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: .5rem;
+  }
+</style>
+
+<script is:inline>
+  // El visor de Office descarga el archivo desde su URL pública; en local no puede alcanzarlo.
+  const isLocal = ['localhost', '127.0.0.1', '::1', '[::1]'].includes(location.hostname);
+  document.querySelectorAll('[data-presentation]').forEach((section) => {
+    const frame = section.querySelector('[data-office]');
+    const toolbar = section.querySelector('.viewer-toolbar');
+    if (!frame) return;
+    if (isLocal) {
+      frame.remove();
+      toolbar?.remove();
+      section.querySelector('[data-local-notice]')?.removeAttribute('hidden');
+      return;
+    }
+    const fileUrl = new URL(frame.dataset.src, location.origin).href;
+    frame.src = 'https://view.officeapps.live.com/op/embed.aspx?src=' + encodeURIComponent(fileUrl);
+    section.querySelector('[data-fullscreen]')?.addEventListener('click', () => {
+      if (document.fullscreenElement) {
+        document.exitFullscreen();
+      } else if (frame.requestFullscreen) {
+        frame.requestFullscreen();
+      }
+    });
+  });
+</script>

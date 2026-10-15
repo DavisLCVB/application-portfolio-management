@@ -25,9 +25,18 @@ Se conservan los nombres y las subcarpetas. También se acepta la extensión `.P
 
 En desarrollo local, reinicia `npm run dev` después de agregar, modificar o retirar PDF. En producción, cada build vuelve a preparar el catálogo.
 
+## Presentaciones
+
+Copia tus archivos `.pptx` en cualquier subcarpeta de `docs/`, por ejemplo `docs/presentaciones/avance.pptx`. Durante el build se copian al sitio y aparecen en la [sección de presentaciones](/presentaciones/), con visor integrado y descarga.
+
+- La presentación es pública una vez desplegada, igual que el resto de `docs/`.
+- El visor integrado es el de Office en línea de Microsoft, que descarga el archivo desde su URL pública. Solo funciona en el dominio de producción: en local y en vistas previas de Vercel protegidas se muestra únicamente la descarga.
+- Microsoft limita el tamaño de los archivos que admite el visor (alrededor de 10 MB para PowerPoint). Reduce imágenes o divide la presentación si la supera.
+- En desarrollo local, reinicia `npm run dev` después de agregar, modificar o retirar presentaciones.
+
 ## Qué se comparte
 
-Trata `docs/` como contenido público. Guarda borradores y documentación confidencial **fuera de esta carpeta**. No se siguen enlaces simbólicos ni se copian PDF de carpetas ocultas. No agregues credenciales ni datos sensibles.
+Trata `docs/` como contenido público. Guarda borradores y documentación confidencial **fuera de esta carpeta**. No se siguen enlaces simbólicos ni se copian PDF o presentaciones de carpetas ocultas. No agregues credenciales ni datos sensibles.
 
 El texto dentro de los PDF no se incorpora al buscador de Starlight. El portal no convierte documentos de Office a PDF ni proporciona autenticación.
 

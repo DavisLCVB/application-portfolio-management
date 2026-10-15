@@ -8,9 +8,12 @@ import { execFileSync } from 'node:child_process';
 test('publica PDF anidados, codifica URLs y retira archivos eliminados', async () => {
   const root = await mkdtemp(path.join(tmpdir(), 'apm-pdfs-'));
   try {
-    const script = path.join(root, 'website/scripts/prepare-pdfs.mjs');
-    await mkdir(path.dirname(script), { recursive: true });
-    await copyFile(new URL('./prepare-pdfs.mjs', import.meta.url), script);
+    const scripts = path.join(root, 'website/scripts');
+    await mkdir(scripts, { recursive: true });
+    for (const file of ['prepare-pdfs.mjs', 'publish-files.mjs']) {
+      await copyFile(new URL(`./${file}`, import.meta.url), path.join(scripts, file));
+    }
+    const script = path.join(scripts, 'prepare-pdfs.mjs');
     await mkdir(path.join(root, 'docs/entregables'), { recursive: true });
     await mkdir(path.join(root, 'docs/.interno'));
     const pdf = Buffer.from('%PDF-1.4\n% Fixture para comprobar copia sin transformar\n%%EOF\n');

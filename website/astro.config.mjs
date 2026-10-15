@@ -26,6 +26,7 @@ export default defineConfig({
           ],
         },
         { label: 'Documentos PDF', link: '/documentos/' },
+        { label: 'Presentaciones', link: '/presentaciones/' },
         { label: 'Guías', items: [{ autogenerate: { directory: 'guias' } }] },
       ],
       customCss: ['./src/styles/custom.css'],
