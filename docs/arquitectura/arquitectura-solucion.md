@@ -20,7 +20,7 @@ Resumen a muy alto nivel de cómo se usa el APM, cómo actúa la IA y de dónde 
                ▼
  ┌────────────────────────────┐   herramientas   ┌──────────────────────┐
  │ API del APM (App Service)  │◄─────────────────┤ Agentes de IA        │
- │ única puerta de entrada    │                  │ (Azure OpenAI)       │
+ │ única puerta de entrada    │                  │ (proveedor LLM)      │
  │ para personas y agentes    ├─────────────────►│ responden con citas  │
  └──────┬──────────────▲──────┘     contexto     └──────────────────────┘
         │              │         (con permisos)
@@ -54,6 +54,10 @@ Agente sugiere ──► Borrador ──► Gobierno de Arquitectura aprueba ─
 Cómo responde el sistema en las funcionalidades principales. Cada flujo pasa por la API del APM y respeta los permisos de quien consulta. La lista completa está en [IA agéntica y funcionalidades](../ia-agentes/).
 
 ### Chat del portafolio
+
+:::note[Capacidad secundaria]
+El chat es una capacidad **secundaria y posterior**: primero se construye la captura de datos (descubrimiento, reconciliación y gobierno) y la consulta se expone antes mediante un servidor MCP. Ver [Roadmap](../roadmap/#decisión-construir-con-fuentes-abiertas).
+:::
 
 _Ejemplo: «¿Qué aplicaciones críticas usan PostgreSQL 11?»_
 
@@ -99,11 +103,33 @@ _Ejemplo: «Genera la vista de contexto de la aplicación Pagos»_
 | Secretos | **Key Vault** | Secretos y claves; sin credenciales en el catálogo |
 | Red | *Private endpoints* / integración con VNet | Los servicios de datos e IA no se exponen a Internet |
 | Observabilidad | **Application Insights / Azure Monitor** | Trazas, métricas y alertas |
-| IA | **Azure OpenAI** | Servicio de modelos |
+| IA | **Azure OpenAI** (objetivo) | Servicio de modelos, consumido detrás de una capa de proveedor intercambiable (ver [Portabilidad y costo](#portabilidad-y-costo)) |
 | IA | **Azure AI Foundry Agent Service** (o equivalente, por validar) | Orquestación de agentes |
 | IA | **Azure AI Search** | Índice para recuperación de contexto (RAG) |
 | Ingesta | **Azure Functions** (temporizador/cola) o Data Factory | Migración, sincronización y feeds |
-| Canal opcional | Copilot Studio / Teams (por validar) | Acceso al chat desde herramientas corporativas |
+| Canal opcional | Copilot Studio / Teams (por validar) | Acceso al chat desde herramientas corporativas (capacidad secundaria y posterior) |
+
+## Portabilidad y costo
+
+Con presupuesto limitado, **Azure es la arquitectura objetivo empresarial**, pero el diseño evita depender de servicios exclusivos de una nube: el MVP puede ejecutarse en la capa gratuita de **Azure o de GCP** y migrar al objetivo sin rediseño. No se adquieren herramientas comerciales de APM/EA (ver [Roadmap](../roadmap/#decisión-construir-con-fuentes-abiertas)).
+
+**Capa de proveedor de LLM intercambiable.** Los agentes no llaman a un SDK concreto: usan una interfaz propia con tres operaciones (generar texto, extraer campos contra un esquema y calcular embeddings). Cada proveedor (Google Gemini, OpenAI, Anthropic Claude o Azure OpenAI) es un adaptador que se elige por configuración y entorno. Las reglas de [modelos por rol](#modelos-por-rol) aplican a cada adaptador: versión fijada y compuerta de evals antes de cambiar de proveedor o de modelo. Cambiar el modelo de embeddings obliga a reindexar.
+
+| Componente | Objetivo empresarial (Azure) | MVP en capa gratuita o portable |
+|---|---|---|
+| Web y API | App Service | Contenedor en Azure Container Apps o Google Cloud Run (límites gratuitos por validar) |
+| Registro maestro | Azure SQL Database | PostgreSQL (gestionado o en contenedor) u oferta gratuita de Azure SQL Database (por validar) |
+| Identidad | Entra ID | Cualquier proveedor OIDC estándar; la API solo depende de OIDC |
+| Secretos | Key Vault | Key Vault o Google Secret Manager (por validar) |
+| Observabilidad | Application Insights / Azure Monitor | Instrumentación OpenTelemetry con exportador al servicio de la nube elegida |
+| Modelos de IA | Azure OpenAI | Capa de proveedor: Gemini, OpenAI, Claude o Azure OpenAI, según cuota gratuita o créditos disponibles (por validar) |
+| Orquestación de agentes | Azure AI Foundry Agent Service (por validar) | Orquestación en el propio código de la API, sin servicio gestionado |
+| Búsqueda (RAG) | Azure AI Search | Extensión `pgvector` sobre PostgreSQL (por validar) |
+| Ingesta programada | Azure Functions o Data Factory | Azure Functions (plan de consumo) o Cloud Run jobs con Cloud Scheduler (por validar) |
+| Feeds CVE / EOL | NVD, OSV y `endoflife.date` | Los mismos: solo fuentes gratuitas, más una tabla propia de EOL curada |
+| Canal de chat | Copilot Studio / Teams (por validar) | Fuera del MVP; consulta vía servidor MCP |
+
+Los costos no se estiman en esta página: los límites de las capas gratuitas cambian y deben confirmarse en la documentación vigente de cada proveedor antes del piloto.
 
 ## Capa de IA
 
@@ -118,9 +144,9 @@ _Ejemplo: «Genera la vista de contexto de la aplicación Pagos»_
 
 | Rol | Uso | Modelo |
 |---|---|---|
-| Razonamiento / chat | Agentes y chat del portafolio | Modelo de chat/razonamiento de Azure OpenAI (versión por validar) |
-| Pequeño | Clasificación y extracción | Modelo pequeño de Azure OpenAI (versión por validar) |
-| Embeddings | Indexación y búsqueda semántica | Familia `text-embedding-3` (small/large), listada en el catálogo de Microsoft |
+| Razonamiento / chat | Agentes y chat del portafolio | Modelo de chat/razonamiento del proveedor elegido; Azure OpenAI en el objetivo (versión por validar) |
+| Pequeño | Clasificación y extracción | Modelo pequeño del proveedor elegido; Azure OpenAI en el objetivo (versión por validar) |
+| Embeddings | Indexación y búsqueda semántica | En el objetivo, familia `text-embedding-3` (small/large), listada en el catálogo de Microsoft; en el MVP, el modelo de embeddings del proveedor elegido |
 
 El catálogo de modelos cambia con frecuencia ([Microsoft Learn: modelos de Azure](https://learn.microsoft.com/en-us/azure/foundry/foundry-models/concepts/models-sold-directly-by-azure)), por lo que las versiones concretas se eligen con **evals** del propio APM. Reglas: **versión fijada** (*pinning*) por entorno y **compuerta de evals** antes de cualquier actualización de modelo.
 
@@ -137,7 +163,7 @@ El catálogo de modelos cambia con frecuencia ([Microsoft Learn: modelos de Azur
 |---|---|---|
 | Excel (migración única) | Carga por lotes como `Borrador`; ver [Migración del Excel](../gobierno-datos/#migración-del-excel) | F1 |
 | CMDB | Sincronización de solo lectura, por clave de CI | F3 |
-| NVD / OSV (CVE) y endoflife.date (EOL) | Función programada; propuesta por validar | F2 |
+| NVD / OSV (CVE) y endoflife.date (EOL) | Función programada; solo fuentes gratuitas, más una tabla propia de EOL curada para productos sin cobertura; propuesta por validar | F2 |
 | SBOM y repositorios | Descubrimiento continuo | F3 |
 
 Toda ingesta registra **procedencia** (fuente, método, fecha, autor). El contenido externo se trata como **no confiable** (defensa contra *prompt injection*): se sanea, nunca se ejecutan instrucciones halladas en los datos y los agentes solo pueden invocar herramientas de una lista permitida.
@@ -225,5 +251,5 @@ La regla de fondo es que **la IA propone y la persona dispone**: los controles 1
 | F1 | App Service, Azure SQL, Entra ID, Key Vault, observabilidad; migración del Excel |
 | F2 | Ingesta de CVE y EOL |
 | F3 | Conectores CMDB, SBOM y repositorios |
-| F4 | Azure OpenAI, agentes, Azure AI Search, evals, mecanismo de detención |
+| F4 | Capa de proveedor de LLM (Azure OpenAI en el objetivo), agentes, Azure AI Search, servidor MCP, evals, mecanismo de detención; el chat queda para una fase posterior y opcional |
 | F5 | Analítica avanzada e informes sobre la misma base |

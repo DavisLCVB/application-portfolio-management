@@ -81,9 +81,32 @@ LeanIX v4 tiene un mecanismo **verificado** llamado *Quality Seal*: un sello que
 
 El flujo de aprobación de esta página es distinto y complementario: la aprobación de Gobierno de Arquitectura es un **gate previo a la publicación** de un cambio gobernado — mientras la solicitud está pendiente, el dato publicado no cambia. Se puede adoptar el Quality Seal como indicador adicional de calidad sobre un Fact Sheet ya publicado, sin que reemplace este gate de gobierno.
 
+### SLA de revisión y carga de revisión
+
+:::caution[Propuesta inicial, a calibrar en el piloto]
+Los plazos y métricas de esta sección son una **propuesta inicial**. Se ajustan con los datos medidos en el piloto de calibración y se acuerdan con el equipo de Gobierno de Arquitectura.
+:::
+
+| Elemento en cola | Plazo propuesto para decidir | Al vencer |
+|---|---|---|
+| Solicitud de cambio sobre un atributo gobernado | 5 días hábiles | Se escala al arquitecto responsable, igual que un micro-nudge vencido (riesgo 14 en [Riesgos de la IA](../arquitectura-solucion/#riesgos-de-la-ia-y-contramedidas)) |
+| Candidato huérfano o conflicto de reconciliación | 5 días hábiles | Se escala al arquitecto responsable, que decide o reasigna |
+| Lote de migración del Excel | Por tanda priorizada, no por elemento | Se replanifica la tanda en la siguiente sesión de gobierno |
+
+Para que la revisión no se convierta en el nuevo cuello de botella, se miden desde el inicio estas métricas de carga:
+
+| Métrica | Qué indica |
+|---|---|
+| Tamaño de la cola (por tipo: solicitudes, huérfanos, conflictos, migración) | Si entra más trabajo del que se resuelve |
+| Antigüedad de los elementos en cola (p50 y p95) | Si el SLA se cumple para la mayoría y para los casos lentos |
+| Elementos resueltos por revisor y semana | Capacidad real del equipo y reparto de la carga |
+| Tasa de aprobación y de rechazo (y de devolución) | Calidad de las propuestas; una aprobación cercana al 100 % sin ediciones puede indicar sesgo de automatización |
+| Escalamientos por SLA vencido | Puntos donde el plazo o la capacidad no alcanzan |
+
+Si la cola crece de forma sostenida, se ajustan primero los umbrales de publicación automática y la priorización de lotes, antes que el número de revisores.
+
 ### Pendiente de definir
 
-- **SLA de revisión**: cuánto tiempo tiene Gobierno de Arquitectura para resolver una solicitud. No se define un número aquí; debe acordarse con el equipo de gobierno.
 - **Notificaciones**: canales y eventos exactos (¿correo?, ¿en la app?, ¿ambos?) para avisar de una solicitud pendiente, una decisión o un cambio ingerido relevante (ver también el componente "Notificaciones y Aprobaciones" en [Composición de la plataforma](../#composición-de-la-plataforma)).
 
 ## Migración del Excel

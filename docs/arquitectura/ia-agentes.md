@@ -7,7 +7,7 @@ description: Capacidades de IA agéntica del APM, pipeline multi-agente de descu
 
 Tradicionalmente, la inteligencia artificial en la gestión de portafolio de aplicaciones se ha concebido como un consumidor pasivo o "bombero downstream": asume que el catálogo ya existe, está limpio y actualizado, limitándose a responder consultas de chat, correlacionar CVEs o calcular obsolescencia sobre datos preexistentes.
 
-En organizaciones de alta complejidad y sector público (como el MEF), la realidad es que el catálogo manual falla por fatiga burocrática, falta de incentivos y dispersión de información. El verdadero cuello de botella es la captura y unificación de datos. La arquitectura del APM evoluciona hacia un **motor proactivo de descubrimiento continuo upstream**, donde un sistema multi-agente escanea activamente la realidad técnica y contractual para construir y mantener al día los Fact Sheets con mínima intervención humana.
+En organizaciones de alta complejidad y sector público, la realidad es que el catálogo manual falla por fatiga burocrática, falta de incentivos y dispersión de información. El verdadero cuello de botella es la captura y unificación de datos. La arquitectura del APM evoluciona hacia un **motor proactivo de descubrimiento continuo upstream**, donde un sistema multi-agente escanea activamente la realidad técnica y contractual para construir y mantener al día los Fact Sheets con mínima intervención humana.
 
 ![Pipeline multi-agente de descubrimiento y reconciliación](./diagramas/ia-descubrimiento.svg)
 
@@ -82,6 +82,8 @@ El LLM se reserva para el texto no estructurado y la redacción; la extracción 
 | 3 · Reconciliador | Reglas deterministas y *fuzzy matching* | Opcional: embeddings solo para casos ambiguos |
 | 4 · Micro-Nudge | Lógica de decisión determinista (cuándo, a quién, qué preguntar) | Sí, solo para redactar la pregunta |
 
+El modelo de lenguaje se consume detrás de una **capa de proveedor intercambiable**: el diseño no depende de un proveedor concreto (Google Gemini, OpenAI, Anthropic Claude o Azure OpenAI), y el proveedor se elige por entorno según costo y resultados de las evals (ver [Portabilidad y costo](../arquitectura-solucion/#portabilidad-y-costo)).
+
 ### Agente 1: Code-to-Catalog (Pilar técnico)
 
 Este agente inspecciona de manera continua los artefactos generados en el ciclo de vida del desarrollo de software:
@@ -107,7 +109,7 @@ Gran parte de la información crítica de una aplicación en organizaciones púb
 
 ### Agente 3: Reconciliador Semántico (Entity Resolution)
 
-El desafío principal en organizaciones reales es que el código y los contratos utilizan nomenclaturas diferentes: un repositorio puede llamarse `svc-mef-pagos-v2`, mientras que el contrato lo denomina *"Servicio de Implementación de la Pasarela de Recaudación Digital para Entidades Públicas"*, y la CMDB lo etiqueta como `VM-PRD-PAGOS01`.
+El desafío principal en organizaciones reales es que el código y los contratos utilizan nomenclaturas diferentes: un repositorio puede llamarse `svc-pagos-v2`, mientras que el contrato lo denomina *"Servicio de Implementación de la Pasarela de Recaudación Digital para Entidades Públicas"*, y la CMDB lo etiqueta como `VM-PRD-PAGOS01`.
 
 - **Ancla en el catálogo existente**: el reconciliador no construye entidades desde cero. Primero toma como referencia las aplicaciones ya conocidas (Excel migrado y CIs de la CMDB, ver [Gobierno y procedencia de datos](../gobierno-datos/#identidad-y-reconciliación-con-cmdb)) y luego **adjunta** a cada una la evidencia técnica del Agente 1 y la evidencia contractual del Agente 2.
 - **Relación N:M, no 1:1**: una aplicación puede tener varios repositorios, varios contratos o TDRs (desarrollo, mantenimiento, adendas) y varios CIs; a la vez, un repositorio compartido o un contrato marco puede cubrir varias aplicaciones. El resultado es un grafo de vínculos, no un emparejamiento uno a uno.
@@ -132,8 +134,8 @@ El mayor error de los portafolios de arquitectura tradicionales es exigir a los 
 
 - **Filosofía de mínima fricción**: El agente interactúa en los canales cotidianos del equipo (canales de chat como Slack o Microsoft Teams, o comentarios automatizados en Pull Requests).
 - **Micro-solicitudes en 1 clic**: Formula preguntas puntuales, contextuales y de respuesta binaria o de selección rápida.
-  - *Ejemplo*: *"Hola @carlos.detectamos que el repositorio `svc-mef-pagos-v2` se despliega en producción en K8s. Según los últimos commits, tú eres el principal contribuyente. ¿Confirmas que eres el Dueño Técnico de esta aplicación? [Confirmar] [No, indicar responsable]"*.
-  - *Ejemplo 2*: *"El contrato MEF-2024-089 especifica una criticidad de negocio 'Misión Crítica' para este módulo. ¿Sigue vigente esa clasificación? [Sí, confirmar] [No, ajustar]"*.
+  - *Ejemplo*: *"Hola @carlos. Detectamos que el repositorio `svc-pagos-v2` se despliega en producción en K8s. Según los últimos commits, tú eres el principal contribuyente. ¿Confirmas que eres el Dueño Técnico de esta aplicación? [Confirmar] [No, indicar responsable]"*.
+  - *Ejemplo 2*: *"El contrato CTR-2024-089 especifica una criticidad de negocio 'Misión Crítica' para este módulo. ¿Sigue vigente esa clasificación? [Sí, confirmar] [No, ajustar]"*.
 - **Enriquecimiento progresivo**: Resuelve ambigüedades, llena vacíos de información donde la confianza del reconciliador era insuficiente y actualiza la hipótesis sin fatiga operativa.
 
 ### Operación continua
@@ -168,7 +170,7 @@ La arquitectura de descubrimiento y gestión agéntica del APM se diseña bajo e
 ### 2. Transparencia y explicabilidad (Principio 1.3)
 - Cada atributo propuesto por el sistema multi-agente está respaldado por **citas de evidencia primaria verificables**:
   - Para datos técnicos: enlace directo al archivo de configuración, línea de código o manifiesto (`deployment.yaml#L45`, `pom.xml#L12-L28`), junto con el hash del commit escaneado.
-  - Para datos contractuales: referencia exacta al documento, número de página y párrafo de la cláusula (`Contrato-MEF-2024-012.pdf`, Pág. 8, Cláusula 4.2).
+  - Para datos contractuales: referencia exacta al documento, número de página y párrafo de la cláusula (`Contrato-2024-012.pdf`, Pág. 8, Cláusula 4.2).
 - Si un arquitecto audita un Fact Sheet, la plataforma permite inspeccionar el fragmento original de texto o código que originó la sugerencia, lo que reduce el riesgo de aceptar inferencias sin sustento.
 
 ### 3. Robustez, seguridad y protección (Principio 1.4)
@@ -199,13 +201,13 @@ A partir de los datos reconciliados y plantillas estandarizadas, los agentes sin
 - Propuestas de remediación y generación automática de incidencias en ITSM.
 
 ### Obsolescencia tecnológica y de licenciamiento
-- Vigilancia de hitos de fin de soporte (EOL/EOS) mediante feeds como `endoflife.date` y catálogos de proveedores.
+- Vigilancia de hitos de fin de soporte (EOL/EOS) mediante fuentes abiertas y gratuitas (`endoflife.date`), complementadas con una tabla propia de EOL curada para los productos que esa fuente no cubre.
 - Cruce con los plazos contractuales y garantías detectados por el Agente Dark Data Miner.
 - Notificaciones predictivas con 6 a 12 meses de anticipación para planificar refactorizaciones o renovaciones de contratos.
 
 ### Consulta y analítica avanzada sobre el portafolio
-- Consultas en lenguaje natural sobre el grafo del portafolio (*"¿Qué aplicaciones dependen de Oracle 12c y tienen contrato vencido este año?"*).
-- Matriz de racionalización (TIME: Tolerante, Invertir, Mantener, Eliminar).
+- Consultas en lenguaje natural sobre el grafo del portafolio, como capacidad **secundaria y posterior** a la captura de datos (*"¿Qué aplicaciones dependen de Oracle 12c y tienen contrato vencido este año?"*).
+- Matriz de racionalización (TIME: Tolerar, Invertir, Migrar, Eliminar).
 - Detección de redundancias funcionales y análisis de impacto en cascada ante cambios.
 
 ---

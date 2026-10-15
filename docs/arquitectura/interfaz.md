@@ -36,7 +36,7 @@ APM
 │   ├── Descubrimiento          (hipótesis conciliadas, huérfanos, nudges)
 │   ├── Historial de agentes    (acciones, origen, trazabilidad)
 │   ├── Generador de arquitecturas
-│   └── Chat del portafolio
+│   └── Chat del portafolio     (secundario, fase posterior)
 ├── Gobernanza
 │   ├── Aprobaciones
 │   ├── Auditoría y cambios
@@ -59,14 +59,14 @@ APM
 | **Centro de vulnerabilidades** | Ranking CVE por severidad × criticidad de la aplicación, con propuestas de remediación y tickets. |
 | **Bandeja de propuestas IA** | Lista de cambios propuestos por agentes con comparativa (*diff*), origen y acción Aprobar / Rechazar / Editar. |
 | **Centro de descubrimiento** | Hipótesis de Fact Sheet generadas por los agentes de descubrimiento, con *score* de confianza, evidencia primaria citada (archivo/línea o documento/cláusula) y candidatos huérfanos sin coincidencia en el catálogo. |
-| **Chat del portafolio** | Consultas en lenguaje natural con respuestas citando fuentes del catálogo. |
+| **Chat del portafolio** | Consultas en lenguaje natural con respuestas citando fuentes del catálogo. Capacidad **secundaria y posterior**: la consulta se expone primero vía servidor MCP. |
 
 ## Patrones de interacción con la IA agéntica
 
 - **Tarjeta de propuesta**: muestra qué cambió (antes → después), quién/qué lo generó (modelo, prompt, versión), confianza y estado (`Borrador` → `En revisión` → `Aprobada` / `Rechazada`).
-- **Aprobaciones**: un solo clic desde la bandeja, con registro obligatorio opcional de comentario; los cambios se publican solo tras aprobación.
+- **Aprobaciones**: desde la bandeja; el comentario es **obligatorio para rechazar o devolver** y opcional para aprobar. Los cambios se publican solo tras aprobación. Para mitigar el sesgo de automatización, el botón Aprobar aparece después de la evidencia primaria y del *diff*, no antes, y las propuestas de baja confianza no admiten aprobación en lote.
 - **Micro-nudge**: pregunta de un clic en Microsoft Teams o como comentario en un *pull request*; cita la evidencia que la origina, vence en un plazo configurable (p. ej. 5 días hábiles) y luego se escala al arquitecto responsable; cada persona tiene un límite de preguntas y el excedente se agrupa en un resumen semanal.
-- **Chat con fuentes**: cada respuesta enlaza los registros del catálogo citados (permitir verificación).
+- **Chat con fuentes** (secundario): cada respuesta enlaza los registros del catálogo citados (permitir verificación).
 - **Notificaciones**: avisos de CVEs nuevos, EOL próximas, propuestas pendientes y contratos por vencer (por correo y en la app).
 
 ## Roles y vistas por rol
