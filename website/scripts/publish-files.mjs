@@ -4,8 +4,11 @@ import path from 'node:path';
 /**
  * Copia los archivos de docs/ con la extensión indicada a una carpeta pública
  * y escribe un manifiesto JSON con `{ title, url }` ordenado por título.
+ * `title(fullPath, relativeName)` es opcional; por defecto usa la ruta relativa a docs/.
  */
-export async function publishFiles({ source, destination, manifest, extension, urlPrefix }) {
+const defaultTitle = (_fullPath, relativeName) => relativeName;
+
+export async function publishFiles({ source, destination, manifest, extension, urlPrefix, title = defaultTitle }) {
   const pattern = new RegExp(`\\.${extension}$`, 'i');
   const files = [];
 
@@ -22,7 +25,7 @@ export async function publishFiles({ source, destination, manifest, extension, u
         await copyFile(fullPath, target);
         const segments = name.split(path.sep);
         files.push({
-          title: segments.join('/'),
+          title: await title(fullPath, segments.join('/')),
           url: urlPrefix + segments.map(encodeURIComponent).join('/'),
         });
       }

@@ -21,6 +21,7 @@ Forecast ~200 authored lines, one work unit. Strategy: ask-on-risk. RDD: off (gl
 
 ## Tasks
 - [x] T1 — Pipeline + page + sidebar + docs for presentations. Route: delegated, writer trigger (2+ non-trivial files).
+- [x] T2 — Human-readable presentation titles: embedded `dc:title` from `docProps/core.xml`, fallback to prettified basename; PDFs unchanged. Route: delegated, writer trigger (2+ non-trivial files).
 
 ## Acceptance criteria
 - `npm test` and `npm run build` pass; `dist/presentaciones/index.html` exists.
@@ -35,6 +36,11 @@ Forecast ~200 authored lines, one work unit. Strategy: ask-on-risk. RDD: off (gl
 - `git status --short` → no generated outputs or `.pptx` files listed.
 - RDD off (global): ordinary checks only.
 - Commit: `922bcee` feat(website): sección de presentaciones con visor de Office.
+- T2: new `website/scripts/pptx-title.mjs` (ZIP central directory + `zlib.inflateRawSync`, Node built-ins only, any failure → fallback); optional `title(fullPath, relativeName)` hook in `publish-files.mjs` (default = relative path, so PDFs keep their titles); `prepare-presentations.mjs` passes `presentationTitle`. Page unchanged (renders `title`).
+- T2 RED: `npm test` failed with ENOENT copying `pptx-title.mjs` after adding assertions for `Mi & deck` (deflated test ZIP) and `Otro archivo final` (garbage `.pptx`).
+- T2 GREEN: `cd website && npm test` → 2 pass, 0 fail.
+- T2 build: `npm run build` → 15 pages; `src/generated/presentaciones.json` title `APM con IA agéntica`.
+- T2 commit: pending (GPG-signed, by user).
 
 ## Next step
 Manual check of the Office viewer on the production domain after deployment with a real `.pptx`.

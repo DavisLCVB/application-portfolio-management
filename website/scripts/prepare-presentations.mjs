@@ -1,5 +1,6 @@
 import { fileURLToPath } from 'node:url';
 import { publishFiles } from './publish-files.mjs';
+import { presentationTitle } from './pptx-title.mjs';
 
 const presentations = await publishFiles({
   source: fileURLToPath(new URL('../../docs/', import.meta.url)),
@@ -7,5 +8,6 @@ const presentations = await publishFiles({
   manifest: fileURLToPath(new URL('../src/generated/presentaciones.json', import.meta.url)),
   extension: 'pptx',
   urlPrefix: '/presentaciones/',
+  title: presentationTitle,
 });
 console.log(`Presentaciones preparadas: ${presentations.length}`);
