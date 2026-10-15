@@ -34,6 +34,7 @@ Forecast ~200 authored lines, one work unit. Strategy: ask-on-risk. RDD: off (gl
 - `cd website && npm run build` → 14 pages built; `website/dist/presentaciones/index.html` exists.
 - `git status --short` → no generated outputs or `.pptx` files listed.
 - RDD off (global): ordinary checks only.
+- Commit: `922bcee` feat(website): sección de presentaciones con visor de Office.
 
 ## Next step
 Manual check of the Office viewer on the production domain after deployment with a real `.pptx`.
