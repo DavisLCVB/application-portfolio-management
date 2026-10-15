@@ -23,6 +23,7 @@ export default defineConfig({
             { label: 'Arquitectura de solución', slug: 'arquitectura/arquitectura-solucion' },
             { label: 'Interfaz (UI/UX)', slug: 'arquitectura/interfaz' },
             { label: 'Roadmap', slug: 'arquitectura/roadmap' },
+            { label: 'Soluciones similares', slug: 'arquitectura/soluciones-similares' },
           ],
         },
         { label: 'Documentos PDF', link: '/documentos/' },
