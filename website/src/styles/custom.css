@@ -1,15 +1,659 @@
-/* Ajustes visuales del portal documental. */
+/* Ajustes visuales del portal: aurora, vidrio, íconos, bento y movimiento. */
 :root {
   --sl-color-accent-low: #172b46;
   --sl-color-accent: #387bd6;
   --sl-color-accent-high: #b9d7ff;
+
+  /* Motion tokens (transitions.dev scale), only the ones in use. */
+  --duration-stagger: 40ms;
+  --duration-quick: 150ms;
+  --duration-fast: 250ms;
+  --ease-smooth-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --distance-base: 8px;
+  --stagger-dur: 500ms;
+  --stagger-distance: 12px;
+  --stagger-stagger: 40ms;
+  --stagger-blur: 3px;
+  --stagger-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --learn-shift: 2px;
+  --learn-spread: 8deg;
+  --learn-in: 350ms;
+  --learn-out: 350ms;
+  --learn-ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Surfaces (dark). Glass sits over the aurora; tiles are translucent, never blurred. */
+  --apm-glass: color-mix(in oklab, var(--sl-color-black) 62%, transparent);
+  --apm-glass-menu: color-mix(in oklab, var(--sl-color-black) 88%, transparent);
+  --apm-hairline: oklch(1 0 0 / 0.08);
+  --apm-tile-bg: color-mix(in oklab, var(--sl-color-gray-6) 62%, transparent);
+  --apm-ring: 0 0 0 1px oklch(1 0 0 / 0.08);
+  --apm-ring-hover: 0 0 0 1px oklch(1 0 0 / 0.16);
+  --apm-lift: 0 1px 2px oklch(0 0 0 / 0.3), 0 12px 32px -12px oklch(0 0 0 / 0.6);
+  --apm-outline-img: oklch(1 0 0 / 0.1);
+  --apm-tono-l: 0.8;
+
+  /* Aurora blobs: blue, indigo, violet. Alphas capped so gray-2 text stays >=4.5:1 where all three overlap. */
+  --apm-aurora-1: oklch(0.55 0.19 255 / 0.4);
+  --apm-aurora-2: oklch(0.5 0.21 280 / 0.38);
+  --apm-aurora-3: oklch(0.52 0.22 305 / 0.32);
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Zoom de imágenes (lightbox) */
-.sl-markdown-content img {
+/* Light theme inverts the accent roles: low is a pale tint, high is the dark ink. #2a64b8 keeps links at 5.8:1 on white. */
+:root[data-theme='light'] {
+  --sl-color-accent-low: #dbe8fa;
+  --sl-color-accent: #2a64b8;
+  --sl-color-accent-high: #13325e;
+
+  --apm-glass: color-mix(in oklab, white 66%, transparent);
+  --apm-glass-menu: color-mix(in oklab, white 90%, transparent);
+  --apm-hairline: oklch(0 0 0 / 0.08);
+  --apm-tile-bg: color-mix(in oklab, white 64%, transparent);
+  --apm-ring: 0 0 0 1px oklch(0 0 0 / 0.07), 0 1px 2px -1px oklch(0 0 0 / 0.06);
+  --apm-ring-hover: 0 0 0 1px oklch(0 0 0 / 0.1), 0 1px 2px -1px oklch(0 0 0 / 0.08);
+  --apm-lift: 0 2px 4px oklch(0 0 0 / 0.04), 0 12px 32px -12px oklch(0.3 0.08 265 / 0.22);
+  --apm-outline-img: oklch(0 0 0 / 0.1);
+  --apm-tono-l: 0.5;
+
+  --apm-aurora-1: oklch(0.86 0.09 255 / 0.7);
+  --apm-aurora-2: oklch(0.85 0.1 285 / 0.6);
+  --apm-aurora-3: oklch(0.88 0.09 320 / 0.55);
+}
+
+/* ---------- Aurora: soft radial blobs on a fixed layer behind everything. ---------- */
+body::before,
+body::after {
+  content: '';
+  position: fixed;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Reading pages: faint and static at the top, so the glass chrome has color to blur. */
+body::before {
+  inset: 0 0 auto;
+  height: 40rem;
+  background:
+    radial-gradient(38% 60% at 12% 0%, var(--apm-aurora-1), transparent 70%),
+    radial-gradient(34% 55% at 52% -12%, var(--apm-aurora-2), transparent 70%),
+    radial-gradient(34% 55% at 92% 0%, var(--apm-aurora-3), transparent 70%);
+  opacity: 0.4;
+  mask-image: linear-gradient(black 30%, transparent);
+}
+
+/* Home: vivid, full-viewport, drifting slowly (transform only). */
+:root[data-has-hero] body::before,
+:root[data-has-hero] body::after {
+  inset: -15%;
+  height: auto;
+  opacity: 1;
+  mask-image: linear-gradient(black 35%, transparent 95%);
+}
+
+:root[data-has-hero] body::before {
+  background:
+    radial-gradient(28% 34% at 74% 26%, var(--apm-aurora-1), transparent 70%),
+    radial-gradient(30% 30% at 18% 14%, var(--apm-aurora-2), transparent 70%);
+}
+
+:root[data-has-hero] body::after {
+  background:
+    radial-gradient(26% 32% at 92% 52%, var(--apm-aurora-3), transparent 70%),
+    radial-gradient(24% 26% at 46% 46%, var(--apm-aurora-2), transparent 72%);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-has-hero] body::before {
+    animation: apm-aurora-a 28s ease-in-out infinite alternate;
+  }
+
+  :root[data-has-hero] body::after {
+    animation: apm-aurora-b 36s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes apm-aurora-a {
+  to { transform: translate3d(-6%, 5%, 0) scale(1.12); }
+}
+
+@keyframes apm-aurora-b {
+  to { transform: translate3d(7%, -4%, 0) rotate(8deg) scale(0.92); }
+}
+
+/* ---------- Glass chrome: header, sidebar, tables of contents. ---------- */
+.page > .header {
+  border-bottom-color: var(--apm-hairline);
+}
+
+@media (min-width: 50rem) {
+  .sidebar-pane {
+    border-inline-end-color: var(--apm-hairline);
+  }
+}
+
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .page > .header,
+  mobile-starlight-toc nav {
+    background-color: var(--apm-glass);
+    -webkit-backdrop-filter: blur(16px) saturate(1.6);
+    backdrop-filter: blur(16px) saturate(1.6);
+  }
+
+  /* The mobile menu covers the page, so it stays nearly opaque for legibility. */
+  .sidebar-pane {
+    background-color: var(--apm-glass-menu);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    backdrop-filter: blur(20px) saturate(1.4);
+  }
+
+  @media (min-width: 50rem) {
+    .sidebar-pane {
+      background-color: var(--apm-glass);
+    }
+  }
+
+  @media (min-width: 72rem) {
+    .right-sidebar {
+      border-inline-start-color: var(--apm-hairline);
+      background-color: color-mix(in oklab, var(--sl-color-black) 30%, transparent);
+      -webkit-backdrop-filter: blur(16px) saturate(1.4);
+      backdrop-filter: blur(16px) saturate(1.4);
+    }
+
+    :root[data-theme='light'] .right-sidebar {
+      background-color: color-mix(in oklab, white 40%, transparent);
+    }
+  }
+}
+
+/* ---------- Icons: one authored 24px set, 1.5 stroke, painted with currentColor via mask. ---------- */
+.apm-ico {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 1.25em;
+  height: 1.25em;
+  background-color: currentColor;
+  -webkit-mask: var(--ico) center / contain no-repeat;
+  mask: var(--ico) center / contain no-repeat;
+}
+
+/* Sidebar: every link gets an icon by href (a component override would duplicate Starlight's sidebar). */
+.sidebar-content :is(a, .group-label) {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.sidebar-content a::before,
+.sidebar-content .group-label::before {
+  content: '';
+  flex-shrink: 0;
+  width: 1.125rem;
+  height: 1.125rem;
+  background-color: currentColor;
+  opacity: 0.8;
+  -webkit-mask: var(--ico, var(--apm-i-documentos)) center / contain no-repeat;
+  mask: var(--ico, var(--apm-i-documentos)) center / contain no-repeat;
+}
+
+.sidebar-content a[aria-current='page']::before {
+  opacity: 1;
+}
+
+.sidebar-content a {
+  border-radius: 0.5rem;
+  transition-property: background-color, color;
+  transition-duration: var(--duration-quick);
+  transition-timing-function: ease-out;
+}
+
+.sidebar-content a:not([aria-current='page']):hover {
+  background-color: color-mix(in oklab, var(--sl-color-white) 6%, transparent);
+}
+
+.sidebar-content a[href='/'] { --ico: var(--apm-i-inicio); }
+.sidebar-content a[href='/arquitectura/'] { --ico: var(--apm-i-arquitectura); }
+.sidebar-content a[href='/arquitectura/catalogos/'] { --ico: var(--apm-i-catalogos); }
+.sidebar-content a[href='/arquitectura/modelo-datos/'] { --ico: var(--apm-i-datos); }
+.sidebar-content a[href='/arquitectura/gobierno-datos/'] { --ico: var(--apm-i-gobierno); }
+.sidebar-content a[href='/arquitectura/ia-agentes/'] { --ico: var(--apm-i-ia); }
+.sidebar-content a[href='/arquitectura/arquitectura-solucion/'] { --ico: var(--apm-i-solucion); }
+.sidebar-content a[href='/arquitectura/interfaz/'] { --ico: var(--apm-i-interfaz); }
+.sidebar-content a[href='/arquitectura/roadmap/'] { --ico: var(--apm-i-roadmap); }
+.sidebar-content a[href='/arquitectura/soluciones-similares/'] { --ico: var(--apm-i-similares); }
+.sidebar-content a[href='/documentos/'] { --ico: var(--apm-i-documentos); }
+.sidebar-content a[href='/presentaciones/'] { --ico: var(--apm-i-presentaciones); }
+.sidebar-content details:has(a[href^='/arquitectura/']) > summary .group-label { --ico: var(--apm-i-arquitectura); }
+.sidebar-content details:has(a[href^='/guias/']) > summary .group-label { --ico: var(--apm-i-guias); }
+
+/* ---------- Buttons: one primary/secondary language, with icon, lift on hover, press scale. ---------- */
+:is(.apm-btn, .sl-link-button) {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem 0.6rem 0.875rem;
+  border: 0;
+  border-radius: 0.625rem;
+  font: inherit;
+  font-size: var(--sl-text-sm);
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+  cursor: pointer;
+  transition-property: background-color, box-shadow, color, translate, scale;
+  transition-duration: var(--duration-quick);
+  transition-timing-function: ease-out;
+}
+
+:is(.apm-btn--primario, .sl-link-button.primary) {
+  background-color: var(--sl-color-text-accent);
+  color: var(--sl-color-black);
+  box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.25), 0 1px 2px oklch(0 0 0 / 0.25);
+}
+
+:root[data-theme='light'] :is(.apm-btn--primario, .sl-link-button.primary) {
+  color: white;
+}
+
+:is(.apm-btn--secundario, .sl-link-button.secondary, .sl-link-button.minimal) {
+  background-color: var(--apm-tile-bg);
+  color: var(--sl-color-white);
+  box-shadow: var(--apm-ring);
+}
+
+@media (hover: hover) {
+  :is(.apm-btn, .sl-link-button):hover {
+    translate: 0 -1px;
+  }
+
+  :is(.apm-btn--primario, .sl-link-button.primary):hover {
+    background-color: color-mix(in oklab, var(--sl-color-text-accent) 85%, var(--sl-color-white));
+    color: var(--sl-color-black);
+    box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.25), var(--apm-lift);
+  }
+
+  :root[data-theme='light'] :is(.apm-btn--primario, .sl-link-button.primary):hover {
+    background-color: color-mix(in oklab, var(--sl-color-text-accent) 88%, black);
+    color: white;
+  }
+
+  :is(.apm-btn--secundario, .sl-link-button.secondary, .sl-link-button.minimal):hover {
+    color: var(--sl-color-white);
+    box-shadow: var(--apm-ring-hover), var(--apm-lift);
+  }
+}
+
+:is(.apm-btn, .sl-link-button):active {
+  translate: 0 0;
+  scale: 0.96;
+}
+
+@media (min-width: 50rem) {
+  .sl-link-button {
+    font-size: var(--sl-text-base);
+    padding: 0.75rem 1.25rem 0.75rem 1.125rem;
+  }
+}
+
+/* ---------- Bento: translucent tiles over the aurora, on entry surfaces only. ---------- */
+.apm-bento-marco {
+  container-type: inline-size;
+}
+
+.apm-bento {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.875rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.apm-tile {
+  --tono: oklch(var(--apm-tono-l) 0.16 var(--tono-h, 255));
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  min-width: 0;
+  padding: 1.25rem;
+  border-radius: 1rem;
+  background:
+    radial-gradient(120% 90% at 100% 0%, color-mix(in oklab, var(--tono) 12%, transparent), transparent 60%),
+    var(--apm-tile-bg);
+  box-shadow: var(--apm-ring);
+  color: var(--sl-color-gray-2);
+  font-size: var(--sl-text-sm);
+  line-height: 1.55;
+  text-decoration: none;
+  transition-property: box-shadow, translate, scale;
+  transition-duration: var(--duration-quick);
+  transition-timing-function: ease-out;
+}
+
+.apm-tile h2,
+.apm-tile__titulo {
+  margin: 0;
+  color: var(--sl-color-white);
+  font-size: var(--sl-text-lg);
+  font-weight: 600;
+  line-height: 1.3;
+  text-wrap: balance;
+}
+
+.apm-tile p {
+  margin: 0;
+}
+
+.apm-tile__cab {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Hue chip: same oklch lightness for every tile, so color encodes identity, not rank. */
+.apm-tile__icono {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.625rem;
+  background: color-mix(in oklab, var(--tono) 16%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--tono) 28%, transparent);
+  color: var(--tono);
+  font-size: 1.125rem;
+}
+
+a.apm-tile {
+  cursor: pointer;
+}
+
+a.apm-tile .apm-tile__ir {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  color: var(--sl-color-gray-3);
+  transition-property: color, translate;
+  transition-duration: var(--duration-quick);
+  transition-timing-function: ease-out;
+}
+
+@media (hover: hover) {
+  a.apm-tile:hover {
+    translate: 0 -2px;
+    box-shadow: 0 0 0 1px color-mix(in oklab, var(--tono) 40%, transparent), var(--apm-lift);
+  }
+
+  a.apm-tile:hover .apm-tile__ir {
+    color: var(--tono);
+    translate: 2px 0;
+  }
+}
+
+a.apm-tile:active {
+  translate: 0 0;
+  scale: 0.98;
+}
+
+a.apm-tile:focus-visible {
+  outline: 2px solid var(--sl-color-text-accent);
+  outline-offset: 3px;
+  border-radius: 1rem;
+}
+
+/* Diagram thumbnail (Markdown wraps it in <p>): white plate inset 0.5rem, concentric with the tile. */
+.apm-tile > p:has(> img) {
+  margin: auto -0.75rem -0.75rem;
+  padding-top: 0.75rem;
+}
+
+.apm-tile > p > img {
+  display: block;
+  width: 100%;
+  height: 7.5rem;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  background: #ffffff;
+  outline: 1px solid var(--apm-outline-img);
+  outline-offset: -1px;
+  object-fit: contain;
+}
+
+/* Section bento (Arquitectura): six columns once the column is wide enough. */
+.apm-bento--secciones {
+  margin-bottom: 1rem;
+}
+
+@container (min-width: 36rem) {
+  .apm-bento--secciones {
+    grid-template-columns: repeat(6, 1fr);
+  }
+
+  .apm-span-2 { grid-column: span 2; }
+  .apm-span-3 { grid-column: span 3; }
+  .apm-span-4 { grid-column: span 4; }
+}
+
+/* Entrance: tiles rise once, staggered; under 400ms in total. */
+@media (prefers-reduced-motion: no-preference) {
+  .apm-bento--entrada > .apm-tile,
+  .apm-bento[data-revelar='si'] > .apm-tile {
+    animation: apm-tile-entra var(--duration-fast) var(--ease-smooth-out) both;
+    animation-delay: calc(min(var(--i, 0), 4) * var(--duration-stagger));
+  }
+
+  .apm-bento[data-revelar='pendiente'] > .apm-tile {
+    opacity: 0;
+  }
+}
+
+@keyframes apm-tile-entra {
+  from {
+    opacity: 0;
+    translate: 0 var(--distance-base);
+  }
+}
+
+/* ---------- Content blocks ---------- */
+:is(h1, h2, h3, h4) {
+  text-wrap: balance;
+}
+
+.sl-markdown-content :is(p, li, figcaption, td) {
+  text-wrap: pretty;
+}
+
+.sl-markdown-content .sl-heading-wrapper.level-h2:not(:first-child) {
+  margin-top: 2.75rem;
+}
+
+.sl-markdown-content .sl-heading-wrapper.level-h3:not(:first-child) {
+  margin-top: 2rem;
+}
+
+.sl-markdown-content :is(h2, h3):not(:where(.not-content *)) {
+  letter-spacing: -0.015em;
+}
+
+/* Diagrams: white plate, neutral 1px outline, rounded, zoomable. */
+.sl-markdown-content img:not(:where(.not-content *)) {
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  background: #ffffff;
+  outline: 1px solid var(--apm-outline-img);
+  outline-offset: -1px;
   cursor: zoom-in;
 }
 
+/* Tables: rounded container, tinted header, row hover. */
+.sl-markdown-content table:not(:where(.not-content *)) {
+  width: fit-content;
+  max-width: 100%;
+  border-radius: 0.75rem;
+  background: var(--apm-tile-bg);
+  box-shadow: var(--apm-ring);
+  font-size: var(--sl-text-sm);
+}
+
+.sl-markdown-content :is(th, td):not(:where(.not-content *)) {
+  padding: 0.6rem 1rem;
+  border-bottom-color: var(--apm-hairline);
+}
+
+.sl-markdown-content :is(th:first-child, td:first-child):not(:where(.not-content *)) {
+  padding-inline-start: 1rem;
+}
+
+.sl-markdown-content :is(th:last-child, td:last-child):not(:where(.not-content *)) {
+  padding-inline-end: 1rem;
+}
+
+.sl-markdown-content th:not(:where(.not-content *)) {
+  background: color-mix(in oklab, var(--sl-color-accent) 12%, transparent);
+}
+
+.sl-markdown-content tr:last-child > td:not(:where(.not-content *)) {
+  border-bottom: 0;
+}
+
+.sl-markdown-content tbody tr:not(:where(.not-content *)) {
+  transition: background-color var(--duration-quick) ease-out;
+}
+
+.sl-markdown-content tbody tr:not(:where(.not-content *)):hover {
+  background: color-mix(in oklab, var(--sl-color-white) 4%, transparent);
+}
+
+/* Asides: hairline tinted card instead of a thick side stripe. */
+.starlight-aside {
+  border: 1px solid color-mix(in oklab, var(--sl-color-asides-border) 35%, transparent);
+  border-radius: 0.75rem;
+  background-color: color-mix(in oklab, var(--sl-color-asides-border) 10%, transparent);
+}
+
+/* Content links: underline that fills on hover; the faint line keeps them findable at rest. */
+.sl-markdown-content a:not(:where(.not-content *, .sl-link-button, .sl-anchor-link)) {
+  text-decoration: none;
+  background-image:
+    linear-gradient(currentColor, currentColor),
+    linear-gradient(color-mix(in oklab, currentColor 40%, transparent), color-mix(in oklab, currentColor 40%, transparent));
+  background-position: 0 100%;
+  background-size: 0% 1px, 100% 1px;
+  background-repeat: no-repeat;
+  transition-property: color, background-size;
+  transition-duration: var(--duration-fast);
+  transition-timing-function: var(--ease-smooth-out);
+}
+
+.sl-markdown-content a:not(:where(.not-content *, .sl-link-button, .sl-anchor-link)):hover {
+  background-size: 100% 1px, 100% 1px;
+}
+
+:where(a, button, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--sl-color-text-accent);
+  outline-offset: 2px;
+  border-radius: 0.2rem;
+}
+
+::selection {
+  background: var(--sl-color-accent-low);
+  color: var(--sl-color-white);
+}
+
+/* ---------- Page transitions: only the content area moves; chrome stays put. ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition {
+    navigation: auto;
+  }
+
+  main {
+    view-transition-name: apm-main;
+  }
+
+  ::view-transition-old(root),
+  ::view-transition-new(root),
+  ::view-transition-group(apm-main) {
+    animation: none;
+  }
+
+  ::view-transition-old(apm-main) {
+    animation: apm-vt-sale var(--duration-quick) ease-out both;
+  }
+
+  ::view-transition-new(apm-main) {
+    animation: apm-vt-entra var(--duration-fast) var(--ease-smooth-out) both;
+  }
+}
+
+@keyframes apm-vt-sale {
+  to { opacity: 0; }
+}
+
+@keyframes apm-vt-entra {
+  from {
+    opacity: 0;
+    transform: translateY(var(--distance-base));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sl-markdown-content a,
+  .sidebar-content a,
+  .apm-tile,
+  .apm-tile__ir,
+  :is(.apm-btn, .sl-link-button) {
+    transition: none;
+  }
+}
+
+/* Icon set (generated from authored paths; keep in sync if edited). */
+:root {
+  --apm-i-inicio: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 10.5 12 4l8 6.5V19a1 1 0 0 1-1 1h-4v-5.5h-6V20H5a1 1 0 0 1-1-1z'/%3E%3C/svg%3E");
+  --apm-i-arquitectura: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3.5 20.5 8 12 12.5 3.5 8z M3.5 12 12 16.5 20.5 12 M3.5 16 12 20.5 20.5 16'/%3E%3C/svg%3E");
+  --apm-i-catalogos: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 4.5h5a.5.5 0 0 1 .5.5v5a.5.5 0 0 1-.5.5H5a.5.5 0 0 1-.5-.5V5a.5.5 0 0 1 .5-.5z M14 4.5h5a.5.5 0 0 1 .5.5v5a.5.5 0 0 1-.5.5h-5a.5.5 0 0 1-.5-.5V5a.5.5 0 0 1 .5-.5z M5 13.5h5a.5.5 0 0 1 .5.5v5a.5.5 0 0 1-.5.5H5a.5.5 0 0 1-.5-.5v-5a.5.5 0 0 1 .5-.5z M14 13.5h5a.5.5 0 0 1 .5.5v5a.5.5 0 0 1-.5.5h-5a.5.5 0 0 1-.5-.5v-5a.5.5 0 0 1 .5-.5z'/%3E%3C/svg%3E");
+  --apm-i-datos: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.5 6.5c0-1.4 3.4-2.5 7.5-2.5s7.5 1.1 7.5 2.5S16.1 9 12 9 4.5 7.9 4.5 6.5z M4.5 6.5v11c0 1.4 3.4 2.5 7.5 2.5s7.5-1.1 7.5-2.5v-11 M4.5 12c0 1.4 3.4 2.5 7.5 2.5s7.5-1.1 7.5-2.5'/%3E%3C/svg%3E");
+  --apm-i-gobierno: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3.5 5 6.2v5.3c0 4.2 2.9 7.7 7 9 4.1-1.3 7-4.8 7-9V6.2z M9 12l2.2 2.2L15.5 10'/%3E%3C/svg%3E");
+  --apm-i-ia: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M11 4l1.6 4.4L17 10l-4.4 1.6L11 16l-1.6-4.4L5 10l4.4-1.6z M18 14.5l.8 1.9 1.9.8-1.9.8-.8 1.9-.8-1.9-1.9-.8 1.9-.8z'/%3E%3C/svg%3E");
+  --apm-i-solucion: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 4.5h14a.5.5 0 0 1 .5.5v4.5a.5.5 0 0 1-.5.5H5a.5.5 0 0 1-.5-.5V5a.5.5 0 0 1 .5-.5z M5 14h14a.5.5 0 0 1 .5.5V19a.5.5 0 0 1-.5.5H5a.5.5 0 0 1-.5-.5v-4.5A.5.5 0 0 1 5 14z M8 7.25h.01 M8 16.75h.01'/%3E%3C/svg%3E");
+  --apm-i-interfaz: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.5 5.5h15a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1h-15a1 1 0 0 1-1-1v-11a1 1 0 0 1 1-1z M3.5 9.5h17 M9 9.5v9'/%3E%3C/svg%3E");
+  --apm-i-roadmap: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 20.5V4 M5 4.5h11.5l-2.5 4 2.5 4H5'/%3E%3C/svg%3E");
+  --apm-i-similares: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9.5 9h9a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5z M15 9V5.5a.5.5 0 0 0-.5-.5h-9a.5.5 0 0 0-.5.5v9a.5.5 0 0 0 .5.5H9'/%3E%3C/svg%3E");
+  --apm-i-documentos: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M13.5 3.5H7a1 1 0 0 0-1 1v15a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V8z M13.5 3.5V8H18 M9 12.5h6 M9 16h6'/%3E%3C/svg%3E");
+  --apm-i-presentaciones: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 4.5h17 M5 4.5v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9 M12 14.5v4 M8.5 20.5l3.5-2 3.5 2 M9 11l2-2 2 1.5 3-3'/%3E%3C/svg%3E");
+  --apm-i-guias: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 18.5V5.5A1.5 1.5 0 0 1 6.5 4H19v13H6.5A1.5 1.5 0 0 0 5 18.5zm0 0A1.5 1.5 0 0 0 6.5 20H19'/%3E%3C/svg%3E");
+  --apm-i-descargar: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 4.5v10 M7.5 10.5 12 15l4.5-4.5 M5 19.5h14'/%3E%3C/svg%3E");
+  --apm-i-flecha: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14 M13.5 6.5 19 12l-5.5 5.5'/%3E%3C/svg%3E");
+  --apm-i-externo: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 4.5h5.5V10 M19.5 4.5 11 13 M17.5 14v4.5a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1v-11a1 1 0 0 1 1-1H10'/%3E%3C/svg%3E");
+  --apm-i-pantalla: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.5 9V4.5H9 M15 4.5h4.5V9 M4.5 15v4.5H9 M19.5 15v4.5H15'/%3E%3C/svg%3E");
+  --apm-i-estado: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 12h4l2.5-6.5 4 13 2.5-6.5h4'/%3E%3C/svg%3E");
+  --apm-i-ciclo: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M19.5 12a7.5 7.5 0 0 1-13.1 5 M4.5 12a7.5 7.5 0 0 1 13.1-5 M17.6 3.5V7h-3.5 M6.4 20.5V17h3.5'/%3E%3C/svg%3E");
+}
+
+.apm-ico--inicio { --ico: var(--apm-i-inicio); }
+.apm-ico--arquitectura { --ico: var(--apm-i-arquitectura); }
+.apm-ico--catalogos { --ico: var(--apm-i-catalogos); }
+.apm-ico--datos { --ico: var(--apm-i-datos); }
+.apm-ico--gobierno { --ico: var(--apm-i-gobierno); }
+.apm-ico--ia { --ico: var(--apm-i-ia); }
+.apm-ico--solucion { --ico: var(--apm-i-solucion); }
+.apm-ico--interfaz { --ico: var(--apm-i-interfaz); }
+.apm-ico--roadmap { --ico: var(--apm-i-roadmap); }
+.apm-ico--similares { --ico: var(--apm-i-similares); }
+.apm-ico--documentos { --ico: var(--apm-i-documentos); }
+.apm-ico--presentaciones { --ico: var(--apm-i-presentaciones); }
+.apm-ico--guias { --ico: var(--apm-i-guias); }
+.apm-ico--descargar { --ico: var(--apm-i-descargar); }
+.apm-ico--flecha { --ico: var(--apm-i-flecha); }
+.apm-ico--externo { --ico: var(--apm-i-externo); }
+.apm-ico--pantalla { --ico: var(--apm-i-pantalla); }
+.apm-ico--estado { --ico: var(--apm-i-estado); }
+.apm-ico--ciclo { --ico: var(--apm-i-ciclo); }
+
+/* Zoom de imágenes (lightbox) */
 .apm-zoom {
   position: fixed;
   inset: 0;
@@ -37,4 +681,318 @@
 .apm-zoom--open {
   opacity: 1;
   pointer-events: auto;
+}
+
+/* Ciclo de datos de la portada: fila 1-2-3, retorno 4-5-6 en serpiente. */
+.apm-ciclo {
+  container-type: inline-size;
+  margin-block: 2rem 2.5rem;
+}
+
+.apm-ciclo ol {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2.5rem 2rem;
+  padding: 0;
+  list-style: none;
+}
+
+.apm-ciclo li {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 1rem;
+  border: 1px solid var(--sl-color-gray-5);
+  border-radius: 0.5rem;
+  font-size: var(--sl-text-sm);
+  line-height: 1.5;
+}
+
+.apm-ciclo li.apm-ciclo__clave {
+  border-color: var(--sl-color-gray-3);
+  background: var(--sl-color-gray-6);
+}
+
+.apm-ciclo__n {
+  color: var(--sl-color-gray-3);
+  font-size: var(--sl-text-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.apm-ciclo strong {
+  color: var(--sl-color-white);
+  font-size: var(--sl-text-base);
+  text-wrap: balance;
+}
+
+.apm-ciclo span:has(+ em) {
+  margin-bottom: 0.5rem;
+}
+
+.apm-ciclo b {
+  color: var(--sl-color-white);
+}
+
+.apm-ciclo em {
+  align-self: flex-start;
+  margin-top: auto;
+  padding: 0.1rem 0.45rem;
+  border: 1px dashed var(--sl-color-gray-4);
+  border-radius: 0.25rem;
+  color: var(--sl-color-gray-2);
+  font-size: var(--sl-text-xs);
+  font-style: normal;
+}
+
+/* Flechas entre pasos, dibujadas en el hueco de la grilla. */
+.apm-ciclo li::after {
+  content: '';
+  position: absolute;
+  background: var(--sl-color-gray-3);
+}
+
+.apm-ciclo li:nth-child(1) { grid-area: 1 / 1; }
+.apm-ciclo li:nth-child(2) { grid-area: 1 / 2; }
+.apm-ciclo li:nth-child(3) { grid-area: 1 / 3; }
+.apm-ciclo li:nth-child(4) { grid-area: 2 / 3; }
+.apm-ciclo li:nth-child(5) { grid-area: 2 / 2; }
+.apm-ciclo li:nth-child(6) { grid-area: 2 / 1; }
+
+/* Horizontal: 1→2, 2→3, 4→5, 5→6 */
+.apm-ciclo li:is(:nth-child(1), :nth-child(2), :nth-child(4), :nth-child(5))::after {
+  top: 50%;
+  left: 100%;
+  width: 2rem;
+  height: 10px;
+  translate: 0 -50%;
+  clip-path: polygon(3px 4px, calc(100% - 11px) 4px, calc(100% - 11px) 0, calc(100% - 3px) 50%, calc(100% - 11px) 100%, calc(100% - 11px) 6px, 3px 6px);
+}
+
+.apm-ciclo li:is(:nth-child(4), :nth-child(5))::after {
+  left: auto;
+  right: 100%;
+  scale: -1 1;
+}
+
+/* Vertical: 3→4 baja, 6→1 sube y cierra el ciclo */
+.apm-ciclo li:is(:nth-child(3), :nth-child(6))::after {
+  top: 100%;
+  left: 50%;
+  width: 10px;
+  height: 2.5rem;
+  translate: -50% 0;
+  clip-path: polygon(4px 3px, 6px 3px, 6px calc(100% - 11px), 100% calc(100% - 11px), 50% calc(100% - 3px), 0 calc(100% - 11px), 4px calc(100% - 11px));
+}
+
+.apm-ciclo li:nth-child(6)::after {
+  top: auto;
+  bottom: 100%;
+  scale: 1 -1;
+}
+
+.apm-ciclo figcaption {
+  margin-top: 1rem;
+  color: var(--sl-color-gray-3);
+  font-size: var(--sl-text-sm);
+}
+
+/* Columna estrecha: lista vertical en orden, sin flecha de retorno. */
+@container (max-width: 34rem) {
+  .apm-ciclo ol {
+    grid-template-columns: 1fr;
+    gap: 1.75rem;
+  }
+
+  .apm-ciclo li:nth-child(n) {
+    grid-area: auto;
+  }
+
+  .apm-ciclo li:nth-child(n)::after {
+    top: 100%;
+    bottom: auto;
+    left: 50%;
+    right: auto;
+    width: 10px;
+    height: 1.75rem;
+    translate: -50% 0;
+    scale: 1 1;
+    clip-path: polygon(4px 3px, 6px 3px, 6px calc(100% - 11px), 100% calc(100% - 11px), 50% calc(100% - 3px), 0 calc(100% - 11px), 4px calc(100% - 11px));
+  }
+
+  .apm-ciclo li:nth-child(6)::after {
+    display: none;
+  }
+}
+
+/* Roadmap: vertical timeline, one hue per phase at equal lightness. */
+.apm-fases {
+  --fase-l: 0.8;
+  --fase-c: 0.16;
+  position: relative;
+  display: grid;
+  gap: 1.25rem;
+  margin-block: 1.5rem 2rem;
+  padding: 0;
+  list-style: none;
+}
+
+:root[data-theme='light'] .apm-fases {
+  --fase-l: 0.5;
+}
+
+.apm-fase--f0 { --fase-h: 230; }
+.apm-fase--f1 { --fase-h: 275; }
+.apm-fase--f2 { --fase-h: 310; }
+.apm-fase--f3 { --fase-h: 355; }
+.apm-fase--f4 { --fase-h: 65; }
+.apm-fase--f5 { --fase-h: 160; }
+
+.apm-fases .apm-fase {
+  --fase: oklch(var(--fase-l) var(--fase-c) var(--fase-h));
+  position: relative;
+  margin: 0;
+  padding: 1rem 1.25rem 1.1rem;
+  margin-left: 2.25rem;
+  border: 1px solid color-mix(in oklab, var(--fase) 22%, var(--sl-color-gray-5));
+  border-radius: 0.75rem;
+  background: color-mix(in oklab, var(--fase) 9%, transparent);
+  transition-property: border-color, background-color;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
+}
+
+.apm-fases .apm-fase:hover {
+  border-color: color-mix(in oklab, var(--fase) 55%, transparent);
+  background: color-mix(in oklab, var(--fase) 14%, transparent);
+}
+
+/* Node on the rail and the segment down to the next phase. */
+.apm-fase::before {
+  content: '';
+  position: absolute;
+  top: 1.35rem;
+  left: -2.25rem;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  background: var(--fase);
+  box-shadow: 0 0 0 4px var(--sl-color-bg);
+}
+
+.apm-fase:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 2.1rem;
+  bottom: -2.6rem;
+  left: calc(-2.25rem + 0.375rem - 1px);
+  width: 2px;
+  background: linear-gradient(var(--fase), color-mix(in oklab, var(--fase) 30%, transparent));
+}
+
+.apm-fase__cab {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+}
+
+.apm-fase__codigo {
+  padding: 0.1rem 0.5rem;
+  border-radius: 0.35rem;
+  background: color-mix(in oklab, var(--fase) 18%, transparent);
+  color: var(--fase);
+  font-size: var(--sl-text-sm);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.apm-fase__nombre {
+  color: var(--sl-color-white);
+  font-size: var(--sl-text-xl);
+  line-height: 1.3;
+}
+
+.apm-fase__estado {
+  margin-left: auto;
+  padding: 0.1rem 0.6rem;
+  border: 1px solid var(--sl-color-gray-5);
+  border-radius: 999px;
+  color: var(--sl-color-gray-3);
+  font-size: var(--sl-text-xs);
+}
+
+.apm-fase--actual {
+  border-color: color-mix(in oklab, var(--fase) 55%, transparent);
+}
+
+.apm-fase--actual .apm-fase__estado {
+  border-color: transparent;
+  background: var(--fase);
+  color: var(--sl-color-black);
+  font-weight: 600;
+}
+
+.apm-fases dl {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.25rem 1.5rem;
+  margin: 0.75rem 0 0;
+}
+
+.apm-fases dt {
+  grid-row: 1;
+  margin: 0;
+  color: color-mix(in oklab, var(--fase) 70%, var(--sl-color-gray-3));
+  font-size: var(--sl-text-xs);
+  font-weight: 600;
+}
+
+.apm-fases dd {
+  grid-row: 2;
+  margin: 0;
+  padding: 0;
+  font-size: var(--sl-text-sm);
+  line-height: 1.6;
+}
+
+@media (max-width: 40rem) {
+  .apm-fases dl {
+    grid-template-columns: 1fr;
+  }
+
+  .apm-fases dt,
+  .apm-fases dd {
+    grid-row: auto;
+  }
+
+  .apm-fases dt:not(:first-child) {
+    margin-top: 0.5rem;
+  }
+}
+
+/* The current phase pulses once its node is on screen; static otherwise. */
+@media (prefers-reduced-motion: no-preference) {
+  .apm-fase--actual::before {
+    animation: apm-fase-pulso 2.4s ease-out infinite;
+  }
+
+  @supports (animation-timeline: view()) {
+    .apm-fases .apm-fase {
+      animation: apm-fase-entra linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 60%;
+    }
+  }
+}
+
+@keyframes apm-fase-pulso {
+  0% { box-shadow: 0 0 0 4px var(--sl-color-bg), 0 0 0 4px color-mix(in oklab, var(--fase) 50%, transparent); }
+  100% { box-shadow: 0 0 0 4px var(--sl-color-bg), 0 0 0 14px transparent; }
+}
+
+@keyframes apm-fase-entra {
+  from { opacity: 0; translate: 0 1rem; }
+  to { opacity: 1; translate: 0 0; }
 }

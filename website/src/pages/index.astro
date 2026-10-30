@@ -1,0 +1,572 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+
+const title = 'Gestión del portafolio de aplicaciones con IA agéntica';
+const lede =
+  'Agentes de IA que descubren aplicaciones desde el código y los contratos, las concilian con el catálogo existente y piden validación humana solo cuando hace falta, para que Arquitectura TI decida con un portafolio al día.';
+
+// Synthetic example: one app walking through the discovery pipeline of docs/arquitectura/ia-agentes.md.
+const pasos = [
+  {
+    lineas: [
+      ['Agente 1 · Code-to-Catalog', 'repositorio detectado: tramites-web'],
+      ['', 'stack: Java 17 · Spring Boot · PostgreSQL'],
+    ],
+  },
+  {
+    lineas: [
+      ['Agente 2 · Dark Data Miner', 'contrato CTR-2024-018: proveedor de soporte'],
+      ['', 'vigente hasta 2026-12'],
+    ],
+  },
+  {
+    lineas: [
+      ['Agente 3 · Reconciliador Semántico', 'candidato: Sistema de Trámites en Línea'],
+      ['', 'score 0.82 < umbral 0.85 → Requiere Verificación'],
+    ],
+  },
+  {
+    lineas: [
+      ['Agente 4 · Micro-Nudge', 'pregunta de 1 clic al responsable técnico'],
+      ['', '¿tramites-web pertenece a Sistema de Trámites en Línea?'],
+    ],
+  },
+  {
+    lineas: [
+      ['Responsable técnico', 'confirma: sí'],
+      ['Fact Sheet', 'propuesto, pendiente de aprobación del arquitecto/a TI'],
+      ['Arquitecto/a TI', 'aprueba: el sistema entra al Catálogo APM'],
+    ],
+  },
+];
+const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const log = pasos
+  .flatMap((p) => p.lineas)
+  .map(([quien, que]) => `<li>${quien ? `<b>[${esc(quien)}]</b> ` : '<span aria-hidden="true">  </span>'}${esc(que)}</li>`)
+  .join('');
+
+// Collection animation (viewBox 540x360): sources | agents | Fact Sheet + catalog. GSAP drives it client-side.
+const node = (id: string, x: number, y: number, w: number, t: string, s: string) => `
+  <g class="n" data-n="${id}">
+    <rect class="n__box" x="${x}" y="${y}" width="${w}" height="46" rx="6"/>
+    <rect class="n__hl" x="${x}" y="${y}" width="${w}" height="46" rx="6" opacity="0"/>
+    <text class="t1" x="${x + 10}" y="${y + 19}">${esc(t)}</text>
+    <text class="t2" x="${x + 10}" y="${y + 35}">${esc(s)}</text>
+  </g>`;
+const chip = (id: string, label: string, mono = true) => {
+  const w = Math.round(label.length * 6.4 + 14);
+  return `<g class="chip" data-chip="${id}" opacity="0"><rect x="${-w / 2}" y="-10" width="${w}" height="20" rx="4"/><text class="${mono ? 'mono' : ''}" x="0" y="4" text-anchor="middle">${esc(label)}</text></g>`;
+};
+const rutas: Record<string, string> = {
+  s1a1: 'M134,50 C165,50 165,41 196,41',
+  s2a2: 'M134,130 C165,130 165,121 196,121',
+  s3a3: 'M134,210 C165,210 165,201 196,201',
+  a1a3: 'M308,34 C328,34 328,194 308,194',
+  a2a3: 'M308,128 C320,128 320,194 308,194',
+  a3a4: 'M252,224 L252,258',
+  a4r: 'M196,281 C165,281 165,290 134,290',
+};
+const campos = [
+  ['Nombre', 'Sistema de Trámites en Línea'],
+  ['Tecnología', 'Java 17 · Spring Boot'],
+  ['Contrato', 'Soporte: CTR-2024-018'],
+  ['Confianza', '0.82 → confirmada'],
+];
+const animacion = `
+<svg class="apm-anim" viewBox="0 0 540 360" aria-hidden="true" focusable="false">
+  ${Object.entries(rutas).map(([id, d]) => `<path class="ruta" data-ruta="${id}" d="${d}"/>`).join('')}
+  <!-- Evidence sits under the nodes so it reads as entering them. -->
+  ${chip('web', 'tramites-web')}${chip('java', 'Java 17')}${chip('spring', 'Spring Boot')}
+  ${chip('ctr', 'CTR-2024-018')}${chip('vig', 'vigente 2026-12')}${chip('ancla', 'ancla')}
+  ${chip('preg', '¿es tuyo?', false)}${chip('si', 'sí', false)}
+  <circle class="dot" data-dot="1" r="3" opacity="0"/><circle class="dot" data-dot="2" r="3" opacity="0"/><circle class="dot" data-dot="3" r="3" opacity="0"/>
+  ${node('s1', 2, 27, 132, 'Repositorios', 'Git · CI/CD')}
+  ${node('s2', 2, 107, 132, 'Contratos y TDRs', 'PDF · Word')}
+  ${node('s3', 2, 187, 132, 'Catálogo existente', 'Excel · CMDB')}
+  ${node('r', 2, 267, 132, 'Responsable', 'técnico')}
+  ${node('a1', 196, 18, 112, 'Agente 1', 'Code-to-Catalog')}
+  ${node('a2', 196, 98, 112, 'Agente 2', 'Dark Data Miner')}
+  ${node('a3', 196, 178, 112, 'Agente 3', 'Reconciliador')}
+  ${node('a4', 196, 258, 112, 'Agente 4', 'Micro-Nudge')}
+  <g class="score" opacity="0">
+    <text class="mono score__v" x="336" y="222">0.00</text>
+    <text class="t2" x="336" y="240">score · &lt; umbral 0.85</text>
+  </g>
+  <g class="card">
+    <rect class="card__box" x="336" y="10" width="202" height="180" rx="6"/>
+    <text class="t1" x="348" y="32">Fact Sheet</text>
+    <path class="sep" d="M336,42 H538 M336,164 H538"/>
+    ${campos.map(([k, v], i) => `<text class="t3" x="348" y="${58 + i * 28}">${k}</text><text class="t2 campo" x="348" y="${71 + i * 28}" opacity="0">${esc(v)}</text>`).join('')}
+    <path class="check" d="M348,177 l4,4 l8,-9" pathLength="1"/>
+    <text class="t3 pend" x="348" y="181">Pendiente · Arquitecto/a TI</text>
+    <text class="t2 ok" x="366" y="181" opacity="0">Aprobado · Arquitecto/a TI</text>
+  </g>
+  <g class="cat">
+    <rect class="card__box" x="336" y="262" width="202" height="86" rx="6"/>
+    <text class="t1" x="348" y="282">Catálogo APM</text>
+    <text class="t3" x="348" y="302">Portal de Proveedores</text>
+    <text class="t3" x="348" y="318">Mesa de Ayuda TI</text>
+    <rect class="n__hl cat__hl" x="342" y="323" width="190" height="18" rx="4" opacity="0"/>
+    <text class="t2 cat__nuevo" x="348" y="336" opacity="0">Sistema de Trámites en Línea</text>
+  </g>
+</svg>`;
+
+// Starlight's Hero places image.html beside the copy on wide screens. The animation is decorative;
+// the console log is the text alternative (visually hidden while the animation runs).
+const consola = `
+<div class="apm-flujo">
+  ${animacion}
+  <section class="apm-consola" aria-label="Consola de agentes: ejemplo ilustrativo con datos sintéticos">
+    <div class="apm-consola__cab" aria-hidden="true">Registro del descubrimiento</div>
+    <div class="apm-consola__vista"><ol class="apm-consola__log">${log}</ol></div>
+  </section>
+  <p class="apm-flujo__nota">Ejemplo ilustrativo con datos sintéticos</p>
+</div>`;
+
+// Icons come from the shared mask set in custom.css; Starlight's hero only accepts an <svg> string.
+const ico = (name: string, extra = '') =>
+  `<svg class="apm-ico apm-ico--${name} ${extra}" width="20" height="20" aria-hidden="true" focusable="false"></svg>`;
+
+const recorrido = [
+  ['Visión general', '/arquitectura/', 'El sistema, su contexto de negocio y las vistas ArchiMate.', 'arquitectura', 230],
+  ['IA agéntica', '/arquitectura/ia-agentes/', 'Los cuatro agentes del descubrimiento continuo y su gobernanza.', 'ia', 275],
+  ['Roadmap', '/arquitectura/roadmap/', 'Fases de construcción, de los cimientos a la analítica avanzada.', 'roadmap', 310],
+  ['Presentación', '/presentaciones/', 'La propuesta resumida en diapositivas.', 'presentaciones', 355],
+] as const;
+---
+
+<StarlightPage
+  frontmatter={{
+    title,
+    description:
+      'Propuesta académica de un APM donde agentes de IA descubren aplicaciones y las concilian con el catálogo de Arquitectura TI.',
+    template: 'splash',
+    hero: {
+      title,
+      tagline: lede,
+      image: { html: consola },
+      actions: [
+        { text: 'Ver la arquitectura', link: '/arquitectura/', variant: 'primary', icon: ico('flecha') },
+        { text: 'Ver la presentación', link: '/presentaciones/', variant: 'secondary', icon: ico('presentaciones', 'apm-ico--lead') },
+      ],
+    },
+  }}
+>
+  <div class="apm-bento-marco not-content">
+    <div class="apm-bento apm-bento--portada" data-revelar>
+      <section class="apm-tile apm-tile--ciclo" style="--i: 0; --tono-h: 255" aria-labelledby="t-ciclo">
+        <div class="apm-tile__cab">
+          <span class="apm-tile__icono"><span class="apm-ico apm-ico--ciclo" aria-hidden="true"></span></span>
+          <h2 id="t-ciclo">Ciclo de datos con humano en el bucle</h2>
+        </div>
+        <figure class="apm-ciclo">
+          <ol aria-label="Ciclo de datos con humano en el bucle">
+            <li><span class="apm-ciclo__n">1</span><strong>Capturar fuentes</strong><span>CMDB, nube, SBOM y repositorios</span><em>Datos crudos</em></li>
+            <li class="apm-ciclo__clave"><span class="apm-ciclo__n">2</span><strong>Normalizar y enriquecer</strong><span><b>Agentes IA:</b> descubren y concilian con el catálogo</span><em>Datos enriquecidos</em></li>
+            <li class="apm-ciclo__clave"><span class="apm-ciclo__n">3</span><strong>Validar</strong><span><b>Humano en el bucle:</b> el arquitecto/a TI aprueba</span><em>Propuesta de cambio</em></li>
+            <li><span class="apm-ciclo__n">4</span><strong>Publicar en catálogo</strong><span>Escribe con auditoría</span><em>Datos publicados</em></li>
+            <li><span class="apm-ciclo__n">5</span><strong>Analizar</strong><span>Vulnerabilidades, obsolescencia y criticidad</span></li>
+            <li><span class="apm-ciclo__n">6</span><strong>Recomendar y notificar</strong><span>Vuelve a alimentar la captura</span><em>Alertas y recomendaciones</em></li>
+          </ol>
+          <figcaption>El detalle de los cuatro agentes está en <a href="/arquitectura/ia-agentes/">IA agéntica</a>.</figcaption>
+        </figure>
+      </section>
+
+      <section class="apm-tile apm-tile--estado" style="--i: 1; --tono-h: 160" aria-labelledby="t-estado">
+        <div class="apm-tile__cab">
+          <span class="apm-tile__icono"><span class="apm-ico apm-ico--estado" aria-hidden="true"></span></span>
+          <h2 id="t-estado">Estado del proyecto</h2>
+        </div>
+        <dl class="apm-estado">
+          <dt>Qué es</dt>
+          <dd>Una propuesta académica con datos sintéticos; no hay una organización real detrás.</dd>
+          <dt>Qué está construido</dt>
+          <dd>Este portal, la arquitectura en ArchiMate versionada como código y un prototipo del pipeline de descubrimiento.</dd>
+          <dt>Qué sigue</dt>
+          <dd>Cerrar la fase F0 · Cimientos con el piloto de calibración y empezar F1 · Catálogo núcleo.</dd>
+        </dl>
+      </section>
+
+      <h2 class="apm-bento__titulo">Recorrido sugerido</h2>
+      {recorrido.map(([texto, href, detalle, icono, tono], n) => (
+        <a class="apm-tile apm-tile--ruta" href={href} style={`--i: ${n + 2}; --tono-h: ${tono}`}>
+          <span class="apm-tile__icono"><span class={`apm-ico apm-ico--${icono}`} aria-hidden="true"></span></span>
+          <span class="apm-tile__titulo">{texto}</span>
+          <span>{detalle}</span>
+          <span class="apm-ico apm-ico--flecha apm-tile__ir" aria-hidden="true"></span>
+        </a>
+      ))}
+    </div>
+  </div>
+</StarlightPage>
+
+<style is:global>
+  /* Home only: Starlight sets data-has-hero on pages with a hero. */
+  [data-has-hero] .hero {
+    align-items: start;
+  }
+  [data-has-hero] .hero > .hero-html {
+    order: 2;
+    width: 100%;
+    margin: 0;
+  }
+  [data-has-hero] .hero .stack {
+    text-align: start;
+  }
+  [data-has-hero] .hero .copy {
+    align-items: flex-start;
+  }
+  [data-has-hero] .hero h1 {
+    font-size: clamp(2.1875rem, 1.25rem + 3vw, 3.25rem);
+    letter-spacing: -0.02em;
+  }
+  [data-has-hero] .hero .actions {
+    justify-content: flex-start;
+    align-items: center;
+    gap: 1rem 1.5rem;
+  }
+  /* Leading icon on the secondary action; Starlight renders raw icons after the text. */
+  [data-has-hero] .hero .apm-ico--lead {
+    order: -1;
+  }
+  /* The primary action carries a trailing arrow, so its icon side is the end. */
+  [data-has-hero] .hero .sl-link-button.primary {
+    padding-inline: 1rem 0.875rem;
+  }
+  @media (min-width: 50rem) {
+    [data-has-hero] .hero .sl-link-button.primary {
+      padding-inline: 1.25rem 1.125rem;
+    }
+  }
+  @media (min-width: 50rem) {
+    [data-has-hero] .hero {
+      grid-template-columns: 6fr 5fr;
+      gap: 3rem;
+      padding-block: clamp(2.5rem, 1rem + 6vmin, 5rem);
+    }
+  }
+
+  /* Hero entrance: staggered rise with blur, once on load (texts reveal). */
+  @media (prefers-reduced-motion: no-preference) {
+    [data-has-hero] .hero :is(h1, .tagline, .actions) {
+      animation: apm-reveal var(--stagger-dur) var(--stagger-ease) both;
+    }
+    [data-has-hero] .hero .tagline {
+      animation-delay: calc(var(--stagger-stagger) * 2);
+    }
+    [data-has-hero] .hero .actions {
+      animation-delay: calc(var(--stagger-stagger) * 4);
+    }
+  }
+  @keyframes apm-reveal {
+    from {
+      opacity: 0;
+      transform: translateY(var(--stagger-distance));
+      filter: blur(var(--stagger-blur));
+    }
+  }
+
+  /* Agent console: flat panel, hairline border; mono only for the machine log. */
+  .apm-consola {
+    border: 1px solid var(--sl-color-gray-5);
+    flex: 1;
+    min-width: 0;
+    border-radius: 0.5rem;
+    background: var(--sl-color-gray-6);
+    text-align: start;
+  }
+  .apm-consola__cab {
+    padding: 0.6rem 1rem;
+    border-bottom: 1px solid var(--sl-color-gray-5);
+    font-size: var(--sl-text-sm);
+  }
+  .apm-consola__vista {
+    padding: 0.75rem 1rem;
+  }
+  .apm-consola__log {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-family: var(--sl-font-mono);
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    color: var(--sl-color-gray-2);
+  }
+  .apm-consola__log li {
+    margin: 0;
+    padding-block-end: 0.25rem;
+    white-space: pre-wrap;
+  }
+  .apm-consola__log b {
+    font-weight: 600;
+    color: var(--sl-color-white);
+  }
+  /* Fallback/text alternative: shown without JS or with reduced motion. */
+  .apm-flujo {
+    flex: 1;
+    min-width: 0;
+  }
+  .apm-flujo__nota {
+    margin: 0.5rem 0 0;
+    color: var(--sl-color-gray-3);
+    font-size: var(--sl-text-xs);
+  }
+  .apm-anim {
+    display: none;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 540 / 360;
+    overflow: visible;
+    font-family: var(--sl-font);
+    font-size: 12px;
+  }
+  /* Below 36rem the SVG labels shrink to ~7px, so the readable log takes its place. */
+  @media (prefers-reduced-motion: no-preference) and (scripting: enabled) and (min-width: 36rem) {
+    .apm-anim {
+      display: block;
+    }
+    /* Keep the log for screen readers while the animation plays. */
+    .apm-flujo .apm-consola {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      margin: -1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+      border: 0;
+    }
+  }
+  .apm-anim .ruta {
+    fill: none;
+    stroke: var(--sl-color-gray-5);
+    stroke-width: 1;
+  }
+  .apm-anim .n__box,
+  .apm-anim .card__box {
+    fill: var(--sl-color-gray-6);
+    stroke: var(--sl-color-gray-4);
+    stroke-width: 1;
+  }
+  .apm-anim .n__hl {
+    fill: var(--sl-color-accent-low);
+    stroke: var(--sl-color-accent);
+    stroke-width: 1;
+  }
+  .apm-anim .sep {
+    fill: none;
+    stroke: var(--sl-color-gray-5);
+  }
+  .apm-anim .t1 {
+    fill: var(--sl-color-white);
+    font-weight: 600;
+  }
+  .apm-anim .t2 {
+    fill: var(--sl-color-gray-2);
+    font-size: 11px;
+  }
+  .apm-anim .t3 {
+    fill: var(--sl-color-gray-3);
+    font-size: 10.5px;
+  }
+  .apm-anim .mono {
+    font-family: var(--sl-font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+  .apm-anim .score__v {
+    fill: var(--sl-color-white);
+    font-size: 18px;
+    font-weight: 600;
+  }
+  .apm-anim .chip rect {
+    fill: var(--sl-color-black);
+    stroke: var(--sl-color-accent);
+  }
+  .apm-anim .chip text {
+    fill: var(--sl-color-text-accent);
+    font-size: 10.5px;
+  }
+  .apm-anim .dot {
+    fill: var(--sl-color-accent);
+  }
+  .apm-anim .check {
+    fill: none;
+    stroke: var(--sl-color-text-accent);
+    stroke-width: 1.75;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+  }
+
+  /* Console panel sits on the aurora: translucent like the tiles. */
+  .apm-consola {
+    background: var(--apm-tile-bg);
+    border-color: var(--apm-hairline);
+  }
+
+  /* Home bento: cycle large, status beside it, four path tiles. */
+  @container (min-width: 36rem) {
+    .apm-bento--portada {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .apm-bento--portada > :is(.apm-tile--ciclo, .apm-tile--estado, .apm-bento__titulo) {
+      grid-column: 1 / -1;
+    }
+  }
+  @container (min-width: 60rem) {
+    .apm-bento--portada {
+      grid-template-columns: repeat(12, 1fr);
+    }
+    .apm-bento--portada > .apm-tile--ciclo { grid-column: span 8; }
+    .apm-bento--portada > .apm-tile--estado { grid-column: span 4; }
+    .apm-bento--portada > .apm-tile--ruta { grid-column: span 3; }
+  }
+  .apm-bento__titulo {
+    margin: 1.25rem 0 0.25rem;
+    color: var(--sl-color-white);
+    font-size: var(--sl-text-h4);
+    font-weight: 600;
+  }
+  .apm-tile--ruta {
+    padding-top: 1.125rem;
+  }
+  .apm-tile--ruta .apm-tile__icono {
+    margin-bottom: 0.5rem;
+  }
+  .apm-tile .apm-ciclo {
+    margin: 0;
+  }
+  .apm-tile .apm-ciclo li {
+    padding: 0.75rem;
+    border-color: var(--apm-hairline);
+    background: color-mix(in oklab, var(--sl-color-black) 30%, transparent);
+  }
+  .apm-tile .apm-ciclo li.apm-ciclo__clave {
+    border-color: color-mix(in oklab, var(--tono) 40%, transparent);
+    background: color-mix(in oklab, var(--tono) 10%, transparent);
+  }
+  .apm-tile .apm-ciclo a {
+    color: var(--sl-color-text-accent);
+  }
+  .apm-estado {
+    display: grid;
+    gap: 0.25rem;
+    margin: 0;
+  }
+  .apm-estado dt {
+    margin-top: 0.5rem;
+    color: color-mix(in oklab, var(--tono) 70%, var(--sl-color-white));
+    font-size: var(--sl-text-xs);
+    font-weight: 600;
+  }
+  .apm-estado dt:first-child {
+    margin-top: 0;
+  }
+  .apm-estado dd {
+    margin: 0;
+  }
+</style>
+
+<script>
+  // Bento tiles rise once when the grid first scrolls into view; without JS they are simply visible.
+  const bento = document.querySelector<HTMLElement>('.apm-bento[data-revelar]');
+  if (bento && matchMedia('(prefers-reduced-motion: no-preference)').matches) {
+    bento.dataset.revelar = 'pendiente';
+    const io = new IntersectionObserver(([e]) => {
+      if (!e.isIntersecting) return;
+      bento.dataset.revelar = 'si';
+      io.disconnect();
+    }, { threshold: 0.1 });
+    io.observe(bento);
+  }
+</script>
+
+<script>
+  import { gsap } from 'gsap';
+  import { MotionPathPlugin } from 'gsap/MotionPathPlugin';
+
+  gsap.registerPlugin(MotionPathPlugin);
+
+  const svg = document.querySelector<SVGSVGElement>('.apm-anim');
+  if (svg) {
+    const mm = gsap.matchMedia();
+    // CSS shows the SVG only under this same query, so reduced motion keeps the static console.
+    mm.add('(prefers-reduced-motion: no-preference)', () => {
+      const $ = (sel: string) => svg.querySelector(sel)!;
+      const hl = (n: string) => $(`[data-n="${n}"] .n__hl`);
+      const ruta = (r: string) => $(`[data-ruta="${r}"]`);
+      const scoreV = $('.score__v');
+      const score = { v: 0 };
+      const tl = gsap.timeline({ repeat: -1, defaults: { ease: 'power3.out', duration: 0.35 } });
+
+      const on = (n: string, at: number, off: number) =>
+        tl.to(hl(n), { opacity: 1 }, at).to(hl(n), { opacity: 0, duration: 0.5 }, off);
+      // Evidence travels along a connector, fading in and out at its ends.
+      const travel = (el: string, r: string, at: number, dur = 1.1, back = false) => {
+        const path = ruta(r);
+        tl.to(el, {
+          duration: dur,
+          ease: 'power2.inOut',
+          motionPath: { path, align: path, alignOrigin: [0.5, 0.5], start: back ? 1 : 0, end: back ? 0 : 1 },
+        }, at)
+          .to(el, { opacity: 1, duration: 0.2, ease: 'none' }, at)
+          .to(el, { opacity: 0, duration: 0.25, ease: 'none' }, at + dur - 0.25);
+      };
+      const chip = (c: string) => svg.querySelector(`[data-chip="${c}"]`);
+      const dot = (d: number) => svg.querySelector(`[data-dot="${d}"]`);
+
+      // Agents 1 and 2 extract evidence from code and contracts.
+      on('a1', 0.4, 2.3);
+      travel(chip('web'), 's1a1', 0.4);
+      travel(chip('java'), 's1a1', 0.75);
+      travel(chip('spring'), 's1a1', 1.1);
+      on('a2', 1.4, 3.0);
+      travel(chip('ctr'), 's2a2', 1.4);
+      travel(chip('vig'), 's2a2', 1.8);
+      // Agent 3 reconciles both outputs against the existing catalog anchor.
+      on('a3', 3.0, 5.6);
+      travel(dot(1), 'a1a3', 3.0, 0.9);
+      travel(dot(2), 'a2a3', 3.1, 0.8);
+      travel(chip('ancla'), 's3a3', 3.1);
+      tl.to('.apm-anim .score', { opacity: 1 }, 4.1)
+        .fromTo(score, { v: 0 }, {
+          v: 0.82, duration: 1.2, ease: 'power2.out',
+          onUpdate: () => { scoreV.textContent = score.v.toFixed(2); },
+        }, 4.1);
+      // Below threshold: Agent 4 asks the technical owner, who confirms.
+      travel(dot(3), 'a3a4', 5.6, 0.6);
+      on('a4', 6.0, 8.6);
+      travel(chip('preg'), 'a4r', 6.2, 1.0, true);
+      on('r', 7.0, 8.4);
+      travel(chip('si'), 'a4r', 7.4, 1.0);
+      // The Fact Sheet fills, the architect approves, and it lands in the catalog.
+      tl.fromTo('.apm-anim .campo', { opacity: 0, y: 4 }, { opacity: 1, y: 0, stagger: 0.25, duration: 0.4 }, 8.6)
+        .to('.apm-anim .check', { strokeDashoffset: 0, duration: 0.5, ease: 'power2.out' }, 9.9)
+        .to('.apm-anim .pend', { opacity: 0, duration: 0.2 }, 9.9)
+        .to('.apm-anim .ok', { opacity: 1 }, 10.1)
+        .to('.apm-anim .card', { y: 232, scale: 0.2, opacity: 0, transformOrigin: '50% 50%', duration: 0.8, ease: 'power2.in' }, 10.9)
+        .to('.apm-anim .cat__hl', { opacity: 1 }, 11.5)
+        .to('.apm-anim .cat__nuevo', { opacity: 1 }, 11.5)
+        // Soft reset back to the opening frame.
+        .to(['.apm-anim .score', '.apm-anim .cat__hl', '.apm-anim .cat__nuevo'], { opacity: 0, duration: 0.5 }, 12.7)
+        .set('.apm-anim .card', { y: 0, scale: 1 }, 13.0)
+        .set(['.apm-anim .campo', '.apm-anim .ok'], { opacity: 0 }, 13.0)
+        .set('.apm-anim .pend', { opacity: 1 }, 13.0)
+        .set('.apm-anim .check', { strokeDashoffset: 1 }, 13.0)
+        .to('.apm-anim .card', { opacity: 1, duration: 0.5 }, 13.0)
+        .to({}, { duration: 0.6 });
+
+      // Pause while the hero is off-screen or the tab is hidden.
+      let visible = true;
+      const sync = () => (visible && !document.hidden ? tl.play() : tl.pause());
+      const io = new IntersectionObserver(([e]) => { visible = e.isIntersecting; sync(); });
+      io.observe(svg);
+      document.addEventListener('visibilitychange', sync);
+      return () => {
+        io.disconnect();
+        document.removeEventListener('visibilitychange', sync);
+      };
+    });
+  }
+</script>

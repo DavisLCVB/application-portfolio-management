@@ -1,6 +1,11 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import { existsSync, readFileSync } from 'node:fs';
+
+// prepare-pdfs.mjs writes this catalog before Astro starts; hide the section while it is empty.
+const pdfCatalog = new URL('./src/generated/pdfs.json', import.meta.url);
+const hasPdfs = existsSync(pdfCatalog) && JSON.parse(readFileSync(pdfCatalog, 'utf8')).length > 0;
 
 export default defineConfig({
   integrations: [
@@ -11,7 +16,7 @@ export default defineConfig({
       locales: { root: { label: 'Español', lang: 'es' } },
       logo: { src: './src/assets/logo.svg' },
       sidebar: [
-        { label: 'Inicio', slug: 'index' },
+        { label: 'Inicio', link: '/' },
         {
           label: 'Arquitectura del sistema',
           items: [
@@ -26,7 +31,7 @@ export default defineConfig({
             { label: 'Soluciones similares', slug: 'arquitectura/soluciones-similares' },
           ],
         },
-        { label: 'Documentos PDF', link: '/documentos/' },
+        ...(hasPdfs ? [{ label: 'Documentos PDF', link: '/documentos/' }] : []),
         { label: 'Presentaciones', link: '/presentaciones/' },
         { label: 'Guías', items: [{ autogenerate: { directory: 'guias' } }] },
       ],
@@ -57,7 +62,7 @@ export default defineConfig({
                 overlay.classList.add('apm-zoom--open');
               };
               document.addEventListener('DOMContentLoaded', () => {
-                document.querySelectorAll('.sl-markdown-content img').forEach((img) => {
+                document.querySelectorAll('.sl-markdown-content img:not(.not-content img)').forEach((img) => {
                   img.addEventListener('click', (event) => {
                     event.preventDefault();
                     open(img.currentSrc || img.src, img.alt);
