@@ -1,4 +1,4 @@
-package gob.mef.recaudacion;
+package gob.entidad.recaudacion;
 
 import org.springframework.web.bind.annotation.*;
 import java.util.List;

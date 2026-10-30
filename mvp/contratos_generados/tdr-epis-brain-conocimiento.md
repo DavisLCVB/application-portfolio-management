@@ -1,7 +1,7 @@
 # Términos de Referencia: Plataforma EPIS-Brain de Grafos de Conocimiento e Inteligencia Semántica
 
 ## Cláusula 1: Identificación y Objeto del Servicio
-- Código de referencia contractual: TDR-2023-MEF-0078
+- Código de referencia contractual: TDR-2023-ORG-0078
 - Objeto: Implementación, entrenamiento y soporte de la plataforma central de inteligencia semántica EPIS-Brain (epis-brain), integrando ontologías organizacionales, grafos de conocimiento y agentes de recuperación aumentada para la toma de decisiones.
 
 ## Cláusula 2: Proveedor Adjudicado y Razón Social

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                  xmlns:archimate="http://www.archimatetool.com/archimate"
-                 name="Modelo Arquitectura MEF - Fondos Públicos"
+                 name="Modelo Arquitectura Entidad - Fondos Públicos"
                  id="id-archi-model-mef-01"
                  version="5.0.0">
   <folder name="Application" id="id-folder-app" type="application">

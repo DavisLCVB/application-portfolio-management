@@ -210,7 +210,7 @@ class TestSpreadsheetConnector(unittest.TestCase):
         app1 = evidences[0]
         self.assertEqual(app1.repo_name, "Sistema Integrado de Tesorería")
         self.assertEqual(app1.primary_language, "Java")
-        self.assertIn("cmendoza@mef.gob.pe", app1.top_contributor)
+        self.assertIn("cmendoza@entidad.gob.pe", app1.top_contributor)
         self.assertTrue(any("catalogo_aplicaciones.csv#R2" in k for k in app1.file_citations))
 
         app2 = evidences[1]
@@ -225,8 +225,8 @@ class TestSpreadsheetConnector(unittest.TestCase):
         xlsx_file = self.temp_path / "test_catalogo.xlsx"
         rows = [
             ["ID", "Nombre Aplicación", "Responsable Técnico", "Tecnología", "SLA"],
-            ["APP-101", "Servicio de Deuda Pública", "Elena Ramos <eramos@mef.gob.pe>", "Java Spring Boot 3.1", "99.9%"],
-            ["APP-102", "Portal de Transparencia Económica", "Mario Ruiz <mruiz@mef.gob.pe>", "TypeScript React 18", "99.5%"],
+            ["APP-101", "Servicio de Deuda Pública", "Elena Ramos <eramos@entidad.gob.pe>", "Java Spring Boot 3.1", "99.9%"],
+            ["APP-102", "Portal de Transparencia Económica", "Mario Ruiz <mruiz@entidad.gob.pe>", "TypeScript React 18", "99.5%"],
         ]
         _create_minimal_xlsx(xlsx_file, rows)
 
@@ -237,7 +237,7 @@ class TestSpreadsheetConnector(unittest.TestCase):
         self.assertEqual(ev1.repo_name, "Servicio de Deuda Pública")
         self.assertEqual(ev1.primary_language, "Java")
         self.assertEqual(ev1.runtime_version, "3.1")
-        self.assertIn("eramos@mef.gob.pe", ev1.top_contributor)
+        self.assertIn("eramos@entidad.gob.pe", ev1.top_contributor)
         # Verificar formato canónico de cita OpenXML
         self.assertTrue(any("test_catalogo.xlsx#Sheet1!R2" in k for k in ev1.file_citations))
 
@@ -259,7 +259,7 @@ class TestPresentationConnector(unittest.TestCase):
 
     def test_extract_synthetic_pptx(self):
         pptx_file = self.temp_path / "arquitectura_test.pptx"
-        text = "Sistema de Gestión de Planillas MEF implementado con Java Spring Boot y Docker. Contacto: dev@mef.gob.pe"
+        text = "Sistema de Gestión de Planillas implementado con Java Spring Boot y Docker. Contacto: dev@entidad.gob.pe"
         _create_minimal_pptx(pptx_file, text, shape_id="4")
 
         evidences = self.connector.extract(pptx_file)
@@ -269,7 +269,7 @@ class TestPresentationConnector(unittest.TestCase):
         self.assertIsNotNone(tech_ev)
         self.assertIn("Sistema de Gestión de Planillas", tech_ev.repo_name)
         self.assertEqual(tech_ev.primary_language, "Java")
-        self.assertIn("dev@mef.gob.pe", tech_ev.top_contributor)
+        self.assertIn("dev@entidad.gob.pe", tech_ev.top_contributor)
         self.assertTrue(any("Slide1!Shape4" in k for k in tech_ev.file_citations))
 
     def test_extract_existing_project_pptx(self):

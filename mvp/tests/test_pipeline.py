@@ -137,7 +137,7 @@ class TestContractMiner(unittest.TestCase):
         tdr_path = self.contracts_dir / "tdr-recaudacion-digital.md"
         ev = self.miner.extract(str(tdr_path))
 
-        self.assertEqual(ev.doc_id, "TDR-2024-MEF-0089")
+        self.assertEqual(ev.doc_id, "TDR-2024-ORG-0089")
         self.assertIn("Indra Soluciones", ev.provider_name)
         self.assertEqual(ev.sla_uptime, "99.9%")
         self.assertEqual(ev.contract_dates.get("start_date"), "2024-03-01")
@@ -151,7 +151,7 @@ class TestContractMiner(unittest.TestCase):
         tdr_path = self.contracts_dir / "tdr-portal-ciudadano.md"
         ev = self.miner.extract(str(tdr_path))
 
-        self.assertEqual(ev.doc_id, "TDR-2023-MEF-0145")
+        self.assertEqual(ev.doc_id, "TDR-2023-ORG-0145")
         self.assertIn("Stefanini IT", ev.provider_name)
         self.assertEqual(ev.sla_uptime, "99.5%")
         self.assertEqual(ev.contract_dates.get("start_date"), "2023-11-01")
@@ -205,8 +205,8 @@ class TestSemanticReconciliator(unittest.TestCase):
         # Solo se vinculan los pares que superan el score mínimo (sin forzar cruces)
         pairs = {(tech.repo_name, contract.doc_id) for _, tech, contract in result.links}
         self.assertEqual(pairs, {
-            ("recaudacion-digital-service", "TDR-2024-MEF-0089"),
-            ("portal-atencion-ciudadano", "TDR-2023-MEF-0145"),
+            ("recaudacion-digital-service", "TDR-2024-ORG-0089"),
+            ("portal-atencion-ciudadano", "TDR-2023-ORG-0145"),
         })
         self.assertEqual(result.orphans, [])
 
@@ -227,7 +227,7 @@ class TestNudgeGenerator(unittest.TestCase):
             confidence_score=0.90,
             status="Draft",
             business_owner=None,  # Campo faltante
-            technical_owner="Dev Lead <dev@mef.gob.pe>",
+            technical_owner="Dev Lead <dev@entidad.gob.pe>",
         )
         nudges = self.generator.evaluate_and_generate(hipotesis)
 

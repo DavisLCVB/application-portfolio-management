@@ -1,7 +1,7 @@
 # Términos de Referencia: Sistema ERP de Recursos Empresariales y Procesos Administrativos
 
 ## Cláusula 1: Identificación y Objeto del Servicio
-- Código de referencia contractual: TDR-2024-MEF-0102
+- Código de referencia contractual: TDR-2024-ORG-0102
 - Objeto: Contratación de servicios de fábrica de software y consultoría para el mantenimiento evolutivo y soporte del Sistema ERP de Recursos Empresariales (ERP Recursos Empresariales), cubriendo módulos de compras, logística, presupuesto y gestión documental.
 
 ## Cláusula 2: Proveedor Adjudicado y Razón Social

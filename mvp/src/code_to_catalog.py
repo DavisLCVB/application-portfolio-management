@@ -25,7 +25,7 @@ class CodeToCatalogExtractor:
     de la aplicación directamente de sus artefactos de construcción.
     """
 
-    def __init__(self, default_contributor: str = "Equipo Core <arquitectura@mef.gob.pe>"):
+    def __init__(self, default_contributor: str = "Equipo Core <arquitectura@entidad.gob.pe>"):
         self.default_contributor = default_contributor
 
     def extract(self, repo_path: str) -> EvidenciaTecnica:

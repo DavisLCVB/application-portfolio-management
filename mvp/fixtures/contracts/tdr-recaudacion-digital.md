@@ -1,8 +1,8 @@
 # Términos de Referencia: Pasarela de Recaudación Digital de Ingresos Públicos
 
 ## Cláusula 1: Identificación y Objeto del Servicio
-- Código de referencia contractual: TDR-2024-MEF-0089
-- Objeto: Contratación de servicios especializados para la continuidad operativa, evolución tecnológica y soporte de la plataforma central de recaudación tributaria y tasas del Ministerio de Economía y Finanzas (MEF).
+- Código de referencia contractual: TDR-2024-ORG-0089
+- Objeto: Contratación de servicios especializados para la continuidad operativa, evolución tecnológica y soporte de la plataforma central de recaudación tributaria y tasas de la entidad contratante.
 
 ## Cláusula 2: Proveedor Adjudicado y Razón Social
 - Proveedor adjudicado: Indra Soluciones Tecnologías de la Información S.L.U.

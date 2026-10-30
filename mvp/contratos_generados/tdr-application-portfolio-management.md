@@ -1,7 +1,7 @@
 # Términos de Referencia: Portal de Arquitectura TI y Gestión de Portafolio de Aplicaciones (Application Portfolio Management - APM)
 
 ## Cláusula 1: Identificación y Objeto del Servicio
-- Código de referencia contractual: TDR-2024-MEF-0015
+- Código de referencia contractual: TDR-2024-ORG-0015
 - Objeto: Consultoría de Arquitectura Empresarial y desarrollo del portal documental gobernado Application Portfolio Management (APM), con modelado de activos en ArchiMate 3.2 e integración de agentes de IA para descubrimiento continuo.
 
 ## Cláusula 2: Proveedor Adjudicado y Razón Social

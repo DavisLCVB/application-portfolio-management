@@ -37,7 +37,7 @@ class NudgeGenerator:
         o el dueño técnico es solo una sugerencia.
         """
         nudges: List[MicroNudge] = []
-        recipient = (tech.top_contributor if tech else hipotesis.technical_owner) or "arquitectura@mef.gob.pe"
+        recipient = (tech.top_contributor if tech else hipotesis.technical_owner) or "arquitectura@entidad.gob.pe"
         channel = "Microsoft Teams / Slack"
 
         # 1. Caso A: Score inferior al umbral único de revisión

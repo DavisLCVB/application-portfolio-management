@@ -216,7 +216,7 @@ class PresentationConnector(BaseConnector):
             return email_match.group(1)
         for lead in ["Arquitectura", "Dirección TI", "Equipo Core", "Equipo de Desarrollo"]:
             if lead.lower() in combined.lower():
-                return f"{lead} <arquitectura@mef.gob.pe>"
+                return f"{lead} <arquitectura@entidad.gob.pe>"
         return "Desconocido"
 
     def _infer_primary_language(self, techs: List[str]) -> str:

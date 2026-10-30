@@ -1,7 +1,7 @@
 # Términos de Referencia: Motor de Suscripciones y Facturación Recurrente (Subscription Engine)
 
 ## Cláusula 1: Identificación y Objeto del Servicio
-- Código de referencia contractual: TDR-2023-MEF-0304
+- Código de referencia contractual: TDR-2023-ORG-0304
 - Objeto: Mantenimiento correctivo, soporte 24x7 y adecuación normativa del motor transaccional de suscripciones (Subscription Engine / subscription-engine), encargado del cobro periódico de tasas y servicios institucionales.
 
 ## Cláusula 2: Proveedor Adjudicado y Razón Social

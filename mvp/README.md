@@ -1,6 +1,6 @@
 # MVP 1: Pipeline de Descubrimiento Continuo y Reconciliación Semántica
 
-Este módulo implementa el prototipo ejecutable (**MVP 1**) del sistema multi-agente de descubrimiento continuo para la plataforma de Gestión de Portafolio de Aplicaciones (**APM**), diseñado para organizaciones complejas y entidades del sector público (como el Ministerio de Economía y Finanzas - MEF).
+Este módulo implementa el prototipo ejecutable (**MVP 1**) del sistema multi-agente de descubrimiento continuo para la plataforma de Gestión de Portafolio de Aplicaciones (**APM**), diseñado para organizaciones complejas y entidades del sector público.
 
 ---
 
@@ -258,7 +258,7 @@ El pipeline genera dos artefactos principales de gobernanza:
       "entity_name": "Sistema Integrado de Tesorería",
       "catalog_id": "APP-001",
       "linked_repos": ["recaudacion-digital-service"],
-      "linked_contracts": ["TDR-2024-MEF-0089"],
+      "linked_contracts": ["TDR-2024-ORG-0089"],
       "multi_application_contracts": {},
       "candidate_type": "Application",
       "technical_stack": "Java (Java 17)",
@@ -276,7 +276,7 @@ El pipeline genera dos artefactos principales de gobernanza:
         },
         {
           "source": "contract_dark_data",
-          "doc_id": "TDR-2024-MEF-0089",
+          "doc_id": "TDR-2024-ORG-0089",
           "attribute": "sla_uptime",
           "citation": "tdr-recaudacion-digital.md#Cláusula 4 (L18)"
         }
@@ -291,7 +291,7 @@ El pipeline genera dos artefactos principales de gobernanza:
       "name": "portal-atencion-ciudadano",
       "best_score": 0.306,
       "reason": "Sin coincidencia con ninguna aplicación del catálogo (posible Shadow IT).",
-      "related": ["TDR-2023-MEF-0145"]
+      "related": ["TDR-2023-ORG-0145"]
     }
   ],
   "conflicts": [],

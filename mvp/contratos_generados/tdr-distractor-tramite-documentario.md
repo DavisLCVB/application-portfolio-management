@@ -1,7 +1,7 @@
 # Términos de Referencia: Sistema Integrado de Trámite Documentario y Mesa de Partes Virtual
 
 ## Cláusula 1: Identificación y Objeto del Servicio
-- Código de referencia contractual: TDR-2022-MEF-0005
+- Código de referencia contractual: TDR-2022-ORG-0005
 - Objeto: Adquisición de licencias y soporte técnico para el Sistema Antiguo de Trámite Documentario y Archivo Centralizado (STD Legacy).
 
 ## Cláusula 2: Proveedor Adjudicado y Razón Social

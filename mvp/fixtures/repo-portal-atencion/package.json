@@ -1,7 +1,7 @@
 {
   "name": "portal-atencion-ciudadano",
   "version": "2.1.0",
-  "description": "Portal web y API de atención ciudadana y trámites digitales del MEF",
+  "description": "Portal web y API de atención ciudadana y trámites digitales de la entidad",
   "main": "server.js",
   "engines": {
     "node": ">=20.0.0"

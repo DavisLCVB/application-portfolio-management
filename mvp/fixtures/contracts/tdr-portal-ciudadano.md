@@ -1,7 +1,7 @@
 # Términos de Referencia: Portal de Atención y Servicios Digitales al Ciudadano
 
 ## Cláusula 1: Identificación y Objeto
-- Código de referencia: TDR-2023-MEF-0145
+- Código de referencia: TDR-2023-ORG-0145
 - Objeto: Desarrollo, modernización y mantenimiento integral del portal web omnicanal de atención ciudadana y trámites digitales institucional.
 
 ## Cláusula 2: Contratista y Proveedor Adjudicado

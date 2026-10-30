@@ -93,8 +93,8 @@ class TestNToMReconciliation(unittest.TestCase):
             [self.tech_recaudacion],
             [self.contract_recaudacion, self.contract_portal],
         )
-        self.assertEqual(self._linked_pairs(result), {("recaudacion-digital-service", "TDR-2024-MEF-0089")})
-        orphan = next(o for o in result.orphans if o.name == "TDR-2023-MEF-0145")
+        self.assertEqual(self._linked_pairs(result), {("recaudacion-digital-service", "TDR-2024-ORG-0089")})
+        orphan = next(o for o in result.orphans if o.name == "TDR-2023-ORG-0145")
         self.assertEqual(orphan.evidence_type, "contrato")
 
     def test_one_contract_links_to_several_repos(self):
@@ -103,9 +103,9 @@ class TestNToMReconciliation(unittest.TestCase):
             [self.contract_recaudacion, self.contract_portal],
         )
         pairs = self._linked_pairs(result)
-        self.assertIn(("recaudacion-digital-service", "TDR-2024-MEF-0089"), pairs)
-        self.assertIn(("recaudacion-digital-batch", "TDR-2024-MEF-0089"), pairs)
-        self.assertIn(("portal-atencion-ciudadano", "TDR-2023-MEF-0145"), pairs)
+        self.assertIn(("recaudacion-digital-service", "TDR-2024-ORG-0089"), pairs)
+        self.assertIn(("recaudacion-digital-batch", "TDR-2024-ORG-0089"), pairs)
+        self.assertIn(("portal-atencion-ciudadano", "TDR-2023-ORG-0145"), pairs)
         self.assertEqual(result.orphans, [])
 
     def test_one_repo_links_to_several_contracts(self):
@@ -151,7 +151,7 @@ class TestCatalogAnchoring(unittest.TestCase):
         self.assertEqual(app.code, "APP-001")
         self.assertEqual(app.name, "Sistema Integrado de Tesorería")
         self.assertIn("Recaudación Digital", app.aliases)
-        self.assertIn("cmendoza@mef.gob.pe", app.technical_owner)
+        self.assertIn("cmendoza@entidad.gob.pe", app.technical_owner)
         self.assertIn("catalogo_aplicaciones.csv#R2", app.citation)
 
     def test_evidence_is_anchored_to_catalog_application(self):
@@ -166,7 +166,7 @@ class TestCatalogAnchoring(unittest.TestCase):
         self.assertEqual(fs.catalog_id, "APP-001")
         self.assertEqual(fs.entity_name, "Sistema Integrado de Tesorería")
         self.assertEqual(fs.linked_repos, ["recaudacion-digital-service"])
-        self.assertEqual(fs.linked_contracts, ["TDR-2024-MEF-0089"])
+        self.assertEqual(fs.linked_contracts, ["TDR-2024-ORG-0089"])
         self.assertTrue(any(c["source"] == "existing_catalog" for c in fs.primary_citations))
 
     def test_evidence_without_catalog_match_is_orphan(self):
@@ -176,10 +176,10 @@ class TestCatalogAnchoring(unittest.TestCase):
             [self.contract_recaudacion, self.contract_portal],
         )
         orphans = {o.name: o for o in result.orphans}
-        self.assertEqual(set(orphans), {"portal-atencion-ciudadano", "TDR-2023-MEF-0145"})
+        self.assertEqual(set(orphans), {"portal-atencion-ciudadano", "TDR-2023-ORG-0145"})
         # Los huérfanos que se vinculan entre sí se reportan juntos para la revisión humana
-        self.assertIn("TDR-2023-MEF-0145", orphans["portal-atencion-ciudadano"].related)
-        self.assertIn("portal-atencion-ciudadano", orphans["TDR-2023-MEF-0145"].related)
+        self.assertIn("TDR-2023-ORG-0145", orphans["portal-atencion-ciudadano"].related)
+        self.assertIn("portal-atencion-ciudadano", orphans["TDR-2023-ORG-0145"].related)
 
     def test_catalog_application_links_several_repos(self):
         result = self.reconciliator.reconcile_with_catalog(
@@ -253,7 +253,7 @@ class TestScoreTerminologyAndThreshold(unittest.TestCase):
         catalog = load_catalog(CATALOG_CSV)
         result = SemanticReconciliator().reconcile_with_catalog(catalog, [self.tech], [self.contract])
         fs = result.hypotheses[0].fact_sheet
-        self.assertIn("cmendoza@mef.gob.pe", fs.technical_owner)
+        self.assertIn("cmendoza@entidad.gob.pe", fs.technical_owner)
         self.assertFalse(fs.technical_owner_suggested)
 
         without_owner = [dataclasses.replace(catalog[0], technical_owner="")]
