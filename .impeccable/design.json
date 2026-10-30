@@ -1,0 +1,228 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-29T21:00:00Z",
+  "title": "Design System: APM · Arquitectura TI",
+  "extensions": {
+    "colorMeta": {
+      "accent": {
+        "role": "primary",
+        "displayName": "Cuaderno Blue",
+        "canonical": "#387bd6",
+        "tonalRamp": [
+          "oklch(22% 0.06 255)",
+          "oklch(32% 0.09 255)",
+          "oklch(42% 0.12 255)",
+          "oklch(52% 0.14 255)",
+          "oklch(60% 0.15 255)",
+          "oklch(72% 0.11 255)",
+          "oklch(84% 0.07 255)",
+          "oklch(94% 0.03 255)"
+        ]
+      },
+      "accent-low": {
+        "role": "primary",
+        "displayName": "Deep Ink Navy",
+        "canonical": "#172b46"
+      },
+      "accent-high": {
+        "role": "primary",
+        "displayName": "Pale Sky Ink",
+        "canonical": "#b9d7ff"
+      },
+      "ink-black": {
+        "role": "neutral",
+        "displayName": "Ink Black",
+        "canonical": "hsl(224, 10%, 10%)",
+        "tonalRamp": [
+          "hsl(224, 10%, 10%)",
+          "hsl(224, 14%, 16%)",
+          "hsl(224, 10%, 23%)",
+          "hsl(224, 7%, 36%)",
+          "hsl(224, 6%, 56%)",
+          "hsl(224, 6%, 77%)",
+          "hsl(224, 20%, 94%)",
+          "hsl(224, 19%, 97%)"
+        ]
+      },
+      "slate-panel": {
+        "role": "neutral",
+        "displayName": "Slate Panel",
+        "canonical": "hsl(224, 14%, 16%)"
+      },
+      "slate-line": {
+        "role": "neutral",
+        "displayName": "Slate Line",
+        "canonical": "hsl(224, 10%, 23%)"
+      },
+      "slate-muted": {
+        "role": "neutral",
+        "displayName": "Slate Muted",
+        "canonical": "hsl(224, 7%, 36%)"
+      },
+      "slate-dim": {
+        "role": "neutral",
+        "displayName": "Slate Dim",
+        "canonical": "hsl(224, 6%, 56%)"
+      },
+      "slate-text": {
+        "role": "neutral",
+        "displayName": "Slate Text",
+        "canonical": "hsl(224, 6%, 77%)"
+      },
+      "paper-white": {
+        "role": "neutral",
+        "displayName": "Paper White",
+        "canonical": "hsl(0, 0%, 100%)"
+      },
+      "logo-sky": {
+        "role": "tertiary",
+        "displayName": "Logo Sky",
+        "canonical": "#38bdf8"
+      },
+      "logo-indigo": {
+        "role": "tertiary",
+        "displayName": "Logo Indigo",
+        "canonical": "#818cf8"
+      },
+      "logo-pink": {
+        "role": "tertiary",
+        "displayName": "Logo Pink",
+        "canonical": "#f472b6"
+      },
+      "logo-emerald": {
+        "role": "tertiary",
+        "displayName": "Logo Emerald",
+        "canonical": "#34d399"
+      },
+      "logo-tile": {
+        "role": "tertiary",
+        "displayName": "Logo Tile",
+        "canonical": "#1e293b"
+      }
+    },
+    "typographyMeta": {
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Page H1 titles; grows to 2.625rem from a 50rem viewport."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "H2/H3 section breaks."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Prose in the 45rem content column."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Sidebar, table of contents, metadata."
+      },
+      "code": {
+        "displayName": "Code",
+        "purpose": "File paths, commands, identifiers."
+      }
+    },
+    "shadows": [
+      {
+        "name": "lightbox-lift",
+        "value": "0 12px 48px rgba(0, 0, 0, 0.5)",
+        "purpose": "Only on the zoomed diagram in the lightbox."
+      }
+    ],
+    "motion": [
+      {
+        "name": "lightbox-fade",
+        "value": "opacity 0.15s ease",
+        "purpose": "Lightbox open/close."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "md",
+        "value": "50rem"
+      },
+      {
+        "name": "lg",
+        "value": "72rem"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Toolbar Button",
+      "kind": "button",
+      "refersTo": "button-toolbar",
+      "description": "Outlined action for opening or downloading a document.",
+      "html": "<button class=\"ds-btn-toolbar\">Descargar</button>",
+      "css": ".ds-btn-toolbar { background: var(--sl-color-bg, hsl(224, 10%, 10%)); border: 1px solid var(--sl-color-gray-4, hsl(224, 7%, 36%)); color: var(--sl-color-text, hsl(224, 6%, 77%)); padding: .35rem .9rem; border-radius: .4rem; cursor: pointer; font: inherit; } .ds-btn-toolbar:hover { border-color: var(--sl-color-accent, #387bd6); color: var(--sl-color-accent, #387bd6); } .ds-btn-toolbar:focus-visible { outline: 2px solid var(--sl-color-accent, #387bd6); outline-offset: 2px; }"
+    },
+    {
+      "name": "Embedded Viewer",
+      "kind": "card",
+      "refersTo": "embed-frame",
+      "description": "Disclosure with a full-width framed PDF or presentation viewer.",
+      "html": "<details class=\"ds-embed\" open><summary>Informe.pdf</summary><div class=\"ds-embed-frame\"></div></details>",
+      "css": ".ds-embed summary { cursor: pointer; padding-block: .75rem; color: var(--sl-color-white, #fff); } .ds-embed summary:focus-visible { outline: 2px solid var(--sl-color-accent, #387bd6); } .ds-embed-frame { width: 100%; height: 12rem; border: 1px solid var(--sl-color-gray-5, hsl(224, 10%, 23%)); border-radius: .5rem; background: hsl(0, 0%, 100%); }"
+    },
+    {
+      "name": "Sidebar Navigation",
+      "kind": "nav",
+      "refersTo": "sidebar",
+      "description": "Grouped section links with an accented active item.",
+      "html": "<nav class=\"ds-nav\"><a href=\"#\">Inicio</a><a href=\"#\" aria-current=\"page\">IA agéntica</a><a href=\"#\">Roadmap</a></nav>",
+      "css": ".ds-nav { display: flex; flex-direction: column; gap: .25rem; width: 14rem; padding: .75rem; background: hsl(224, 14%, 16%); font-size: .875rem; } .ds-nav a { color: hsl(224, 6%, 77%); text-decoration: none; padding: .3rem .5rem; border-radius: .25rem; } .ds-nav a:hover { color: #fff; } .ds-nav a[aria-current] { background: #172b46; color: #b9d7ff; font-weight: 600; } .ds-nav a:focus-visible { outline: 2px solid #387bd6; }"
+    },
+    {
+      "name": "Diagram Lightbox",
+      "kind": "custom",
+      "refersTo": "lightbox",
+      "description": "Click-to-zoom overlay that lifts a diagram onto a white plate.",
+      "html": "<div class=\"ds-zoom\"><div class=\"ds-zoom-plate\">Diagrama ArchiMate</div></div>",
+      "css": ".ds-zoom { display: flex; align-items: center; justify-content: center; padding: 2rem; background: rgba(10, 15, 25, 0.9); cursor: zoom-out; } .ds-zoom-plate { background: #fff; color: #1e293b; padding: 2rem 3rem; border-radius: .4rem; box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "El Cuaderno de Laboratorio",
+    "overview": "The portal reads like an honest lab notebook for a proposal still under construction. Each page records what is proposed, what is built, and the evidence behind it, mainly the versioned ArchiMate diagrams. The visual system stays out of the way. It is stock Starlight with one tuned blue accent, so attention goes to diagrams, tables, and status notes rather than to decoration.\n\nDensity is documentation-normal: a single 45rem reading column, a persistent sidebar of sections, and generous body leading (1.75). Personality comes from three small things: the four-block logo (a portfolio of applications as colored tiles), a click-to-zoom lightbox that lets evaluators inspect diagrams at full size, and plain Spanish copy that marks status explicitly.\n\nThe current palette is incumbent, not designed. The custom accent overrides Starlight in both themes (Starlight styles live in cascade layers, so unlayered `:root` wins). On white it measures 4.22:1 for body-size links, below WCAG AA; treat that as a known gap, not a rule.",
+    "keyCharacteristics": [
+      "Stock Starlight shell: system UI font stack, cool slate neutrals (hue 224), dark theme first.",
+      "One functional accent (Cuaderno Blue) for links, focus, and active navigation.",
+      "Diagrams are the main artifact; they sit on white and open in a full-viewport lightbox.",
+      "Flat surfaces separated by tone and hairline borders, with no shadow vocabulary.",
+      "Explicit status language (\"propuesto\", \"aún no implementado\") over persuasion."
+    ],
+    "rules": [
+      {
+        "name": "The Single Ink Rule",
+        "body": "Cuaderno Blue is the only interactive color. Logo tile colors never leave the logo.",
+        "section": "colors"
+      },
+      {
+        "name": "The White Plate Rule",
+        "body": "Diagrams always render on a white plate, in both themes, because PlantUML SVGs are drawn for light backgrounds.",
+        "section": "colors"
+      },
+      {
+        "name": "The Status-in-Words Rule",
+        "body": "Status (proposed, in progress, built) is written in text, not implied by color or badges.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat Notebook Rule",
+        "body": "Surfaces are flat at rest. Shadow appears only when something is lifted out of the page, like the lightbox.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do use Starlight's `--sl-color-*` tokens in custom pages instead of literal colors, as the toolbar does.",
+      "Do keep diagrams on a white plate and make them zoomable.",
+      "Do keep custom controls outlined and flat, with Cuaderno Blue only on hover, focus, or active.",
+      "Do state project status in plain Spanish text."
+    ],
+    "donts": [
+      "Don't use the logo tile colors (sky, indigo, pink, emerald) outside the logo mark.",
+      "Don't add shadows to resting surfaces; reserve elevation for content lifted out of the page.",
+      "Don't add paid fonts or assets; the project runs on a zero budget."
+    ]
+  }
+}
