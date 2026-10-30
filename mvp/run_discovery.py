@@ -51,6 +51,7 @@ def run_pipeline(
     catalog_path: Optional[Union[str, Path]] = None,
     review_threshold: float = config.REVIEW_THRESHOLD,
     ambiguity_margin: float = config.AMBIGUITY_MARGIN,
+    min_link_score: Optional[float] = None,
 ) -> Dict[str, Any]:
     """
     Ejecuta el pipeline completo de descubrimiento sobre fixtures de prueba,
@@ -192,7 +193,13 @@ def run_pipeline(
 
     # 4. Agente 3: Reconciliador Semántico
     print("\n[4/5] Agente 3: Anclando evidencia en el catálogo y reconciliando código vs. contratos...")
-    reconciliator = SemanticReconciliator(review_threshold=review_threshold, ambiguity_margin=ambiguity_margin)
+    if min_link_score is None:
+        min_link_score = config.MIN_LINK_SCORE
+    reconciliator = SemanticReconciliator(
+        review_threshold=review_threshold,
+        min_link_score=min_link_score,
+        ambiguity_margin=ambiguity_margin,
+    )
     reconciliation = reconciliator.reconcile_with_catalog(catalog, tech_evidences, contract_evidences)
     print(f"  ✓ Hipótesis ancladas en el catálogo (score de vínculo ≥ {reconciliator.min_link_score:.2f}): {len(reconciliation.hypotheses)}")
     print(f"  ✓ Candidatos huérfanos (sin coincidencia en el catálogo): {len(reconciliation.orphans)}")
