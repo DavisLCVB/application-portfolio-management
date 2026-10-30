@@ -28,7 +28,13 @@ if str(MVP_DIR) not in sys.path:
 from src import config
 from src.code_to_catalog import CodeToCatalogExtractor
 from src.contract_miner import ContractMiner
-from src.models import AplicacionCatalogo, CandidatoHuerfano, ConflictoReconciliacion, ResultadoReconciliacion
+from src.models import (
+    AplicacionCatalogo,
+    CandidatoHuerfano,
+    ConflictoReconciliacion,
+    EvidenciaTecnica,
+    ResultadoReconciliacion,
+)
 from src.nudge_generator import NudgeGenerator
 from src.reconciliator import SemanticReconciliator, load_catalog
 import run_discovery
@@ -425,6 +431,91 @@ class TestMultiApplicationContract(unittest.TestCase):
             "cubre APP-PAS, APP-ING (revisar alcance)"
         )
         self.assertEqual(warnings, [expected, expected])
+
+
+class TestStackLanguageSimilarity(unittest.TestCase):
+    """
+    La congruencia de stack compara lenguajes equivalentes, no subcadenas:
+    "Java" no debe coincidir con "JavaScript" y "Go" no debe coincidir con "Django".
+    Un stack desconocido no es evidencia de incongruencia.
+    """
+
+    def setUp(self):
+        self.reconciliator = SemanticReconciliator()
+
+    def _app(self, language, version=""):
+        return AplicacionCatalogo(
+            code="APP-999",
+            name="Aplicación de Prueba",
+            primary_language=language,
+            runtime_version=version,
+        )
+
+    def _tech(self, language, version=""):
+        return EvidenciaTecnica(
+            repo_name="app-prueba",
+            commit_hash="0" * 12,
+            primary_language=language,
+            runtime_version=version,
+        )
+
+    def test_java_does_not_match_javascript_by_substring(self):
+        similarity = self.reconciliator._stack_similarity(
+            self._app("Java", "OpenJDK 17"),
+            self._tech("JavaScript / TypeScript", "Node.js 20"),
+        )
+        self.assertEqual(similarity, 0.0)
+
+    def test_go_does_not_match_django_by_substring(self):
+        similarity = self.reconciliator._stack_similarity(
+            self._app("Go", "1.22"),
+            self._tech("Django", "1.22"),
+        )
+        self.assertEqual(similarity, 0.0)
+
+    def test_typescript_matches_javascript_typescript_stack(self):
+        similarity = self.reconciliator._stack_similarity(
+            self._app("TypeScript", "Node.js 20"),
+            self._tech("JavaScript / TypeScript", "Node (node:20-alpine)"),
+        )
+        self.assertEqual(similarity, 1.0)
+
+    def test_java_matches_java_plus_node_stack(self):
+        similarity = self.reconciliator._stack_similarity(
+            self._app("Java", "OpenJDK 17"),
+            self._tech("Java + Node.js", "OpenJDK 17"),
+        )
+        self.assertEqual(similarity, 1.0)
+
+    def test_same_language_different_version_scores_half(self):
+        similarity = self.reconciliator._stack_similarity(
+            self._app("Java", "OpenJDK 11"),
+            self._tech("Java", "OpenJDK 17"),
+        )
+        self.assertEqual(similarity, 0.5)
+
+    def test_csharp_does_not_match_cpp(self):
+        similarity = self.reconciliator._stack_similarity(
+            self._app("C#", ".NET 8"),
+            self._tech("C++", "17"),
+        )
+        self.assertEqual(similarity, 0.0)
+
+    def test_csharp_alias_matches(self):
+        similarity = self.reconciliator._stack_similarity(
+            self._app("C#", ".NET 8"),
+            self._tech("CSharp", ".NET 8"),
+        )
+        self.assertEqual(similarity, 1.0)
+
+    def test_unknown_stack_is_neutral(self):
+        for app_language, tech_language in (("", "Java"), ("Java", "Desconocido"), ("Desconocido", "Desconocido")):
+            with self.subTest(app=app_language, tech=tech_language):
+                similarity = self.reconciliator._stack_similarity(
+                    self._app(app_language, "OpenJDK 17"),
+                    self._tech(tech_language, "OpenJDK 17"),
+                )
+                self.assertEqual(similarity, 0.5)
 
 
 if __name__ == "__main__":

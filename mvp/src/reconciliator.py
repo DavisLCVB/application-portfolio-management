@@ -425,13 +425,60 @@ class SemanticReconciliator:
         """Nombre oficial y alias de una aplicación del catálogo."""
         return [app.name] + list(app.aliases)
 
+    # Alias de lenguajes: unifican la notación del catálogo (Excel heredado) con la
+    # detectada en el código para poder comparar tokens, no subcadenas.
+    LANGUAGE_ALIASES: Dict[str, str] = {
+        "js": "javascript",
+        "ts": "typescript",
+        "nodejs": "node",
+        "node.js": "node",
+        "golang": "go",
+        "c#": "csharp",
+        "csharp": "csharp",
+        "c++": "cpp",
+        "cpp": "cpp",
+        "cplusplus": "cpp",
+        ".net": "dotnet",
+        "dotnet": "dotnet",
+        "py": "python",
+        "kt": "kotlin",
+        "rb": "ruby",
+    }
+
+    UNKNOWN_LANGUAGES: Set[str] = {"desconocido", "desconocida", "unknown", "n/a", "na", "none", ""}
+
+    def _language_tokens(self, value: str) -> Set[str]:
+        """
+        Convierte una etiqueta de lenguaje ("JavaScript / TypeScript", "C#", "Java + Node.js")
+        en un conjunto de tokens canónicos, para comparar lenguajes equivalentes sin que
+        una subcadena produzca falsos positivos ("Java" dentro de "JavaScript").
+        """
+        normalized = (value or "").lower()
+        # Los símbolos de C# y C++ se separan antes de tokenizar para no perderlos.
+        normalized = normalized.replace("c++", " cpp ").replace("c#", " csharp ")
+        tokens = {token for token in re.split(r"[^a-z0-9]+", normalized) if token}
+        return {self.LANGUAGE_ALIASES.get(token, token) for token in tokens}
+
     def _stack_similarity(self, app: AplicacionCatalogo, tech: EvidenciaTecnica) -> float:
-        """Congruencia entre el stack registrado en el catálogo y el detectado en el código."""
-        if not app.primary_language:
+        """
+        Congruencia entre el stack registrado en el catálogo y el detectado en el código.
+
+        La coincidencia es por conjunto de tokens canónicos: basta con que uno de los dos
+        stacks esté contenido en el otro ("TypeScript" ⊆ "JavaScript / TypeScript"). Un
+        stack desconocido en cualquiera de los dos lados es neutro (0.5), no una
+        incongruencia.
+        """
+        app_tokens = self._language_tokens(app.primary_language)
+        tech_tokens = self._language_tokens(tech.primary_language)
+        if not app_tokens or not tech_tokens:
             return 0.5
-        language = app.primary_language.lower()
-        detected = tech.primary_language.lower()
-        language_sim = 1.0 if language in detected or detected in language else 0.0
+        if (app_tokens | tech_tokens) & self.UNKNOWN_LANGUAGES:
+            return 0.5
+        language_sim = 1.0 if app_tokens <= tech_tokens or tech_tokens <= app_tokens else 0.0
+        if language_sim == 0.0:
+            # La versión solo es evidencia a favor dentro de la misma familia de lenguaje:
+            # dos stacks distintos no se acercan por compartir un número de versión.
+            return 0.0
         app_version = re.search(r"\d+", app.runtime_version or "")
         tech_version = re.search(r"\d+", tech.runtime_version or "")
         version_sim = 1.0 if app_version and tech_version and app_version.group() == tech_version.group() else 0.0
