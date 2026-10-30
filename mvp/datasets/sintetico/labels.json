@@ -1,0 +1,439 @@
+{
+  "calibration_ratio": 0.7,
+  "category_counts": {
+    "clear_match": 10,
+    "conflict": 4,
+    "divergent_alias": 4,
+    "multi_app_contract": 4,
+    "noise": 6,
+    "orphan_contract": 4,
+    "orphan_repo": 4
+  },
+  "items": [
+    {
+      "category": "clear_match",
+      "evidence_id": "TDR-2024-ORG-0208",
+      "evidence_type": "contrato",
+      "expected_app_ids": [
+        "APP-002"
+      ],
+      "expected_outcome": "linked",
+      "noise": null,
+      "path": "contratos/tdr-2024-org-0208.md",
+      "split": "calibration"
+    },
+    {
+      "category": "multi_app_contract",
+      "evidence_id": "TDR-2024-ORG-0256",
+      "evidence_type": "contrato",
+      "expected_app_ids": [
+        "APP-012",
+        "APP-013"
+      ],
+      "expected_outcome": "multi_app",
+      "noise": null,
+      "path": "contratos/tdr-2024-org-0256.md",
+      "split": "calibration"
+    },
+    {
+      "category": "orphan_contract",
+      "evidence_id": "TDR-2024-ORG-0265",
+      "evidence_type": "contrato",
+      "expected_app_ids": [],
+      "expected_outcome": "orphan",
+      "noise": null,
+      "path": "contratos/tdr-2024-org-0265.md",
+      "split": "calibration"
+    },
+    {
+      "category": "multi_app_contract",
+      "evidence_id": "TDR-2024-ORG-0303",
+      "evidence_type": "contrato",
+      "expected_app_ids": [
+        "APP-010",
+        "APP-029"
+      ],
+      "expected_outcome": "multi_app",
+      "noise": null,
+      "path": "contratos/tdr-2024-org-0303.md",
+      "split": "evaluation"
+    },
+    {
+      "category": "clear_match",
+      "evidence_id": "TDR-2024-ORG-0405",
+      "evidence_type": "contrato",
+      "expected_app_ids": [
+        "APP-023"
+      ],
+      "expected_outcome": "linked",
+      "noise": null,
+      "path": "contratos/tdr-2024-org-0405.md",
+      "split": "calibration"
+    },
+    {
+      "category": "multi_app_contract",
+      "evidence_id": "TDR-2024-ORG-0482",
+      "evidence_type": "contrato",
+      "expected_app_ids": [
+        "APP-015",
+        "APP-019"
+      ],
+      "expected_outcome": "multi_app",
+      "noise": null,
+      "path": "contratos/tdr-2024-org-0482.md",
+      "split": "calibration"
+    },
+    {
+      "category": "noise",
+      "evidence_id": "TDR-2024-ORG-0619",
+      "evidence_type": "contrato",
+      "expected_app_ids": [
+        "APP-028"
+      ],
+      "expected_outcome": "linked",
+      "noise": "repeated_vendor",
+      "path": "contratos/tdr-2024-org-0619.md",
+      "split": "calibration"
+    },
+    {
+      "category": "orphan_contract",
+      "evidence_id": "TDR-2024-ORG-0652",
+      "evidence_type": "contrato",
+      "expected_app_ids": [],
+      "expected_outcome": "orphan",
+      "noise": null,
+      "path": "contratos/tdr-2024-org-0652.md",
+      "split": "evaluation"
+    },
+    {
+      "category": "multi_app_contract",
+      "evidence_id": "TDR-2024-ORG-0723",
+      "evidence_type": "contrato",
+      "expected_app_ids": [
+        "APP-019",
+        "APP-021"
+      ],
+      "expected_outcome": "multi_app",
+      "noise": null,
+      "path": "contratos/tdr-2024-org-0723.md",
+      "split": "calibration"
+    },
+    {
+      "category": "clear_match",
+      "evidence_id": "TDR-2024-ORG-0740",
+      "evidence_type": "contrato",
+      "expected_app_ids": [
+        "APP-022"
+      ],
+      "expected_outcome": "linked",
+      "noise": null,
+      "path": "contratos/tdr-2024-org-0740.md",
+      "split": "evaluation"
+    },
+    {
+      "category": "noise",
+      "evidence_id": "TDR-2024-ORG-0754",
+      "evidence_type": "contrato",
+      "expected_app_ids": [
+        "APP-001"
+      ],
+      "expected_outcome": "linked",
+      "noise": "typo",
+      "path": "contratos/tdr-2024-org-0754.md",
+      "split": "evaluation"
+    },
+    {
+      "category": "orphan_contract",
+      "evidence_id": "TDR-2024-ORG-0880",
+      "evidence_type": "contrato",
+      "expected_app_ids": [],
+      "expected_outcome": "orphan",
+      "noise": null,
+      "path": "contratos/tdr-2024-org-0880.md",
+      "split": "calibration"
+    },
+    {
+      "category": "orphan_contract",
+      "evidence_id": "TDR-2024-ORG-0897",
+      "evidence_type": "contrato",
+      "expected_app_ids": [],
+      "expected_outcome": "orphan",
+      "noise": null,
+      "path": "contratos/tdr-2024-org-0897.md",
+      "split": "calibration"
+    },
+    {
+      "category": "clear_match",
+      "evidence_id": "TDR-2024-ORG-0961",
+      "evidence_type": "contrato",
+      "expected_app_ids": [
+        "APP-026"
+      ],
+      "expected_outcome": "linked",
+      "noise": null,
+      "path": "contratos/tdr-2024-org-0961.md",
+      "split": "calibration"
+    },
+    {
+      "category": "clear_match",
+      "evidence_id": "TDR-2024-ORG-0991",
+      "evidence_type": "contrato",
+      "expected_app_ids": [
+        "APP-016"
+      ],
+      "expected_outcome": "linked",
+      "noise": null,
+      "path": "contratos/tdr-2024-org-0991.md",
+      "split": "calibration"
+    },
+    {
+      "category": "orphan_repo",
+      "evidence_id": "auditoria-interna",
+      "evidence_type": "repositorio",
+      "expected_app_ids": [],
+      "expected_outcome": "orphan",
+      "noise": null,
+      "path": "repos/auditoria-interna",
+      "split": "evaluation"
+    },
+    {
+      "category": "conflict",
+      "evidence_id": "consulta-deudas",
+      "evidence_type": "repositorio",
+      "expected_app_ids": [
+        "APP-007",
+        "APP-030"
+      ],
+      "expected_outcome": "conflict",
+      "noise": null,
+      "path": "repos/consulta-deudas",
+      "split": "evaluation"
+    },
+    {
+      "category": "orphan_repo",
+      "evidence_id": "control-asistencia",
+      "evidence_type": "repositorio",
+      "expected_app_ids": [],
+      "expected_outcome": "orphan",
+      "noise": null,
+      "path": "repos/control-asistencia",
+      "split": "calibration"
+    },
+    {
+      "category": "clear_match",
+      "evidence_id": "datos-abiertos",
+      "evidence_type": "repositorio",
+      "expected_app_ids": [
+        "APP-026"
+      ],
+      "expected_outcome": "linked",
+      "noise": null,
+      "path": "repos/datos-abiertos",
+      "split": "evaluation"
+    },
+    {
+      "category": "divergent_alias",
+      "evidence_id": "firmador-backend",
+      "evidence_type": "repositorio",
+      "expected_app_ids": [
+        "APP-009"
+      ],
+      "expected_outcome": "linked",
+      "noise": null,
+      "path": "repos/firmador-backend",
+      "split": "evaluation"
+    },
+    {
+      "category": "clear_match",
+      "evidence_id": "flota-vehicular",
+      "evidence_type": "repositorio",
+      "expected_app_ids": [
+        "APP-023"
+      ],
+      "expected_outcome": "linked",
+      "noise": null,
+      "path": "repos/flota-vehicular",
+      "split": "evaluation"
+    },
+    {
+      "category": "orphan_repo",
+      "evidence_id": "gestion-citas",
+      "evidence_type": "repositorio",
+      "expected_app_ids": [],
+      "expected_outcome": "orphan",
+      "noise": null,
+      "path": "repos/gestion-citas",
+      "split": "calibration"
+    },
+    {
+      "category": "clear_match",
+      "evidence_id": "gestion-expedientes",
+      "evidence_type": "repositorio",
+      "expected_app_ids": [
+        "APP-022"
+      ],
+      "expected_outcome": "linked",
+      "noise": null,
+      "path": "repos/gestion-expedientes",
+      "split": "calibration"
+    },
+    {
+      "category": "noise",
+      "evidence_id": "gestion-inverisones",
+      "evidence_type": "repositorio",
+      "expected_app_ids": [
+        "APP-006"
+      ],
+      "expected_outcome": "linked",
+      "noise": "typo",
+      "path": "repos/gestion-inverisones",
+      "split": "evaluation"
+    },
+    {
+      "category": "noise",
+      "evidence_id": "gestoin-riesgos",
+      "evidence_type": "repositorio",
+      "expected_app_ids": [
+        "APP-025"
+      ],
+      "expected_outcome": "linked",
+      "noise": "typo",
+      "path": "repos/gestoin-riesgos",
+      "split": "calibration"
+    },
+    {
+      "category": "divergent_alias",
+      "evidence_id": "helpdesk-ciudadano",
+      "evidence_type": "repositorio",
+      "expected_app_ids": [
+        "APP-018"
+      ],
+      "expected_outcome": "linked",
+      "noise": null,
+      "path": "repos/helpdesk-ciudadano",
+      "split": "calibration"
+    },
+    {
+      "category": "conflict",
+      "evidence_id": "mesa-partes-virtual",
+      "evidence_type": "repositorio",
+      "expected_app_ids": [
+        "APP-017",
+        "APP-024"
+      ],
+      "expected_outcome": "conflict",
+      "noise": null,
+      "path": "repos/mesa-partes-virtual",
+      "split": "calibration"
+    },
+    {
+      "category": "clear_match",
+      "evidence_id": "planeamiento-presupuestal",
+      "evidence_type": "repositorio",
+      "expected_app_ids": [
+        "APP-016"
+      ],
+      "expected_outcome": "linked",
+      "noise": null,
+      "path": "repos/planeamiento-presupuestal",
+      "split": "calibration"
+    },
+    {
+      "category": "divergent_alias",
+      "evidence_id": "planillas-core",
+      "evidence_type": "repositorio",
+      "expected_app_ids": [
+        "APP-003"
+      ],
+      "expected_outcome": "linked",
+      "noise": null,
+      "path": "repos/planillas-core",
+      "split": "calibration"
+    },
+    {
+      "category": "orphan_repo",
+      "evidence_id": "programas-sociales",
+      "evidence_type": "repositorio",
+      "expected_app_ids": [],
+      "expected_outcome": "orphan",
+      "noise": null,
+      "path": "repos/programas-sociales",
+      "split": "calibration"
+    },
+    {
+      "category": "conflict",
+      "evidence_id": "registro-visitas",
+      "evidence_type": "repositorio",
+      "expected_app_ids": [
+        "APP-008",
+        "APP-011"
+      ],
+      "expected_outcome": "conflict",
+      "noise": null,
+      "path": "repos/registro-visitas",
+      "split": "calibration"
+    },
+    {
+      "category": "conflict",
+      "evidence_id": "reportes-gerenciales",
+      "evidence_type": "repositorio",
+      "expected_app_ids": [
+        "APP-005",
+        "APP-020"
+      ],
+      "expected_outcome": "conflict",
+      "noise": null,
+      "path": "repos/reportes-gerenciales",
+      "split": "calibration"
+    },
+    {
+      "category": "noise",
+      "evidence_id": "scg-core",
+      "evidence_type": "repositorio",
+      "expected_app_ids": [
+        "APP-014"
+      ],
+      "expected_outcome": "linked",
+      "noise": "abbreviation",
+      "path": "repos/scg-core",
+      "split": "calibration"
+    },
+    {
+      "category": "clear_match",
+      "evidence_id": "seguimiento-obras",
+      "evidence_type": "repositorio",
+      "expected_app_ids": [
+        "APP-002"
+      ],
+      "expected_outcome": "linked",
+      "noise": null,
+      "path": "repos/seguimiento-obras",
+      "split": "calibration"
+    },
+    {
+      "category": "noise",
+      "evidence_id": "sqr-api",
+      "evidence_type": "repositorio",
+      "expected_app_ids": [
+        "APP-027"
+      ],
+      "expected_outcome": "linked",
+      "noise": "abbreviation",
+      "path": "repos/sqr-api",
+      "split": "calibration"
+    },
+    {
+      "category": "divergent_alias",
+      "evidence_id": "svc-pagos-v2",
+      "evidence_type": "repositorio",
+      "expected_app_ids": [
+        "APP-004"
+      ],
+      "expected_outcome": "linked",
+      "noise": null,
+      "path": "repos/svc-pagos-v2",
+      "split": "calibration"
+    }
+  ],
+  "seed": 42
+}

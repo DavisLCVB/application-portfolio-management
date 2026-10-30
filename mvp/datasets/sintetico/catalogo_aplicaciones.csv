@@ -1,0 +1,31 @@
+Codigo,Nombre Aplicacion,Responsable Tecnico,Lenguaje Principal,Version Runtime,Dependencias,SLA Uptime,Proveedor,Alias
+APP-001,Catastro Municipal Digital,Lucía Ramos <lramos@entidad.example>,Java,OpenJDK 17,"Spring Boot, Hibernate, PostgreSQL JDBC",99.5%,Soluciones Digitales del Sur S.A.,CMD
+APP-002,Sistema de Seguimiento de Obras,Diego Salas <dsalas@entidad.example>,TypeScript,Node.js 20,"React, Next.js, Express",99.5%,TecnoServicios Públicos E.I.R.L.,SSO
+APP-003,Gestión de Recursos Humanos,Rosa Huamán <rhuaman@entidad.example>,TypeScript,Node.js 20,"React, Next.js, Express",99.5%,Soluciones Digitales del Sur S.A.,Planillas
+APP-004,Pasarela de Recaudación,Raúl Vega <rvega@entidad.example>,TypeScript,Node.js 20,"React, Next.js, Express",99.5%,Soluciones Digitales del Sur S.A.,Pagos en Línea
+APP-005,Sistema de Reportes Gerenciales Financieros,Raúl Vega <rvega@entidad.example>,TypeScript,Node.js 20,"React, Next.js, Express",99.5%,TecnoServicios Públicos E.I.R.L.,
+APP-006,Sistema de Gestión de Inversiones,Elena Torres <etorres@entidad.example>,Java,OpenJDK 17,"Spring Boot, Hibernate, PostgreSQL JDBC",99.5%,Soluciones Digitales del Sur S.A.,SGI
+APP-007,Sistema de Consulta de Deudas Coactivas,Martín Quispe <mquispe@entidad.example>,Java,OpenJDK 17,"Spring Boot, Hibernate, PostgreSQL JDBC",99.5%,Soluciones Digitales del Sur S.A.,
+APP-008,Sistema de Registro de Visitas Externo,Diego Salas <dsalas@entidad.example>,Java,OpenJDK 17,"Spring Boot, Hibernate, PostgreSQL JDBC",99.5%,Integra Sistemas Corporativos S.A.C.,
+APP-009,Plataforma de Firma Electrónica,Raúl Vega <rvega@entidad.example>,TypeScript,Node.js 20,"React, Next.js, Express",99.5%,Soluciones Digitales del Sur S.A.,Firmador Institucional
+APP-010,Sistema de Trámite Documentario,Martín Quispe <mquispe@entidad.example>,TypeScript,Node.js 20,"React, Next.js, Express",99.5%,Consorcio Andino de Software S.A.C.,STD
+APP-011,Sistema de Registro de Visitas Interno,Rosa Huamán <rhuaman@entidad.example>,Java,OpenJDK 17,"Spring Boot, Hibernate, PostgreSQL JDBC",99.5%,Consorcio Andino de Software S.A.C.,
+APP-012,Sistema de Gestión de Convenios,Lucía Ramos <lramos@entidad.example>,TypeScript,Node.js 20,"React, Next.js, Express",99.5%,TecnoServicios Públicos E.I.R.L.,SGCON
+APP-013,Sistema de Gestión de Archivos,Martín Quispe <mquispe@entidad.example>,Java,OpenJDK 17,"Spring Boot, Hibernate, PostgreSQL JDBC",99.5%,TecnoServicios Públicos E.I.R.L.,SGA
+APP-014,Sistema de Contabilidad Gubernamental,Raúl Vega <rvega@entidad.example>,TypeScript,Node.js 20,"React, Next.js, Express",99.5%,Integra Sistemas Corporativos S.A.C.,SCG
+APP-015,Sistema de Registro Civil,Rosa Huamán <rhuaman@entidad.example>,TypeScript,Node.js 20,"React, Next.js, Express",99.5%,Soluciones Digitales del Sur S.A.,SRC
+APP-016,Sistema de Planeamiento Presupuestal,Raúl Vega <rvega@entidad.example>,Java,OpenJDK 17,"Spring Boot, Hibernate, PostgreSQL JDBC",99.5%,Soluciones Digitales del Sur S.A.,SPP
+APP-017,Mesa de Partes Virtual Central,Raúl Vega <rvega@entidad.example>,Java,OpenJDK 17,"Spring Boot, Hibernate, PostgreSQL JDBC",99.5%,TecnoServicios Públicos E.I.R.L.,
+APP-018,Sistema de Atención al Ciudadano,Rosa Huamán <rhuaman@entidad.example>,TypeScript,Node.js 20,"React, Next.js, Express",99.5%,Integra Sistemas Corporativos S.A.C.,Mesa de Ayuda
+APP-019,Registro de Proveedores del Estado,Elena Torres <etorres@entidad.example>,Java,OpenJDK 17,"Spring Boot, Hibernate, PostgreSQL JDBC",99.5%,Soluciones Digitales del Sur S.A.,RPE
+APP-020,Sistema de Reportes Gerenciales Operativos,Lucía Ramos <lramos@entidad.example>,TypeScript,Node.js 20,"React, Next.js, Express",99.5%,Integra Sistemas Corporativos S.A.C.,
+APP-021,Sistema de Control de Viáticos,Martín Quispe <mquispe@entidad.example>,Java,OpenJDK 17,"Spring Boot, Hibernate, PostgreSQL JDBC",99.5%,Consorcio Andino de Software S.A.C.,SCV
+APP-022,Sistema de Gestión de Expedientes,Elena Torres <etorres@entidad.example>,Java,OpenJDK 17,"Spring Boot, Hibernate, PostgreSQL JDBC",99.5%,Integra Sistemas Corporativos S.A.C.,SGE
+APP-023,Sistema de Gestión de Flota Vehicular,Diego Salas <dsalas@entidad.example>,Java,OpenJDK 17,"Spring Boot, Hibernate, PostgreSQL JDBC",99.5%,Integra Sistemas Corporativos S.A.C.,SGFV
+APP-024,Mesa de Partes Virtual Regional,Elena Torres <etorres@entidad.example>,Java,OpenJDK 17,"Spring Boot, Hibernate, PostgreSQL JDBC",99.5%,Integra Sistemas Corporativos S.A.C.,
+APP-025,Sistema de Gestión de Riesgos,Raúl Vega <rvega@entidad.example>,TypeScript,Node.js 20,"React, Next.js, Express",99.5%,Consorcio Andino de Software S.A.C.,SGR
+APP-026,Plataforma de Datos Abiertos,Raúl Vega <rvega@entidad.example>,Java,OpenJDK 17,"Spring Boot, Hibernate, PostgreSQL JDBC",99.5%,TecnoServicios Públicos E.I.R.L.,PDA
+APP-027,Sistema de Quejas y Reclamos,Rosa Huamán <rhuaman@entidad.example>,TypeScript,Node.js 20,"React, Next.js, Express",99.5%,Consorcio Andino de Software S.A.C.,SQR
+APP-028,Sistema de Notificaciones Electrónicas,Diego Salas <dsalas@entidad.example>,TypeScript,Node.js 20,"React, Next.js, Express",99.5%,Soluciones Digitales del Sur S.A.,SNE
+APP-029,Registro de Licencias de Funcionamiento,Elena Torres <etorres@entidad.example>,Java,OpenJDK 17,"Spring Boot, Hibernate, PostgreSQL JDBC",99.5%,TecnoServicios Públicos E.I.R.L.,RLF
+APP-030,Sistema de Consulta de Deudas Tributarias,Elena Torres <etorres@entidad.example>,Java,OpenJDK 17,"Spring Boot, Hibernate, PostgreSQL JDBC",99.5%,Soluciones Digitales del Sur S.A.,

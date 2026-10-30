@@ -1,0 +1,13 @@
+{
+  "name": "reportes-gerenciales",
+  "version": "1.0.0",
+  "description": "Sistema de Reportes Gerenciales",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "next": "^14.1.4",
+    "react": "^18.2.0"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "name": "svc-pagos-v2",
+  "version": "1.0.0",
+  "description": "Pagos en Línea",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "next": "^14.1.4",
+    "react": "^18.2.0"
+  }
+}
