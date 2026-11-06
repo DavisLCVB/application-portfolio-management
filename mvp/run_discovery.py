@@ -52,14 +52,19 @@ def run_pipeline(
     review_threshold: float = config.REVIEW_THRESHOLD,
     ambiguity_margin: float = config.AMBIGUITY_MARGIN,
     min_link_score: Optional[float] = None,
+    output_dir: Optional[Union[str, Path]] = None,
 ) -> Dict[str, Any]:
     """
     Ejecuta el pipeline completo de descubrimiento sobre fixtures de prueba,
     un directorio multimodal arbitrario, o rutas específicas de repositorios,
     contratos y diagramas.
+
+    `output_dir` permite redirigir los artefactos JSON a otra carpeta (p. ej.
+    `/tmp` en un entorno serverless de solo lectura); por defecto usa
+    `mvp/output/`.
     """
     fixtures_dir = BASE_DIR / "fixtures"
-    output_dir = BASE_DIR / "output"
+    output_dir = Path(output_dir) if output_dir is not None else (BASE_DIR / "output")
     output_dir.mkdir(parents=True, exist_ok=True)
 
     print("================================================================================")
@@ -255,7 +260,7 @@ def run_pipeline(
         with open(diag_output_file, "w", encoding="utf-8") as f:
             json.dump([d.to_dict() for d in diagram_evidences], f, indent=2, ensure_ascii=False)
 
-    print(f"\n[OK] Fact Sheets exportados exitosamente a: {output_file.relative_to(BASE_DIR.parent)}")
+    print(f"\n[OK] Fact Sheets exportados exitosamente a: {output_file}")
 
     # Imprimir tablas resumen CLI
     print_summary_table(fact_sheets, all_nudges)
