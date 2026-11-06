@@ -151,6 +151,30 @@ El descubrimiento no es una carga única: los agentes vuelven a escanear las fue
 
 La publicación automática de atributos técnicos es coherente con *"la IA propone, la persona dispone"*: solo aplica a datos extraídos por reglas deterministas y verificables (no por un LLM), cada valor queda trazado a su evidencia primaria y cualquier persona responsable puede revertirlo o corregirlo, momento a partir del cual pasa a ser un valor validado con precedencia sobre los escaneos siguientes. Las reglas de autoridad y procedencia se detallan en [Gobierno y procedencia de datos](../gobierno-datos/#descubrimiento-continuo-y-precedencia).
 
+### Calibración del score de confianza
+
+El *score* heurístico del reconciliador no es una probabilidad: es un número entre $0.0$ y $1.0$ cuyos umbrales deben fijarse con evidencia, no suponerse. Para demostrar la metodología de calibración —en ausencia de datos reales— el MVP incluye un **piloto de calibración sobre un conjunto sintético etiquetado** (`mvp/`), con verdad conocida (*ground truth*) y ejecución determinista.
+
+**Método**:
+
+- **Conjunto sintético determinista** (`mvp/datasets/sintetico/`, semilla fija): ~30 aplicaciones de catálogo y 36 evidencias (repos y TDRs) distribuidas en siete categorías deliberadas —coincidencia clara, alias divergente, contrato multi-aplicación, repositorio/contrato huérfano, empate ambiguo (conflicto) y ruido (typos, abreviaturas, proveedores repetidos)—, cada una con su resultado esperado en `labels.json`.
+- **Separación calibración/evaluación** (≈70 % / 30 %, estratificada por categoría): los umbrales se seleccionan solo sobre la partición de calibración y se reportan sobre la partición de evaluación reservada, para no sobreajustar.
+- **Barrido de umbrales** (`mvp/calibrate.py`): se evalúa una rejilla de `MIN_LINK_SCORE` × `AMBIGUITY_MARGIN` y se elige la combinación por exactitud máxima, F1 macro y menor número de conflictos; `REVIEW_THRESHOLD` se elige como el menor umbral con cero errores auto-publicados, o el que minimiza errores si ninguno lo alcanza.
+- **Doble criterio de identidad** (`app_ids`): la coincidencia de aplicaciones se mide como conjunto exacto y como superconjunto (el esperado contenido en el predicho), para distinguir aciertos plenos de vínculos con aplicaciones de más.
+
+**Resultados del piloto** (conjunto sintético, no una organización real):
+
+- Con la configuración actual (`MIN_LINK_SCORE=0.50`, `AMBIGUITY_MARGIN=0.05`, `REVIEW_THRESHOLD=0.85`): exactitud $0.8462$ y F1 macro $0.8194$ en calibración, $0.80$ y $0.8167$ en evaluación.
+- El barrido selecciona `MIN_LINK_SCORE=0.60` y `AMBIGUITY_MARGIN=0.01` (exactitud $0.9231$ en calibración), **pero** esa mejora no se sostiene en evaluación ($0.70$): es sobreajuste a una muestra minúscula, no una mejora real.
+- **Ningún umbral de revisión alcanza cero errores** en lo auto-publicado: dos hipótesis incorrectas persisten hasta $0.80$. El *score* heurístico no es todavía una compuerta fiable de publicación automática.
+
+**Conclusión y límites**:
+
+- La medición **no justifica cambiar los umbrales por defecto**; se mantienen como propuestas pendientes de un conjunto verificado de aplicaciones reales.
+- El entregable del piloto es la **metodología** (barrido reproducible, separación calibración/evaluación, métricas por clase y matriz de confusión), no un desempeño medido sobre datos reales.
+- Con particiones tan pequeñas, las diferencias de una o dos evidencias son ruido de medición; los resultados deben releerse al disponer de datos reales.
+- **Supuesto académico**: el caso no cuenta con datos reales, por lo que el acceso a repositorios de proveedores y TDRs se declara como supuesto; la calibración se demuestra con datos sintéticos de verdad conocida, nunca con datos de una organización real.
+
 ---
 
 ## Alineación con los Principios de Gobernanza de IA de la OCDE

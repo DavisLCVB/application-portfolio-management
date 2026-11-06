@@ -125,6 +125,8 @@ Los objetos generados mapean directamente a los tipos fundamentales de LeanIX v4
 mvp/
 ├── README.md                           # Documentación técnica y conceptual
 ├── run_discovery.py                   # Orquestador y runner CLI end-to-end
+├── calibrate.py                       # Barrido de umbrales y selección de parámetros
+├── evaluate.py                        # Evaluador contra labels.json (precisión/recall/F1)
 ├── src/
 │   ├── __init__.py
 │   ├── config.py                      # Umbral único de revisión y score mínimo de vínculo
@@ -132,7 +134,21 @@ mvp/
 │   ├── code_to_catalog.py             # Agente 1: Extractor de código y repositorios
 │   ├── contract_miner.py              # Agente 2: Minero de TDRs y contratos
 │   ├── reconciliator.py               # Agente 3: Reconciliador semántico y scoring
-│   └── nudge_generator.py             # Agente 4: Generador de Adaptive Cards interactivas
+│   ├── nudge_generator.py             # Agente 4: Generador de Adaptive Cards interactivas
+│   ├── synthetic.py                   # Generador determinista del conjunto sintético etiquetado
+│   └── connectors/                    # Capa federada multimodal (sección 6)
+│       ├── __init__.py
+│       ├── base.py
+│       ├── registry.py
+│       ├── spreadsheet_connector.py   # .csv / .xlsx
+│       ├── presentation_connector.py  # .pptx
+│       └── diagram_connector.py       # .puml / .archimate / .drawio
+├── datasets/
+│   └── sintetico/                     # Conjunto etiquetado con verdad conocida (semilla fija)
+│       ├── catalogo_aplicaciones.csv
+│       ├── repos/                     # Repos mínimos (pom.xml / package.json / Dockerfile)
+│       ├── contratos/                 # TDRs en Markdown
+│       └── labels.json                # Verdad esperada por evidencia
 ├── fixtures/                          # Casos de prueba reales
 │   ├── repo-recaudacion/              # Proyecto Java 17 + Spring Boot + Postgres
 │   │   ├── pom.xml
@@ -150,9 +166,15 @@ mvp/
 ├── tests/
 │   ├── __init__.py
 │   ├── test_pipeline.py               # Suite completa de pruebas unitarias
-│   └── test_reconciliation.py         # Reconciliación N:M, anclaje en catálogo y umbral único
-└── output/
-    └── fact_sheets_draft.json         # Artefacto consolidado exportado
+│   ├── test_reconciliation.py         # Reconciliación N:M, anclaje en catálogo y umbral único
+│   ├── test_connectors.py             # Conectores federados multimodales
+│   ├── test_synthetic.py              # Determinismo y categorías del conjunto sintético
+│   ├── test_evaluate.py               # Evaluador y matriz de confusión
+│   └── test_calibrate.py              # Barrido de umbrales y selección de parámetros
+└── output/                            # Artefactos generados (gitignored)
+    ├── fact_sheets_draft.json         # Artefacto consolidado exportado
+    ├── evaluation_report.json         # Métricas del evaluador
+    └── calibration_report.json        # Barrido de umbrales y selección
 ```
 
 ---
@@ -325,3 +347,54 @@ El pipeline genera dos artefactos principales de gobernanza:
   }
 ]
 ```
+
+---
+
+## 9. Calibración y evaluación (resultados)
+
+El barrido y la evaluación se documentan aquí porque el informe del curso los cita solo de forma agregada.
+
+### Conjunto
+
+21 repositorios, 15 contratos y 36 casos etiquetados (26 de calibración y 10 de evaluación), generados con `seed=42` y etiquetas en `datasets/sintetico/labels.json`. Es un corpus sintético: mide la metodología de calibración, no el desempeño en una organización real.
+
+### Barrido
+
+49 combinaciones de `MIN_LINK_SCORE` × `AMBIGUITY_MARGIN` (7×7) sobre los 26 casos de calibración.
+
+### Resultados en calibración (n=26)
+
+| Parámetros | Exactitud | F1 macro | Conflictos |
+|---|---|---|---|
+| 0,60 / 0,01 (seleccionada) | 92,3 % | 91,1 % | 4 |
+| 0,50 / 0,05 (vigente) | 84,6 % | 81,9 % | 5 |
+
+### Evaluación (n=10)
+
+| Parámetros | Exactitud | F1 macro |
+|---|---|---|
+| 0,60 / 0,01 | 70,0 % | 59,9 % |
+| 0,50 / 0,05 | 80,0 % | 81,7 % |
+
+La combinación seleccionada no generaliza: con 10 casos, un caso equivale a 10 puntos porcentuales. Los intervalos de confianza del 95 % aproximados (Wilson) son 76–98 % para 24/26, 40–89 % para 7/10 y 49–94 % para 8/10; se solapan, así que la diferencia no es distinguible con este tamaño.
+
+### Umbral de revisión
+
+0,70 minimiza las publicaciones erróneas (11 auto-publicadas, 2 erróneas, 18,2 %) con 7 casos a revisión. Ningún umbral del barrido alcanza error cero.
+
+### Protocolo del conjunto verificado
+
+Dos arquitectos etiquetan cada caso por separado (vinculado, multi-aplicación, huérfano, conflicto o faltante), un tercero adjudica los desacuerdos, se reporta el acuerdo entre evaluadores (kappa de Cohen) y el conjunto se versiona con fecha y hash. Cualquier cambio de etiqueta genera una versión nueva.
+
+### Riesgo de sobreajuste
+
+Elegir la mejor de 49 combinaciones sobre 26 casos favorece el ajuste al conjunto; el split de evaluación es consistente con ese riesgo. Las cifras no deben leerse como validación del pipeline.
+
+### Reproducción
+
+```bash
+cd mvp
+uv run python calibrate.py
+```
+
+Salidas: `output/calibration_report.json` y `output/evaluation_report.json`.
