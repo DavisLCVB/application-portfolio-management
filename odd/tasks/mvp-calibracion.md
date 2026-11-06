@@ -28,7 +28,7 @@ Trunk-Based Development: un commit por tarea directamente en `main`; push a carg
 - [x] C1 — Generador determinista del conjunto sintético (`mvp/src/synthetic.py` + salida en `mvp/datasets/sintetico/`): ~30 aplicaciones de catálogo, repos mínimos (`pom.xml`/`package.json`/`Dockerfile`), TDRs en Markdown y `labels.json` con la verdad esperada por evidencia (app(s) o huérfano o conflicto). Tests: misma semilla → mismo conjunto; todas las categorías presentes.
 - [x] C2 — Evaluador (`mvp/evaluate.py`): corre el pipeline sobre el conjunto, compara con `labels.json` y reporta precisión/recall/F1 por tipo de resultado y matriz de confusión (texto + JSON). Tests con un mini-conjunto de verdad conocida.
 - [x] C3 — Barrido de umbrales sobre la partición de calibración (`MIN_LINK_SCORE`, `AMBIGUITY_MARGIN`; `REVIEW_THRESHOLD` según tasa de nudges vs. errores), selección justificada y reporte sobre la partición de evaluación; actualizar `src/config.py` solo si la medición lo justifica.
-- [ ] C4 — Documentar: sección "Calibración" en `docs/arquitectura/ia-agentes.md` con método, resultados y límites, y el supuesto académico sobre acceso a fuentes; actualizar `mvp/README.md`.
+- [x] C4 — Documentar: sección "Calibración" en `docs/arquitectura/ia-agentes.md` con método, resultados y límites, y el supuesto académico sobre acceso a fuentes; actualizar `mvp/README.md`.
 
 ## Progreso
 - Documento creado (2026-10-11). Antecedente: `odd/tasks/mvp-descubrimiento.md` T1–T12 completas (origin/main en `29d0b50`).
@@ -47,6 +47,10 @@ Trunk-Based Development: un commit por tarea directamente en `main`; push a carg
   - `REVIEW_THRESHOLD`: ningún umbral alcanza 0 errores (2 hipótesis incorrectas auto-publicadas persisten hasta 0.80); el script propone 0.70 con `zero_error=false`.
   - CONCLUSIÓN: la medición NO justifica cambiar `src/config.py`; se mantienen 0.50 / 0.05 / 0.85 como heurísticos pendientes de datos reales. Entregable de C3 = metodología de calibración, no un cambio de umbrales.
   - Verificación: 103 tests OK; reporte JSON determinista (byte-idéntico entre corridas).
+- C4 completada: commit `474aa9c`.
+  - `docs/arquitectura/ia-agentes.md`: sección "Calibración del score de confianza" (método, resultados, límites y supuesto académico de acceso a fuentes).
+  - `mvp/README.md`: estructura del proyecto actualizada (`synthetic.py`, `evaluate.py`, `calibrate.py`, `connectors/`, `datasets/sintetico/`, tests de calibración/evaluación/conectores) y sección 9 "Calibración y evaluación (resultados)".
+  - Verificación: `npm test` (2 OK) + `npm run build` (15 páginas) + 103 tests MVP OK.
 
-## Siguiente paso
-C4 — Documentar: sección "Calibración" en `docs/arquitectura/ia-agentes.md` (método, resultados —incluida la no-generalización y el umbral de revisión sin error 0— y límites, más el supuesto académico de acceso a fuentes) y actualizar `mvp/README.md` (estructura del proyecto: `synthetic.py`, `evaluate.py`, `calibrate.py`, `datasets/sintetico/` y el flujo de calibración).
+## Estado
+Todas las tareas de calibración (C1–C4) están completas. Quedan pendientes fuera de este track: el renombrado de la presentación (pptx) y el push de los commits a `origin/main`.
