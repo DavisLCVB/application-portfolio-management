@@ -1,11 +1,6 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
-import { existsSync, readFileSync } from 'node:fs';
-
-// prepare-pdfs.mjs writes this catalog before Astro starts; hide the section while it is empty.
-const pdfCatalog = new URL('./src/generated/pdfs.json', import.meta.url);
-const hasPdfs = existsSync(pdfCatalog) && JSON.parse(readFileSync(pdfCatalog, 'utf8')).length > 0;
 
 export default defineConfig({
   integrations: [
@@ -32,14 +27,9 @@ export default defineConfig({
             { label: 'Soluciones similares', slug: 'arquitectura/soluciones-similares' },
           ],
         },
-        ...(hasPdfs ? [{ label: 'Documentos PDF', link: '/documentos/' }] : []),
-        { label: 'Presentaciones', link: '/presentaciones/' },
-        {
-          label: 'Guías',
-          items: [
-            { label: 'Guía técnica del MVP', slug: 'guias/guia-tecnica-mvp' },
-          ],
-        },
+        { label: 'Presentación', link: '/presentaciones/' },
+        { label: 'Informe', link: '/documentos/' },
+        { label: 'Guía', link: '/guias/guia-tecnica-mvp/' },
       ],
       customCss: ['./src/styles/custom.css'],
       head: [
