@@ -14,3 +14,17 @@ __pycache__/
 *.pyc
 mvp/.venv/
 mvp/output/
+
+# Agentes y skills locales (DSH / Claude Code)
+.agents/skills/
+.claude/skills/
+.atl/
+skills-lock.json
+
+# Build e informe del curso (generados con LibreOffice; se mantienen fuera de git)
+odd/tasks/.build/
+odd/tasks/informe-v2.md
+odd/tasks/informe-v3.md
+odd/tasks/informe-v3-roadmap.md
+odd/tasks/revision-informe-v3.md
+odd/tasks/re-review-informe-v3.md
