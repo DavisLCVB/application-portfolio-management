@@ -1,0 +1,11 @@
+# Copia este archivo a `terraform.tfvars` y rellena los valores.
+# `terraform.tfvars` está en .gitignore: no se versiona.
+
+project_id = "mi-proyecto-gcp"
+region     = "us-central1"
+
+# Opcionales (valores por defecto en variables.tf):
+# repository_id = "apm-mvp"
+# image_name    = "apm-mvp-api"
+# image_tag     = "latest"
+# service_name  = "apm-mvp"

@@ -57,3 +57,10 @@ Los archivos de `website/public/documentos/` y el catálogo de `website/src/gene
 La integración Git de Vercel despliega cada actualización; GitHub Actions valida el build de forma independiente. Configura protección de `main` con el check de CI obligatorio si quieres exigir validación antes de fusionar.
 
 Aún no hay remoto ni proyecto Vercel configurado desde este entorno. No se incluyen enlaces de despliegue ficticios.
+
+## Despliegue del MVP como API en Google Cloud
+
+El pipeline de descubrimiento del MVP también puede ejecutarse como una **API HTTP**
+sobre **Cloud Run**, con la infraestructura declarada como código (**Terraform**).
+Ver [deploy/README.md](deploy/README.md) para el paso a paso (FastAPI + Docker +
+Artifact Registry + Cloud Run + IAM).

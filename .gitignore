@@ -15,6 +15,12 @@ __pycache__/
 mvp/.venv/
 mvp/output/
 
+# Terraform: estado local, proveedores y valores de proyecto (no versionar)
+infra/**/.terraform/
+infra/**/*.tfstate
+infra/**/*.tfstate.*
+infra/**/terraform.tfvars
+
 # Agentes y skills locales (DSH / Claude Code)
 .agents/skills/
 .claude/skills/
