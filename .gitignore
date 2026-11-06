@@ -21,6 +21,10 @@ infra/**/*.tfstate
 infra/**/*.tfstate.*
 infra/**/*.tfvars
 
+# Deck de presentación: salidas generadas (slides y entregables GobIA_TF_*)
+odd/tasks/.deck/slide-*.jpg
+odd/tasks/.deck/GobIA_TF_*
+
 # Agentes y skills locales (DSH / Claude Code)
 .agents/skills/
 .claude/skills/
