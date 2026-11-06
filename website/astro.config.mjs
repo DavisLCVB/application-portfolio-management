@@ -17,6 +17,7 @@ export default defineConfig({
       logo: { src: './src/assets/logo.svg' },
       sidebar: [
         { label: 'Inicio', link: '/' },
+        { label: 'Demo MVP', link: 'https://apm-mvp-5dcohejqua-uc.a.run.app', badge: 'en vivo' },
         {
           label: 'Arquitectura del sistema',
           items: [

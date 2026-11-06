@@ -64,3 +64,9 @@ minúscula). El score no es una probabilidad.
 - Datos sintéticos (caso académico), sin cliente real ni datos de producción.
 - El score no alcanza cero errores de auto-publicación.
 - Cloud Run escala a cero: la primera petición tarda unos segundos (cold start).
+
+## Enlaces
+
+- **Portal de documentación**: arquitectura ArchiMate, roadmap y guías en `website/` (este repositorio).
+- **Demo en vivo (Cloud Run)**: https://apm-mvp-5dcohejqua-uc.a.run.app
+- **Código fuente**: https://github.com/DavisLCVB/application-portfolio-management
