@@ -19,7 +19,7 @@ mvp/output/
 infra/**/.terraform/
 infra/**/*.tfstate
 infra/**/*.tfstate.*
-infra/**/terraform.tfvars
+infra/**/*.tfvars
 
 # Agentes y skills locales (DSH / Claude Code)
 .agents/skills/
