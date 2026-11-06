@@ -24,6 +24,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 # Hacer importable el paquete del MVP (mvp/ está un nivel por encima de deploy/).
@@ -157,3 +158,9 @@ def calibrate_endpoint(request: Optional[CalibrateRequest] = None) -> Dict[str, 
         },
         "grid": report["grid"],
     }
+
+
+# UI web (single-page) servida en la raíz. Se monta al final para que
+# /health, /discover y /calibrate tengan precedencia sobre los estáticos.
+STATIC_DIR = Path(__file__).resolve().parent / "static"
+app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")

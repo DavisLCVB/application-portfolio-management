@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>APM · Descubrimiento con IA Agéntica</title>
+<style>
+:root {
+  --bg: #f7f5fb; --card: #ffffff; --ink: #1f2333; --muted: #6b7280;
+  --accent: #6d28d9; --accent-2: #8b5cf6; --border: #e5e7eb;
+  --green: #16a34a; --amber: #d97706; --red: #dc2626; --blue: #2563eb;
+  --radius: 14px; --shadow: 0 1px 3px rgba(0,0,0,.08), 0 8px 28px rgba(109,40,217,.06);
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--ink); line-height: 1.55; }
+header { background: linear-gradient(135deg, #2e1065 0%, #6d28d9 60%, #8b5cf6 100%); color: #fff; padding: 40px 24px 36px; }
+header .inner { max-width: 980px; margin: 0 auto; }
+header h1 { margin: 0 0 6px; font-size: 1.7rem; letter-spacing: -0.02em; }
+header p { margin: 0; opacity: .85; }
+.wrap { max-width: 980px; margin: 0 auto; padding: 24px; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: -46px 0 24px; position: relative; z-index: 2; }
+button { border: 0; border-radius: 10px; padding: 12px 18px; font-size: .95rem; font-weight: 600; cursor: pointer; transition: transform .06s, box-shadow .15s; background: var(--card); color: var(--accent); box-shadow: var(--shadow); display: inline-flex; align-items: center; gap: 8px; }
+button:hover { transform: translateY(-1px); }
+button:disabled { opacity: .6; cursor: default; transform: none; }
+button.primary { background: var(--accent); color: #fff; }
+.field { display: flex; align-items: center; gap: 8px; background: var(--card); padding: 8px 12px; border-radius: 10px; box-shadow: var(--shadow); font-size: .9rem; color: var(--muted); }
+.field input { width: 66px; border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; font-size: .9rem; }
+.card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; margin-bottom: 20px; }
+.card h2 { margin: 0 0 14px; font-size: 1.05rem; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.stat { background: var(--card); border-radius: var(--radius); padding: 16px; text-align: center; box-shadow: var(--shadow); }
+.stat .n { font-size: 1.8rem; font-weight: 700; color: var(--accent); }
+.stat .l { font-size: .78rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.badge { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: .72rem; font-weight: 600; vertical-align: middle; }
+.badge.green { background: #dcfce7; color: #166534; }
+.badge.amber { background: #fef3c7; color: #92400e; }
+.badge.red { background: #fee2e2; color: #991b1b; }
+.badge.gray { background: #f3f4f6; color: #4b5563; }
+.badge.blue { background: #dbeafe; color: #1e40af; }
+.fs { border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+.fs h3 { margin: 0 0 10px; font-size: 1.05rem; }
+.fs .meta { display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: .87rem; color: var(--muted); }
+.fs .meta b { color: var(--ink); font-weight: 600; }
+.scorebar { height: 8px; background: #ede9fe; border-radius: 99px; margin-top: 12px; overflow: hidden; }
+.scorebar > div { height: 100%; background: linear-gradient(90deg, var(--accent-2), var(--accent)); border-radius: 99px; }
+.mini { font-size: .8rem; margin-top: 5px; color: var(--muted); }
+.orphan, .conflict, .nudge { border: 1px solid var(--border); border-left: 4px solid var(--amber); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; font-size: .9rem; }
+.conflict { border-left-color: var(--red); }
+.nudge { border-left-color: var(--blue); }
+.soft { border-left-color: var(--accent-2); }
+.list-empty { color: var(--muted); font-style: italic; }
+.muted { color: var(--muted); }
+#status { text-align: center; padding: 30px; color: var(--muted); }
+.spinner { width: 26px; height: 26px; border: 3px solid #ede9fe; border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 10px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+footer { text-align: center; padding: 30px; color: var(--muted); font-size: .82rem; }
+</style>
+</head>
+<body>
+<header>
+  <div class="inner">
+    <h1>APM · Descubrimiento con IA Agéntica</h1>
+    <p>Pipeline de descubrimiento continuo y reconciliación semántica — demo interactiva</p>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="toolbar">
+    <button class="primary" id="btnDiscover" onclick="runDiscover()">▶ Ejecutar descubrimiento</button>
+    <button id="btnCalibrate" onclick="runCalibrate()">⚖ Ejecutar calibración</button>
+    <div class="field">
+      <span>Umbral de revisión</span>
+      <input id="umbral" type="number" step="0.05" min="0" max="1" value="0.85">
+    </div>
+  </div>
+
+  <div id="status">
+    <p>Pulsa <b>Ejecutar descubrimiento</b> para correr el pipeline de 4 agentes sobre los fixtures de demostración.</p>
+  </div>
+  <div id="results"></div>
+</div>
+
+<footer>Application Portfolio Management · Caso académico con datos sintéticos · <span id="cold" class="muted"></span></footer>
+
+<script>
+async function api(path, body) {
+  const res = await fetch(path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body || {})
+  });
+  if (!res.ok) throw new Error(path + " → HTTP " + res.status);
+  return res.json();
+}
+function loading(msg) {
+  document.getElementById("status").innerHTML = '<div class="spinner"></div><p>' + msg + '</p>';
+  document.getElementById("results").innerHTML = "";
+}
+function error(msg) {
+  document.getElementById("status").innerHTML = "";
+  document.getElementById("results").innerHTML = '<div class="card"><h2>Error</h2><p class="muted">' + msg + '</p></div>';
+}
+function pct(x) { return ((x || 0) * 100).toFixed(1) + "%"; }
+function badge(status) {
+  const map = { Draft: ['green', 'Draft'], Requires_Verification: ['amber', 'Requiere verificación'] };
+  const c = map[status] || ['gray', status || '—'];
+  return '<span class="badge ' + c[0] + '">' + c[1] + '</span>';
+}
+
+function runDiscover() {
+  const umbral = parseFloat(document.getElementById("umbral").value);
+  const body = isNaN(umbral) ? {} : { review_threshold: umbral };
+  loading("Ejecutando el pipeline de descubrimiento (4 agentes)… puede tardar unos segundos (cold start).");
+  api("/discover", body).then(renderDiscover).catch(e => error(e.message));
+}
+function runCalibrate() {
+  loading("Ejecutando el barrido de calibración… puede tardar.");
+  api("/calibrate", {}).then(renderCalibrate).catch(e => error(e.message));
+}
+
+function renderDiscover(d) {
+  document.getElementById("status").innerHTML = "";
+  const c = d.counts || {};
+  let html = `
+    <div class="stats">
+      <div class="stat"><div class="n">${c.hypotheses ?? 0}</div><div class="l">Hipótesis</div></div>
+      <div class="stat"><div class="n">${c.orphans ?? 0}</div><div class="l">Huérfanos</div></div>
+      <div class="stat"><div class="n">${c.conflicts ?? 0}</div><div class="l">Conflictos</div></div>
+      <div class="stat"><div class="n">${c.micro_nudges ?? 0}</div><div class="l">Micro-nudges</div></div>
+      <div class="stat"><div class="n">${c.diagrams ?? 0}</div><div class="l">Diagramas</div></div>
+    </div>`;
+
+  html += '<div class="card"><h2>Fact Sheets · hipótesis ancladas en el catálogo</h2>';
+  if (!(d.fact_sheets || []).length) html += '<p class="list-empty">Sin hipótesis.</p>';
+  for (const fs of d.fact_sheets || []) {
+    html += `
+      <div class="fs">
+        <h3>${fs.entity_name || "—"} ${badge(fs.status)}</h3>
+        <div class="meta">
+          <span><b>Catálogo:</b> ${fs.catalog_id || "—"}</span>
+          <span><b>Stack:</b> ${fs.technical_stack || "—"}</span>
+          <span><b>Proveedor:</b> ${fs.provider || "—"}</span>
+          <span><b>SLA:</b> ${fs.sla_uptime || "—"}</span>
+        </div>
+        <div class="scorebar"><div style="width:${(fs.confidence_score || 0) * 100}%"></div></div>
+        <div class="mini">Score de confianza: <b>${pct(fs.confidence_score)}</b></div>
+      </div>`;
+  }
+  html += '</div>';
+
+  html += '<div class="card"><h2>Candidatos huérfanos · posible Shadow IT</h2>';
+  if (!(d.orphan_candidates || []).length) html += '<p class="list-empty">Ninguno: toda la evidencia quedó vinculada.</p>';
+  for (const o of d.orphan_candidates || []) {
+    html += `<div class="orphan"><b>${o.evidence_type || ""}</b> · ${o.name || "—"} <span class="muted">(mejor score ${pct(o.best_score)})</span><br><span class="muted">${o.reason || ""}</span></div>`;
+  }
+  html += '</div>';
+
+  html += '<div class="card"><h2>Cola de revisión · conflictos</h2>';
+  if (!(d.conflicts || []).length) html += '<p class="list-empty">Ninguno.</p>';
+  for (const c of d.conflicts || []) {
+    const cands = (c.candidates || []).map(a => (a.catalog_id || "") + (a.name ? " " + a.name : "")).join(", ");
+    html += `<div class="conflict"><b>${c.evidence_type || ""}</b> · ${c.name || "—"}<br><span class="muted">Candidatas: ${cands || "—"}</span></div>`;
+  }
+  html += '</div>';
+
+  html += '<div class="card"><h2>Micro-nudges · validación en 1 clic</h2>';
+  if (!(d.micro_nudges || []).length) html += '<p class="list-empty">Ninguno.</p>';
+  for (const n of d.micro_nudges || []) {
+    const acts = (n.quick_actions || []).map(a => a.label).join(" · ");
+    html += `<div class="nudge"><b>${n.question_title || ""}</b><br><span class="muted">${n.proposed_value || ""}</span><br><span class="muted">Para: ${n.recipient || "—"} · ${n.channel || ""}</span><br><span class="muted">Acciones: ${acts || "—"}</span></div>`;
+  }
+  html += '</div>';
+
+  html += '<div class="card"><h2>Diagramas y modelos descubiertos</h2>';
+  if (!(d.diagram_evidences || []).length) html += '<p class="list-empty">Ninguno.</p>';
+  for (const diag of d.diagram_evidences || []) {
+    html += `<div class="orphan soft"><b>${diag.source_file || "—"}</b> <span class="muted">(${diag.format_type || ""})</span> — ${(diag.components || []).length} componentes, ${(diag.relations || []).length} relaciones</div>`;
+  }
+  html += '</div>';
+
+  document.getElementById("results").innerHTML = html;
+}
+
+function renderCalibrate(d) {
+  document.getElementById("status").innerHTML = "";
+  const sel = d.selection || {};
+  const rt = (d.review_threshold && d.review_threshold.selection) || {};
+  const cur = d.current_params || {};
+  let html = '<div class="card"><h2>Calibración del score de confianza</h2>';
+  html += `<p class="muted">Umbrales vigentes: MIN_LINK_SCORE=${cur.min_link_score}, AMBIGUITY_MARGIN=${cur.ambiguity_margin}, REVIEW_THRESHOLD=${cur.review_threshold}.</p>`;
+  html += `<p>Combinación seleccionada: <b>${sel.min_link_score} / ${sel.ambiguity_margin}</b> · exactitud <b>${pct(sel.accuracy)}</b> · F1 macro <b>${pct(sel.macro_f1)}</b>.</p>`;
+  html += `<p class="muted">${sel.rationale || ""}</p>`;
+  html += `<p>Umbral de revisión seleccionado: <b>${rt.threshold}</b> (cero errores de auto-publicación: ${rt.zero_error ? "sí" : "no"}).</p>`;
+  html += '</div>';
+  document.getElementById("results").innerHTML = html;
+}
+</script>
+</body>
+</html>

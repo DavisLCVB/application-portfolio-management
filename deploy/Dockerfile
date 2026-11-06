@@ -8,6 +8,7 @@ COPY mvp/ ./mvp/
 # La API FastAPI y sus dependencias.
 COPY deploy/requirements.txt ./deploy/requirements.txt
 COPY deploy/app.py ./deploy/app.py
+COPY deploy/static/ ./deploy/static/
 RUN pip install --no-cache-dir -r deploy/requirements.txt
 
 ENV PORT=8080

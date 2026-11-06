@@ -7,6 +7,7 @@ Expone el pipeline de descubrimiento del MVP como una **API HTTP mínima** sobre
 
 | Endpoint | Método | Descripción |
 |---|---|---|
+| `/` | GET | **UI web**: demo interactiva para ejecutar y visualizar el descubrimiento y la calibración |
 | `/health` | GET | Estado del servicio y umbrales vigentes |
 | `/discover` | POST | Ejecuta el pipeline (fixtures por defecto o rutas propias) y devuelve Fact Sheets, micro-nudges, huérfanos y conflictos |
 | `/calibrate` | POST | Ejecuta el barrido de calibración sobre el conjunto sintético etiquetado |
@@ -20,6 +21,8 @@ pipeline**: solo se le añade una capa HTTP.
 ```
 deploy/
 ├── app.py              # Capa HTTP (FastAPI)
+├── static/
+│   └── index.html      # UI web (demo interactiva, sin build)
 ├── Dockerfile          # Imagen Python 3.12 con el MVP + la API
 ├── requirements.txt    # Dependencias de la API
 ├── build-push.sh       # Build y push de la imagen a Artifact Registry
