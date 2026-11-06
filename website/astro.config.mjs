@@ -38,8 +38,6 @@ export default defineConfig({
           label: 'Guías',
           items: [
             { label: 'Guía técnica del MVP', slug: 'guias/guia-tecnica-mvp' },
-            { label: 'Editar y regenerar diagramas', slug: 'guias/diagramas' },
-            { label: 'Publicar documentación', slug: 'guias/publicacion' },
           ],
         },
       ],
